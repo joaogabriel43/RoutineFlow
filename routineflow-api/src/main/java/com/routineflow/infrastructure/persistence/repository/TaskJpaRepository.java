@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskJpaRepository extends JpaRepository<TaskJpaEntity, Long> {
 
@@ -20,4 +21,11 @@ public interface TaskJpaRepository extends JpaRepository<TaskJpaEntity, Long> {
             GROUP BY t.dayOfWeek
             """)
     List<Object[]> countByRoutineGroupedByDayOfWeek(@Param("routineId") Long routineId);
+
+    // Busca tasks de uma área ordenadas por orderIndex — para determinar próximo índice e exibição
+    List<TaskJpaEntity> findByAreaIdOrderByOrderIndex(Long areaId);
+
+    // Busca por id + userId para validação de ownership em operações de escrita
+    // Resolve para: WHERE t.id = :id AND t.area.user.id = :userId
+    Optional<TaskJpaEntity> findByIdAndArea_User_Id(Long id, Long userId);
 }

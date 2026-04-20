@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.DayOfWeek;
 import java.util.List;
+import java.util.Optional;
 
 public interface AreaJpaRepository extends JpaRepository<AreaJpaEntity, Long> {
 
@@ -32,4 +33,16 @@ public interface AreaJpaRepository extends JpaRepository<AreaJpaEntity, Long> {
             ORDER BY a.id
             """)
     List<AreaJpaEntity> findAreasWithAllTasksByRoutineId(@Param("routineId") Long routineId);
+
+    // Busca áreas de uma rotina ordenadas por orderIndex — para ManagePage
+    @Query("""
+            SELECT DISTINCT a FROM AreaJpaEntity a
+            LEFT JOIN FETCH a.tasks
+            WHERE a.routine.id = :routineId
+            ORDER BY a.orderIndex
+            """)
+    List<AreaJpaEntity> findAreasWithTasksByRoutineIdOrderByOrderIndex(@Param("routineId") Long routineId);
+
+    // Busca por id + userId para validação de ownership em operações de escrita
+    Optional<AreaJpaEntity> findByIdAndUserId(Long id, Long userId);
 }

@@ -12,6 +12,12 @@ import type {
   WeeklyCompletionResponse,
   WeekComparisonResponse,
   WeeklyHistoryResponse,
+  AreaResponse,
+  CreateAreaRequest,
+  UpdateAreaRequest,
+  CreateTaskRequest,
+  UpdateTaskRequest,
+  TaskResponse,
 } from '@/types'
 
 // ── Axios instance ────────────────────────────────────────────────────────────
@@ -106,6 +112,39 @@ export const analyticsApi = {
 
   getWeeklyHistory: (weeks = 8) =>
     api.get<WeeklyHistoryResponse>('/analytics/weekly/history', { params: { weeks } }).then((r) => r.data),
+}
+
+// ── Manage (Areas + Tasks CRUD) ───────────────────────────────────────────────
+
+export const manageApi = {
+  // Areas
+  getAreas: () =>
+    api.get<AreaResponse[]>('/areas').then((r) => r.data),
+
+  createArea: (data: CreateAreaRequest) =>
+    api.post<AreaResponse>('/areas', data).then((r) => r.data),
+
+  updateArea: (id: number, data: UpdateAreaRequest) =>
+    api.put<AreaResponse>(`/areas/${id}`, data).then((r) => r.data),
+
+  deleteArea: (id: number) =>
+    api.delete<void>(`/areas/${id}`),
+
+  reorderAreas: (areaIds: number[]) =>
+    api.patch<AreaResponse[]>('/areas/reorder', { areaIds }).then((r) => r.data),
+
+  // Tasks (nested under area)
+  createTask: (areaId: number, data: CreateTaskRequest) =>
+    api.post<TaskResponse>(`/areas/${areaId}/tasks`, data).then((r) => r.data),
+
+  updateTask: (areaId: number, taskId: number, data: UpdateTaskRequest) =>
+    api.put<TaskResponse>(`/areas/${areaId}/tasks/${taskId}`, data).then((r) => r.data),
+
+  deleteTask: (areaId: number, taskId: number) =>
+    api.delete<void>(`/areas/${areaId}/tasks/${taskId}`),
+
+  reorderTasks: (areaId: number, taskIds: number[]) =>
+    api.patch<TaskResponse[]>(`/areas/${areaId}/tasks/reorder`, { taskIds }).then((r) => r.data),
 }
 
 export default api

@@ -42,6 +42,9 @@ public class AreaJpaEntity {
     @Column(nullable = false, length = 10)
     private String icon;
 
+    @Column(name = "order_index", nullable = false)
+    private int orderIndex;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

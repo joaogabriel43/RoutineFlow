@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, Calendar, Home, Upload } from 'lucide-react'
+import { BarChart2, Calendar, Home, Settings2, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -9,10 +9,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/',          icon: Home,     label: 'Hoje'      },
-  { to: '/semana',    icon: Calendar, label: 'Semana'    },
-  { to: '/analytics', icon: BarChart2, label: 'Analytics'},
-  { to: '/import',    icon: Upload,   label: 'Importar'  },
+  { to: '/',          icon: Home,      label: 'Hoje'      },
+  { to: '/semana',    icon: Calendar,  label: 'Semana'    },
+  { to: '/analytics', icon: BarChart2, label: 'Analytics' },
+  { to: '/manage',    icon: Settings2, label: 'Gerenciar' },
+  { to: '/import',    icon: Upload,    label: 'Importar'  },
 ]
 
 // ── Desktop Sidebar ───────────────────────────────────────────────────────────

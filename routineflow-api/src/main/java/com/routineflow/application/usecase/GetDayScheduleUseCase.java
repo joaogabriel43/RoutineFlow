@@ -50,7 +50,7 @@ public class GetDayScheduleUseCase {
                 .filter(t -> t.getDayOfWeek() == dayOfWeek)
                 .sorted(Comparator.comparingInt(TaskJpaEntity::getOrderIndex))
                 .map(t -> new TaskResponse(t.getId(), t.getTitle(), t.getDescription(),
-                        t.getEstimatedMinutes(), t.getOrderIndex()))
+                        t.getEstimatedMinutes(), t.getOrderIndex(), t.getDayOfWeek()))
                 .toList();
 
         return new AreaWithTasksResponse(area.getId(), area.getName(),
