@@ -1,0 +1,354 @@
+# CLAUDE.md — RoutineFlow
+> Versão: 1.7.0 | Criado: 2026-04-19 | Última atualização: 2026-04-19
+
+---
+
+## 🏗️ Visão Geral do Projeto
+
+**RoutineFlow** é um sistema web de gerenciamento de rotina pessoal orientado a dados. O diferencial principal é a **importação de rotinas via arquivo estruturado** (YAML/TXT), eliminando dados hardcoded e permitindo que qualquer usuário configure sua própria rotina sem tocar no código.
+
+**Objetivo de portfólio**: Demonstrar domínio em Java backend (Clean Architecture, DDD, TDD, Strategy Pattern, Scheduled Jobs, Analytics via queries otimizadas) com frontend React moderno como vitrine.
+
+**Potencial de produto**: Arquitetura modular que permite evolução para SaaS no futuro.
+
+---
+
+## 🛠️ Stack Técnica
+
+### Backend
+- **Java 17** — records, sealed classes, text blocks
+- **Spring Boot 3.3** — Spring Web, Spring Security 6, Spring Data JPA, Spring Scheduler
+- **PostgreSQL 16** — banco principal
+- **Flyway** — migrations versionadas
+- **Testcontainers** — testes de integração com PostgreSQL real
+- **JUnit 5 + Mockito** — testes unitários
+- **Maven** — build tool
+
+### Frontend
+- **React 18 + Vite + TypeScript**
+- **Tailwind CSS** — estilização utility-first
+- **shadcn/ui** — componentes prontos, design clean estilo Apple
+- **Recharts** — gráficos de analytics
+- **React Query** — gerenciamento de estado servidor
+
+### Auth
+- **JWT** — stateless authentication
+- **Spring Security 6** — filtros e configuração
+
+### DevOps
+- **Docker + Docker Compose** — ambiente local e deploy
+- **Railway ou Render** — deploy da aplicação
+
+---
+
+## 📁 Estrutura de Pastas
+
+### Backend
+```
+routineflow-api/
+├── src/
+│   ├── main/
+│   │   ├── java/com/routineflow/
+│   │   │   ├── domain/
+│   │   │   │   ├── model/          # Entidades de domínio puras (sem anotações JPA)
+│   │   │   │   ├── repository/     # Interfaces (portas de saída)
+│   │   │   │   └── service/        # Regras de negócio puras
+│   │   │   ├── application/
+│   │   │   │   ├── usecase/        # Casos de uso (orquestração)
+│   │   │   │   └── dto/            # Records de request/response
+│   │   │   ├── infrastructure/
+│   │   │   │   ├── persistence/    # Entities JPA + Repository impl
+│   │   │   │   ├── parser/         # Strategy Pattern para importação de arquivos
+│   │   │   │   └── security/       # JWT filter, UserDetailsService, config
+│   │   │   └── presentation/
+│   │   │       └── controller/     # REST Controllers
+│   │   └── resources/
+│   │       ├── application.yml
+│   │       └── db/migration/       # V1__*, V2__* — Flyway
+│   └── test/
+│       └── java/com/routineflow/
+│           ├── unit/               # Testes unitários por camada
+│           └── integration/        # @SpringBootTest + Testcontainers
+└── pom.xml
+
+```
+
+### Frontend
+```
+routineflow-web/
+├── src/
+│   ├── components/
+│   │   ├── ui/         # shadcn/ui components
+│   │   └── shared/     # componentes reutilizáveis do projeto
+│   ├── pages/          # Today, Week, Analytics, Settings
+│   ├── hooks/          # custom hooks (useToday, useStreak, etc.)
+│   ├── services/       # chamadas à API (axios)
+│   ├── types/          # TypeScript interfaces
+│   └── lib/            # utils, constants
+└── vite.config.ts
+```
+
+---
+
+## ⚙️ Configurações do Ambiente
+
+### Variáveis de ambiente necessárias (.env)
+```
+# Backend
+DB_URL=jdbc:postgresql://localhost:5432/routineflow
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+JWT_SECRET=your-secret-key-min-256-bits
+JWT_EXPIRATION=86400000
+
+# Frontend
+VITE_API_URL=http://localhost:8080/api
+```
+
+### Docker Compose (desenvolvimento local)
+```yaml
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: routineflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+```
+
+### Testcontainers
+- Sempre usar `@Testcontainers` + `PostgreSQLContainer` nos testes de repositório
+- Nunca mockar banco nos testes de integração — usar container real
+
+---
+
+## 📐 Padrões do Projeto
+
+### 1. DTOs como Records Java 17
+```java
+// SEMPRE assim — imutável, sem boilerplate
+public record CreateTaskRequest(
+    @NotBlank String title,
+    @NotBlank String description,
+    @NotNull DayOfWeek dayOfWeek
+) {}
+```
+
+### 2. Constructor Injection obrigatório
+```java
+// CERTO
+@Service
+public class CheckInService {
+    private final CheckInRepository checkInRepository;
+    
+    public CheckInService(CheckInRepository checkInRepository) {
+        this.checkInRepository = checkInRepository;
+    }
+}
+
+// ERRADO — nunca usar
+@Autowired
+private CheckInRepository checkInRepository;
+```
+
+### 3. Nunca expor entidades JPA nos controllers
+- Controller recebe DTO → chama UseCase → UseCase usa domínio → retorna DTO de resposta
+- Entidade JPA nunca sai da camada de infrastructure/persistence
+
+### 4. ResponseEntity explícito em todos os endpoints
+```java
+return ResponseEntity.status(HttpStatus.CREATED).body(response);
+// nunca return response; diretamente
+```
+
+### 5. TDD — testes ANTES da implementação
+- Escrever o teste que falha → implementar para fazer passar → refatorar
+- Todo use case novo: mínimo 1 teste unitário + 1 teste de integração
+- Nomenclatura de testes: `methodName_scenario_expectedResult`
+
+### 6. Strategy Pattern para o Routine Import Engine
+```java
+public interface RoutineFileParser {
+    boolean supports(String fileExtension);
+    ParsedRoutine parse(InputStream inputStream);
+}
+
+// Implementações: YamlRoutineParser, TxtRoutineParser
+```
+
+### 8. Streak: área sem tarefas agendadas no dia → não altera streak
+`StreakCalculationService` verifica `getDayOfWeek()` antes de qualquer operação.
+Dia sem tarefas não conta como "quebra" — streak permanece intacto.
+Implementado em: `StreakCalculationService.calculate()` com `if (!hasTasksToday) continue`.
+
+### 7. Heatmap: range sempre começa numa segunda-feira
+`buildHeatmapRange()` computa `from` como a segunda-feira de 12 semanas atrás em relação à segunda-feira atual.
+Isso garante que o CSS grid de 7 colunas nunca precise de células de offset — sempre começa na coluna correta.
+Dias futuros são marcados com `isFuture: true` e renderizados com cor `#111111` (inativa), nunca com cor de atividade.
+
+### 8. WeekPage: coluna esquerda sticky com z-10
+Para scroll horizontal no mobile não sobrepor os nomes das áreas, a coluna esquerda usa `sticky left-0`.
+`bg-[#141414]` é obrigatório na coluna sticky — sem background ela fica transparente e o grid passa por baixo.
+`z-10` garante que a coluna fique acima dos círculos de dia durante o scroll.
+
+### 9. Frontend: completed status por área, não por task individual
+O backend retorna `completedTasks: number` por área em `DailyProgressResponse` — não IDs individuais de tasks.
+**Solução adotada**: No hook `useToday`, ao mesclar schedule + progress, as primeiras N tasks (ordenadas por `orderIndex`) são marcadas como concluídas onde N = `completedTasks` da área.
+```typescript
+tasks: sorted.map((task, idx) => ({
+  ...task,
+  completed: idx < completed,  // N primeiras = concluídas
+  completedAt: idx < completed ? new Date().toISOString() : null,
+}))
+```
+**Trade-off aceito**: Ordem de conclusão não é preservada entre sessões (sempre as primeiras N tasks ficam marcadas). Aceitável para portfolio demo.
+**Evolução futura**: Se backend evoluir para retornar `completedTaskIds: number[]`, trocar `idx < completed` por `completedIds.has(task.id)`.
+
+### 8. Formato do arquivo de importação (YAML)
+```yaml
+routine:
+  name: "Minha Rotina 2026"
+  areas:
+    - name: "Inglês/PTE"
+      color: "#3B82F6"
+      icon: "📚"
+      schedule:
+        MONDAY:
+          - title: "Re-tell Lecture"
+            description: "3 re-tells no PTE Wizard"
+            estimatedMinutes: 30
+```
+
+---
+
+## 🏛️ ADRs — Decisões de Arquitetura
+
+### ADR-001: React + Vite ao invés de Angular
+**Contexto**: João tem Angular no stack, mas o foco do projeto é demonstrar backend Java. Frontend é vitrine.
+**Decisão**: React 18 + Vite + Tailwind + shadcn/ui para resultado visual clean e rápido com menos boilerplate.
+**Consequências**: (+) Menos tokens de prompt no frontend, resultado visual melhor. (-) Não agrega Angular no CV.
+**Status**: Aceita
+
+### ADR-002: Clean Architecture com separação domínio puro
+**Contexto**: Projeto com potencial de produto futuro — precisa de manutenibilidade.
+**Decisão**: Domain model sem anotações JPA. Entidades JPA separadas na camada infrastructure.
+**Consequências**: (+) Domínio testável sem Spring. (-) Mapeamento extra entre domain model e JPA entity.
+**Status**: Aceita
+
+### ADR-003: Importação via arquivo como feature central
+**Contexto**: Rotinas hardcoded no banco são frágeis e não demonstram padrões de design.
+**Decisão**: Routine Import Engine com Strategy Pattern (YAML e TXT). Banco recebe dados já parseados.
+**Consequências**: (+) Demonstra Strategy Pattern, processamento de arquivo, validação. (+) Modular e extensível.
+**Status**: Aceita
+
+### ADR-004: Analytics via queries otimizadas, sem AI
+**Contexto**: João quer demonstrar domínio de dados sem complexidade de LLM.
+**Decisão**: Streak engine, heatmap, taxa de conclusão — tudo calculado via PostgreSQL com queries agregadas.
+**Consequências**: (+) Demonstra otimização de queries e modelagem. (-) Sem diferencial de AI.
+**Status**: Aceita
+
+### ADR-005: Reset automático via Spring @Scheduled
+**Contexto**: Checkboxes precisam resetar à meia-noite sem intervenção manual.
+**Decisão**: Spring Scheduler com cron job. Histórico nunca é deletado — apenas o estado do dia muda.
+**Consequências**: (+) Simples, sem dependência externa. Histório de DailyLog sempre preservado.
+**Status**: Aceita
+
+---
+
+## 🗺️ Roadmap de Sprints
+
+| Sprint | Foco | Status |
+|--------|------|--------|
+| Sprint 1 | Domain model + Auth (JWT) + Setup | ✅ Concluído |
+| Sprint 2 | Routine Import Engine (Strategy Pattern) | ✅ Concluído |
+| Sprint 3 | Daily Check-in + Reset Automático | ✅ Concluído |
+| Sprint 4 | Analytics API (Streak, Heatmap, Weekly) | ✅ Concluído |
+| Sprint 5 | Frontend React (Setup + TodayPage + WeekPage + AnalyticsPage) | ✅ Concluído |
+| Sprint 6 | ImportPage + Polish + Docker + README | ✅ Concluído |
+
+---
+
+## 🐛 Erros Conhecidos e Como Evitá-los
+
+### [2026-04-19] Testes de integração requerem Docker ativo
+**O que acontece**: `AuthControllerTest` e outros testes com `@Testcontainers` falham com conexão recusada se o Docker Desktop não estiver rodando.
+**Por que**: Testcontainers sobe um container PostgreSQL real em tempo de execução.
+**Como prevenir**: Iniciar o Docker Desktop antes de `./mvnw test`.
+**Rodar apenas unitários sem Docker**: `./mvnw test -Dtest="JwtServiceTest,YamlRoutineParserTest,TxtRoutineParserTest,ImportRoutineUseCaseTest"`
+
+### [2026-04-19] TxtRoutineParser — "malformado" significa título vazio, não ausência de pipe
+**O que acontece**: Linha `MONDAY: semPipe` (sem `|`) é válida — "semPipe" vira o título da task. O teste de "malformado" deve usar `MONDAY: ` (espaço vazio após `:`), que aciona a guarda `parts[0].isBlank()`.
+**Por que**: O parser aceita tasks sem metadados opcionais (desc, min). Só o título é obrigatório.
+**Como prevenir**: Fixture de "malformado" deve ter título vazio, não linha sem pipe.
+
+---
+
+## 🚀 Otimizações e Performance
+
+### Streak Engine — regra crítica
+- Streak é calculado olhando para `daily_logs` em ordem decrescente de data
+- Query deve usar índice em `(user_id, area_id, log_date)` — criar este índice no Flyway
+- Nunca calcular streak em memória iterando todos os logs — sempre via query SQL com `LAG()`
+
+---
+
+## 🤖 Agentes: Casos de Uso Confirmados
+
+| Tarefa | Agentes | Status |
+|--------|---------|--------|
+| Setup + estrutura Maven | @backend-architect + @senior-developer | ✅ |
+| Domain model + JPA entities | @backend-architect + @senior-developer + @database-optimizer | ✅ |
+| Auth JWT com TDD | @security-engineer + @backend-architect + @senior-developer + @api-tester | ✅ |
+| Import Engine + Strategy Pattern | @backend-architect + @senior-developer + @api-tester | ✅ |
+| Endpoints consulta rotina (N+1 fix) | @backend-architect + @senior-developer + @database-optimizer + @api-tester | ✅ |
+| Check-in Engine + upsert DailyLog | @backend-architect + @senior-developer + @api-tester | ✅ |
+| Reset automático + Streak Engine | @backend-architect + @senior-developer + @api-tester | ✅ |
+| Analytics API (streak + heatmap + weekly) | @backend-architect + @senior-developer + @database-optimizer + @api-tester | ✅ |
+| Frontend React completo (3 páginas + hooks) | @frontend-developer | ✅ |
+| ImportPage + EmptyRoutineState + Polish UX | @frontend-developer | ✅ |
+| Docker multi-stage + nginx SPA + README portfólio | @devops-automator + @technical-writer | ✅ |
+
+---
+
+## 📚 Regras de Negócio Relevantes
+
+1. **Reset diário**: checkboxes resetam à meia-noite. O `DailyLog` do dia anterior é preservado com status final.
+2. **Streak**: conta dias consecutivos onde pelo menos 1 tarefa foi concluída na área. Dia sem nenhuma tarefa agendada não quebra o streak.
+3. **Importação de rotina**: um usuário pode ter apenas 1 rotina ativa por vez. Importar nova rotina desativa a anterior.
+4. **Histórico imutável**: `DailyLog` nunca é deletado. É a fonte de verdade para todos os analytics.
+5. **Área sem tarefas no dia**: não aparece na tela "Hoje" — só áreas com tarefas agendadas para aquele dia da semana.
+
+---
+
+## 🔗 Dependências e Integrações Relevantes
+
+| Dependência | Versão | Uso | Observação |
+|---|---|---|---|
+| Spring Boot | 3.3.x | Framework base | |
+| Spring Security | 6.x | Auth + JWT | |
+| Flyway | 9.x | DB migrations | |
+| Testcontainers | 1.19.x | Testes integração | Requer Docker rodando |
+| SnakeYAML | 2.x | Parse de YAML | Já incluso no Spring Boot |
+| JJWT | 0.12.x | JWT tokens | `io.jsonwebtoken` |
+| React | 18.x | Frontend | |
+| shadcn/ui | latest | Componentes UI | |
+| Tailwind CSS | 3.x | Estilização | |
+| Recharts | 3.x | Gráficos | Bundle ~222KB gzipped — não code-split (aceitável para portfolio) |
+
+---
+
+## 📝 Changelog do CLAUDE.md
+
+| Data | Versão | O que mudou |
+|---|---|---|
+| 2026-04-19 | 1.0.0 | Criação inicial — arquitetura, ADRs, padrões, stack definidos |
+| 2026-04-19 | 1.1.0 | Sprint 1 concluído — agentes confirmados, erro Docker documentado |
+| 2026-04-19 | 1.2.0 | Sprint 2 concluído — Import Engine, endpoints rotina, erro TxtParser documentado |
+| 2026-04-19 | 1.3.0 | Sprint 3 concluído — Check-in, reset @Scheduled, streak engine, padrão streak documentado |
+| 2026-04-19 | 1.4.0 | Sprint 4 concluído — Analytics API: Streak, Heatmap, Weekly (completion, comparison, history) |
+| 2026-04-19 | 1.5.0 | Sprint 5 iniciado — Frontend: Vite+React+TS, Tailwind dark, shadcn/ui, api.ts, AppLayout, LoginPage |
+| 2026-04-19 | 1.5.1 | Sprint 5 P2 — TodayPage: useToday hook, AreaCard, TaskItem, optimistic update, skeleton loading |
+| 2026-04-19 | 1.6.0 | Sprint 5 concluído — WeekPage (8 queries paralelas, grid 7×N, hoje destacado), AnalyticsPage (StreakCards, HeatmapGrid CSS, LineChart Recharts), padrão completed-por-área documentado |
+| 2026-04-19 | 1.7.0 | Sprint 6 concluído — ImportPage (drag-and-drop nativo, validação de extensão, first-login welcome), EmptyRoutineState (3 páginas), page transitions, Dockerfiles multi-stage, nginx SPA, docker-compose.yml completo, README profissional |

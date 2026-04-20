@@ -1,0 +1,26 @@
+routine:
+  name: "Minha Rotina 2026"
+  areas:
+    - name: "Inglês/PTE"
+      color: "#3B82F6"
+      icon: "📚"
+      schedule:
+        MONDAY:
+          - title: "Re-tell Lecture"
+            description: "3 re-tells no PTE Wizard"
+            estimatedMinutes: 30
+          - title: "Read Aloud"
+            description: "5 textos curtos"
+            estimatedMinutes: 20
+        WEDNESDAY:
+          - title: "Listening"
+            description: "Podcast 30min"
+            estimatedMinutes: 30
+    - name: "Programação"
+      color: "#F59E0B"
+      icon: "💻"
+      schedule:
+        TUESDAY:
+          - title: "Projeto prático"
+            description: "1 commit no GitHub"
+            estimatedMinutes: 60

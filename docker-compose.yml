@@ -1,0 +1,52 @@
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: routineflow-postgres
+    environment:
+      POSTGRES_DB: routineflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d routineflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Spring Boot API ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./routineflow-api
+      dockerfile: Dockerfile
+    container_name: routineflow-api
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/routineflow
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production-use-at-least-256-bits}
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── React Frontend (nginx) ───────────────────────────────────────────────────
+  web:
+    build:
+      context: ./routineflow-web
+      dockerfile: Dockerfile
+    container_name: routineflow-web
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

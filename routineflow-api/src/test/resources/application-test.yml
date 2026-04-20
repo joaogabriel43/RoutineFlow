@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:tc:postgresql:16:///routineflow_test}
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+security:
+  jwt:
+    secret: test-secret-key-that-is-long-enough-for-hs256-algorithm-min-256-bits
+    expiration-ms: 3600000
+
+logging:
+  level:
+    com.routineflow: DEBUG
