@@ -6,6 +6,7 @@ import { TodayPage } from '@/pages/TodayPage'
 import { WeekPage } from '@/pages/WeekPage'
 import { AnalyticsPage } from '@/pages/AnalyticsPage'
 import { ImportPage } from '@/pages/ImportPage'
+import { ManagePage } from '@/pages/ManagePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="semana" element={<WeekPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="import" element={<ImportPage />} />
+            <Route path="manage" element={<ManagePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

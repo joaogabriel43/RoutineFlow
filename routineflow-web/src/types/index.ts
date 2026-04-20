@@ -23,9 +23,47 @@ export interface RegisterRequest {
 export interface TaskResponse {
   id: number
   title: string
-  description: string
-  estimatedMinutes: number
+  description: string | null
+  estimatedMinutes: number | null
   orderIndex: number
+  dayOfWeek: string
+}
+
+// ── Manage ───────────────────────────────────────────────────────────────────
+
+export interface AreaResponse {
+  id: number
+  name: string
+  color: string
+  icon: string
+  orderIndex: number
+  tasks: TaskResponse[]
+}
+
+export interface CreateAreaRequest {
+  name: string
+  color: string
+  icon: string
+}
+
+export interface UpdateAreaRequest {
+  name: string
+  color: string
+  icon: string
+}
+
+export interface CreateTaskRequest {
+  title: string
+  description: string | null
+  estimatedMinutes: number | null
+  dayOfWeek: string
+}
+
+export interface UpdateTaskRequest {
+  title: string
+  description: string | null
+  estimatedMinutes: number | null
+  dayOfWeek: string
 }
 
 export interface AreaWithTasksResponse {

@@ -52,7 +52,7 @@ export function TaskItem({ task, areaColor, onToggle, isLast = false }: TaskItem
           </span>
 
           {/* Time pill */}
-          {task.estimatedMinutes > 0 && (
+          {task.estimatedMinutes != null && task.estimatedMinutes > 0 && (
             <span className="shrink-0 text-xs bg-[#1f1f1f] text-[#86868b] px-2 py-0.5 rounded-full">
               {task.estimatedMinutes} min
             </span>
