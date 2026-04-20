@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 1.7.0 | Criado: 2026-04-19 | Última atualização: 2026-04-19
+> Versão: 1.8.0 | Criado: 2026-04-19 | Última atualização: 2026-04-20
 
 ---
 
@@ -193,6 +193,17 @@ Para scroll horizontal no mobile não sobrepor os nomes das áreas, a coluna esq
 `bg-[#141414]` é obrigatório na coluna sticky — sem background ela fica transparente e o grid passa por baixo.
 `z-10` garante que a coluna fique acima dos círculos de dia durante o scroll.
 
+### 10. deleteTask nunca toca em DailyLog — cascade do banco cuida disso
+`TaskUseCase.deleteTask()` chama apenas `taskJpaRepository.deleteById()`.
+O `ON DELETE CASCADE` da FK `daily_logs.task_id → tasks.id` (definido no Flyway) lida com a limpeza dos registros filhos.
+`DailyLog` é trilha de auditoria imutável — NUNCA deletar explicitamente via código Java.
+Qualquer chamada a `dailyLogRepository.deleteBy*` neste contexto é um bug grave.
+
+### 11. PATCH /reorder — IDs completos da lista, não deltas
+`reorderAreas` e `reorderTasks` recebem a lista **completa** de IDs na nova ordem (não apenas os que mudaram).
+O use case re-atribui `orderIndex = posição_na_lista` para cada item.
+Frontend deve sempre enviar todos os IDs da área/tarefa, não apenas o que moveu.
+
 ### 9. Frontend: completed status por área, não por task individual
 O backend retorna `completedTasks: number` por área em `DailyProgressResponse` — não IDs individuais de tasks.
 **Solução adotada**: No hook `useToday`, ao mesclar schedule + progress, as primeiras N tasks (ordenadas por `orderIndex`) são marcadas como concluídas onde N = `completedTasks` da área.
@@ -255,6 +266,12 @@ routine:
 **Consequências**: (+) Simples, sem dependência externa. Histório de DailyLog sempre preservado.
 **Status**: Aceita
 
+### ADR-006: Ownership check retorna 404, não 403
+**Contexto**: Ao buscar área ou task por ID, verificar se pertence ao usuário autenticado.
+**Decisão**: `findByIdAndUserId` / `findByIdAndArea_User_Id` — se não encontrar (seja por não existir ou por não ser do usuário), lança `ResourceNotFoundException` → 404.
+**Consequências**: (+) Não vaza informação sobre existência do recurso. (-) Comportamento opaco para depuração. Padrão de segurança por obscuridade intencional.
+**Status**: Aceita
+
 ---
 
 ## 🗺️ Roadmap de Sprints
@@ -267,6 +284,7 @@ routine:
 | Sprint 4 | Analytics API (Streak, Heatmap, Weekly) | ✅ Concluído |
 | Sprint 5 | Frontend React (Setup + TodayPage + WeekPage + AnalyticsPage) | ✅ Concluído |
 | Sprint 6 | ImportPage + Polish + Docker + README | ✅ Concluído |
+| Sprint 7 | CRUD de Áreas e Tarefas (TDD) + ManagePage | ✅ Concluído |
 
 ---
 
@@ -277,6 +295,26 @@ routine:
 **Por que**: Testcontainers sobe um container PostgreSQL real em tempo de execução.
 **Como prevenir**: Iniciar o Docker Desktop antes de `./mvnw test`.
 **Rodar apenas unitários sem Docker**: `./mvnw test -Dtest="JwtServiceTest,YamlRoutineParserTest,TxtRoutineParserTest,ImportRoutineUseCaseTest"`
+
+### [2026-04-20] Spring Security 6 — unauthenticated request retorna 403, não 401
+**O que acontece**: Endpoints protegidos sem token retornam 403 em vez de 401. Testes que esperam 401 falham.
+**Por que**: No Spring Security 6, usuários anônimos são "autenticados como ROLE_ANONYMOUS". Ao acessar endpoint protegido, dispara `AccessDeniedException` (→ 403) em vez de `AuthenticationException` (→ 401).
+**Como prevenir**: Sempre configurar `exceptionHandling` explicitamente no `SecurityConfig`:
+```java
+.exceptionHandling(ex -> ex
+    .authenticationEntryPoint((req, res, authEx) ->
+        res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+    .accessDeniedHandler((req, res, accessEx) ->
+        res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+)
+```
+**Arquivo**: `infrastructure/security/SecurityConfig.java`
+
+### [2026-04-20] Testes de integração falham com "ApplicationContext failure threshold exceeded" quando Docker não está ativo
+**O que acontece**: Todos os 48+ testes de integração falham com a mensagem de threshold, mascarando a causa raiz.
+**Por que**: O primeiro teste tenta subir o contexto Spring (que usa Testcontainers para PostgreSQL), falha pois Docker não está rodando, e todos os demais já pulam com "threshold exceeded".
+**Como diagnosticar**: Rodar `./mvnw test -Dtest="AuthControllerTest#nomeDoTeste" -e` — a causa raiz aparece no log de startup do Tomcat.
+**Como prevenir**: Iniciar o Docker Desktop antes de qualquer `./mvnw test`. Verificar com `docker ps`.
 
 ### [2026-04-19] TxtRoutineParser — "malformado" significa título vazio, não ausência de pipe
 **O que acontece**: Linha `MONDAY: semPipe` (sem `|`) é válida — "semPipe" vira o título da task. O teste de "malformado" deve usar `MONDAY: ` (espaço vazio após `:`), que aciona a guarda `parts[0].isBlank()`.
@@ -309,6 +347,9 @@ routine:
 | Frontend React completo (3 páginas + hooks) | @frontend-developer | ✅ |
 | ImportPage + EmptyRoutineState + Polish UX | @frontend-developer | ✅ |
 | Docker multi-stage + nginx SPA + README portfólio | @devops-automator + @technical-writer | ✅ |
+| CRUD Áreas — TDD (AreaUseCase + AreaController) | @backend-architect + @senior-developer + @api-tester | ✅ |
+| CRUD Tarefas — TDD (TaskUseCase + TaskController) | @backend-architect + @senior-developer + @api-tester | ✅ |
+| ManagePage — CRUD frontend com modals e dual-panel | @frontend-developer | ✅ |
 
 ---
 
@@ -319,6 +360,9 @@ routine:
 3. **Importação de rotina**: um usuário pode ter apenas 1 rotina ativa por vez. Importar nova rotina desativa a anterior.
 4. **Histórico imutável**: `DailyLog` nunca é deletado. É a fonte de verdade para todos os analytics.
 5. **Área sem tarefas no dia**: não aparece na tela "Hoje" — só áreas com tarefas agendadas para aquele dia da semana.
+6. **Reordenação**: `PATCH /areas/reorder` e `PATCH /areas/{id}/tasks/reorder` recebem lista completa de IDs. O backend re-atribui `orderIndex` sequencialmente pela posição na lista.
+7. **Exclusão de task não afeta DailyLog via código**: o banco faz o cascade. `DailyLog` é auditoria imutável — nunca excluir por código Java.
+8. **Ownership check por query, não por lógica de controle**: `findByIdAndUserId` / `findByIdAndArea_User_Id` retornam `Optional.empty()` para IDs inexistentes E para IDs de outros usuários — ambos resultam em 404.
 
 ---
 
@@ -352,3 +396,4 @@ routine:
 | 2026-04-19 | 1.5.1 | Sprint 5 P2 — TodayPage: useToday hook, AreaCard, TaskItem, optimistic update, skeleton loading |
 | 2026-04-19 | 1.6.0 | Sprint 5 concluído — WeekPage (8 queries paralelas, grid 7×N, hoje destacado), AnalyticsPage (StreakCards, HeatmapGrid CSS, LineChart Recharts), padrão completed-por-área documentado |
 | 2026-04-19 | 1.7.0 | Sprint 6 concluído — ImportPage (drag-and-drop nativo, validação de extensão, first-login welcome), EmptyRoutineState (3 páginas), page transitions, Dockerfiles multi-stage, nginx SPA, docker-compose.yml completo, README profissional |
+| 2026-04-20 | 1.8.0 | Sprint 7 concluído — CRUD áreas e tarefas com TDD (16 unit + 15 integration tests), V7 migration (order_index em areas), ManagePage dual-panel, ADR-006 ownership 404, correção Spring Security 6 (401 vs 403), padrão deleteTask cascade |
