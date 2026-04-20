@@ -8,6 +8,8 @@ routineflow-api/target/
 routineflow-web/node_modules/
 routineflow-web/dist/
 routineflow-web/.vite/
+# Shadcn CLI misplaced files on Windows (correct files are in src/components/ui/)
+routineflow-web/@/
 
 # ── Environment / Secrets ─────────────────────────────────────────────────────
 .env
