@@ -58,12 +58,12 @@ function heatmapColor(day: FilledHeatmapDay): string {
 }
 
 // GitHub-style layout: weeks run left→right (columns), days run top→bottom (rows).
-// The data starts on a Monday (guaranteed by backend), so grid-auto-flow:column
-// maps naturally: cell[n] fills row (n % 7), column (n / 7).
+// Cells use 1fr columns so the grid fills the full card width.
+// Data from backend is week-major (Mon–Sun per week). CSS row-flow needs day-major
+// (all Mondays, then all Tuesdays…), so we transpose before rendering.
 const CELL_PX = 13
 const GAP_PX = 3
 
-// Only label odd rows to avoid clutter at this cell size
 const DAY_LABEL_CONFIG: { label: string; row: number }[] = [
   { label: 'Seg', row: 0 },
   { label: 'Qua', row: 2 },
@@ -79,6 +79,17 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
     if (day.isFuture) return `${date}: futuro`
     if (day.totalTasks === 0) return `${date}: sem tarefas`
     return `${date}: ${day.completedTasks}/${day.totalTasks} (${Math.round(day.completionRate * 100)}%)`
+  }
+
+  // Transpose week-major → day-major so CSS row-flow fills correctly:
+  // row 0 = all Mondays (wk0…wk12), row 1 = all Tuesdays, etc.
+  const weeks = Math.floor(days.length / 7) || 1
+  const transposed: FilledHeatmapDay[] = []
+  for (let d = 0; d < 7; d++) {
+    for (let w = 0; w < weeks; w++) {
+      const item = days[w * 7 + d]
+      if (item) transposed.push(item)
+    }
   }
 
   const rowTemplate = `repeat(7, ${CELL_PX}px)`
@@ -109,22 +120,20 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
         })}
       </div>
 
-      {/* Cell grid — 7 rows, weeks fill as columns left→right */}
+      {/* Cell grid — 1fr columns fill available width, fixed row height */}
       <div
-        className="grid"
+        className="grid flex-1 min-w-0"
         style={{
+          gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))`,
           gridTemplateRows: rowTemplate,
-          gridAutoColumns: `${CELL_PX}px`,
-          gridAutoFlow: 'column',
           gap,
         }}
       >
-        {days.map((day, i) => (
+        {transposed.map((day, i) => (
           <div
             key={i}
             className="rounded-[2px] cursor-default transition-opacity hover:opacity-80"
             style={{
-              width: CELL_PX,
               height: CELL_PX,
               backgroundColor: heatmapColor(day),
             }}
