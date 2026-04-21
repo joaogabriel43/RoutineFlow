@@ -57,6 +57,9 @@ function heatmapColor(day: FilledHeatmapDay): string {
   return '#0071e3'
 }
 
+const CELL_PX = 10
+const GAP_PX = 2
+
 function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
   const formatTip = (day: FilledHeatmapDay) => {
     const date = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(
@@ -67,32 +70,40 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
     return `${date}: ${day.completedTasks}/${day.totalTasks} (${Math.round(day.completionRate * 100)}%)`
   }
 
+  const colTemplate = `repeat(7, ${CELL_PX}px)`
+  const gridGap = `${GAP_PX}px`
+
   return (
-    <div>
-      {/* Day labels */}
+    <div style={{ display: 'inline-block' }}>
+      {/* Day labels — aligned to fixed cell columns */}
       <div
         className="grid mb-1"
-        style={{ gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}
+        style={{ gridTemplateColumns: colTemplate, gap: gridGap }}
       >
         {DAY_LABELS.map((d) => (
-          <div key={d} className="text-[9px] text-[#86868b] text-center">
+          <div
+            key={d}
+            className="text-[9px] text-[#86868b] text-center leading-none"
+            style={{ width: CELL_PX }}
+          >
             {d}
           </div>
         ))}
       </div>
 
-      {/* Cells grid */}
+      {/* Cells — fixed 10×10px per cell */}
       <div
         className="grid"
-        style={{ gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}
+        style={{ gridTemplateColumns: colTemplate, gap: gridGap }}
       >
         {days.map((day, i) => (
           <div
             key={i}
-            className="rounded-[3px] cursor-default transition-opacity hover:opacity-80"
+            className="rounded-[2px] cursor-default transition-opacity hover:opacity-80"
             style={{
+              width: CELL_PX,
+              height: CELL_PX,
               backgroundColor: heatmapColor(day),
-              aspectRatio: '1',
             }}
             title={formatTip(day)}
           />
@@ -251,7 +262,7 @@ export function AnalyticsPage() {
 
       {/* ── Heatmap ─────────────────────────────────────────────────────── */}
       <Section title="Histórico de atividade">
-        <div className="rounded-xl bg-[#141414] p-4">
+        <div className="rounded-xl bg-[#141414] p-4 flex flex-col items-start">
           {heatmapDays.length === 0 ? (
             <p className="text-sm text-[#86868b]">Sem dados de atividade.</p>
           ) : (
@@ -263,7 +274,11 @@ export function AnalyticsPage() {
         <div className="flex items-center gap-2 mt-2 justify-end">
           <span className="text-[10px] text-[#86868b]">Menos</span>
           {['#1c1c1e', 'rgba(0,113,227,0.25)', 'rgba(0,113,227,0.55)', '#0071e3'].map((c, i) => (
-            <div key={i} className="w-3 h-3 rounded-[2px]" style={{ backgroundColor: c }} />
+            <div
+              key={i}
+              className="rounded-[2px]"
+              style={{ width: 10, height: 10, backgroundColor: c }}
+            />
           ))}
           <span className="text-[10px] text-[#86868b]">Mais</span>
         </div>
