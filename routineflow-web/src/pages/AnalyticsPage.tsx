@@ -57,8 +57,19 @@ function heatmapColor(day: FilledHeatmapDay): string {
   return '#0071e3'
 }
 
-const CELL_PX = 10
-const GAP_PX = 2
+// GitHub-style layout: weeks run left→right (columns), days run top→bottom (rows).
+// The data starts on a Monday (guaranteed by backend), so grid-auto-flow:column
+// maps naturally: cell[n] fills row (n % 7), column (n / 7).
+const CELL_PX = 13
+const GAP_PX = 3
+
+// Only label odd rows to avoid clutter at this cell size
+const DAY_LABEL_CONFIG: { label: string; row: number }[] = [
+  { label: 'Seg', row: 0 },
+  { label: 'Qua', row: 2 },
+  { label: 'Sex', row: 4 },
+  { label: 'Dom', row: 6 },
+]
 
 function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
   const formatTip = (day: FilledHeatmapDay) => {
@@ -70,31 +81,43 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
     return `${date}: ${day.completedTasks}/${day.totalTasks} (${Math.round(day.completionRate * 100)}%)`
   }
 
-  const colTemplate = `repeat(7, ${CELL_PX}px)`
-  const gridGap = `${GAP_PX}px`
+  const rowTemplate = `repeat(7, ${CELL_PX}px)`
+  const gap = `${GAP_PX}px`
 
   return (
-    <div style={{ display: 'inline-block' }}>
-      {/* Day labels — aligned to fixed cell columns */}
+    <div className="flex items-start gap-2 w-full">
+      {/* Day labels — stacked vertically, aligned to grid rows */}
       <div
-        className="grid mb-1"
-        style={{ gridTemplateColumns: colTemplate, gap: gridGap }}
+        className="grid shrink-0"
+        style={{ gridTemplateRows: rowTemplate, gap }}
       >
-        {DAY_LABELS.map((d) => (
-          <div
-            key={d}
-            className="text-[9px] text-[#86868b] text-center leading-none"
-            style={{ width: CELL_PX }}
-          >
-            {d}
-          </div>
-        ))}
+        {Array.from({ length: 7 }, (_, row) => {
+          const config = DAY_LABEL_CONFIG.find((c) => c.row === row)
+          return (
+            <div
+              key={row}
+              className="flex items-center justify-end"
+              style={{ height: CELL_PX }}
+            >
+              {config && (
+                <span className="text-[9px] text-[#86868b] leading-none pr-1">
+                  {config.label}
+                </span>
+              )}
+            </div>
+          )
+        })}
       </div>
 
-      {/* Cells — fixed 10×10px per cell */}
+      {/* Cell grid — 7 rows, weeks fill as columns left→right */}
       <div
         className="grid"
-        style={{ gridTemplateColumns: colTemplate, gap: gridGap }}
+        style={{
+          gridTemplateRows: rowTemplate,
+          gridAutoColumns: `${CELL_PX}px`,
+          gridAutoFlow: 'column',
+          gap,
+        }}
       >
         {days.map((day, i) => (
           <div
@@ -262,7 +285,7 @@ export function AnalyticsPage() {
 
       {/* ── Heatmap ─────────────────────────────────────────────────────── */}
       <Section title="Histórico de atividade">
-        <div className="rounded-xl bg-[#141414] p-4 flex flex-col items-start">
+        <div className="rounded-xl bg-[#141414] p-4 overflow-x-auto">
           {heatmapDays.length === 0 ? (
             <p className="text-sm text-[#86868b]">Sem dados de atividade.</p>
           ) : (
