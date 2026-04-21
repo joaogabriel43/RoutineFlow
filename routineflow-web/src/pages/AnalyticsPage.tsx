@@ -46,8 +46,6 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
 
 // ── Heatmap ───────────────────────────────────────────────────────────────────
 
-const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-
 function heatmapColor(day: FilledHeatmapDay): string {
   if (day.isFuture) return '#111111'
   if (day.totalTasks === 0) return '#1c1c1e'
