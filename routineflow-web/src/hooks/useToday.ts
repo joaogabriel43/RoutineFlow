@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useQueries, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { useQueries } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { routineApi, checkInApi } from '@/services/api'
 import type { AreaWithTasksResponse, TaskResponse } from '@/types'
@@ -17,39 +17,6 @@ export interface EnrichedArea extends Omit<AreaWithTasksResponse, 'tasks'> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function buildEnrichedAreas(
-  scheduleAreas: AreaWithTasksResponse[],
-  completedCounts: Map<number, number>,
-): EnrichedArea[] {
-  return scheduleAreas.map((area) => {
-    const completed = completedCounts.get(area.id) ?? 0
-    const sorted = [...area.tasks].sort((a, b) => a.orderIndex - b.orderIndex)
-    return {
-      ...area,
-      tasks: sorted.map((task, idx) => ({
-        ...task,
-        completed: idx < completed,
-        completedAt: idx < completed ? new Date().toISOString() : null,
-      })),
-    }
-  })
-}
-
-function setTaskCompletion(
-  areas: EnrichedArea[],
-  taskId: number,
-  completed: boolean,
-): EnrichedArea[] {
-  return areas.map((area) => ({
-    ...area,
-    tasks: area.tasks.map((task) =>
-      task.id === taskId
-        ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
-        : task,
-    ),
-  }))
-}
-
 function computeOverallRate(areas: EnrichedArea[]): number {
   let total = 0
   let done = 0
@@ -63,65 +30,100 @@ function computeOverallRate(areas: EnrichedArea[]): number {
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useToday() {
-  const queryClient = useQueryClient()
-  const [enrichedAreas, setEnrichedAreas] = useState<EnrichedArea[]>([])
+  // Source of truth for checkbox state.
+  // Initialized once from server counts; never overwritten by subsequent refetches.
+  const [localChecked, setLocalChecked] = useState<Map<number, boolean>>(new Map())
+  const [initialized, setInitialized] = useState(false)
 
   const [scheduleQuery, progressQuery] = useQueries({
     queries: [
       {
         queryKey: ['today-schedule'],
         queryFn: routineApi.getToday,
-        staleTime: 60_000,
+        staleTime: 5 * 60 * 1000,   // 5 min — avoid background refetches
+        refetchOnWindowFocus: false, // tab-switching never resets checkboxes
       },
       {
         queryKey: ['today-progress'],
         queryFn: checkInApi.getTodayProgress,
-        staleTime: 30_000,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
       },
     ],
   })
 
-  // Merge schedule + progress whenever either changes
+  // Initialize localChecked exactly once — after both queries have resolved.
+  // Uses the server completedTasks count only for the initial distribution
+  // (first N tasks by orderIndex). After this point, localChecked is the
+  // sole source of truth and is never overwritten by server data.
   useEffect(() => {
+    if (initialized) return
     if (!scheduleQuery.data) return
+    if (progressQuery.isLoading) return // wait for progress before initializing
 
     const completedCounts = new Map<number, number>()
     for (const area of progressQuery.data?.areas ?? []) {
       completedCounts.set(area.areaId, area.completedTasks)
     }
 
-    setEnrichedAreas(buildEnrichedAreas(scheduleQuery.data.areas, completedCounts))
-  }, [scheduleQuery.data, progressQuery.data])
+    const initial = new Map<number, boolean>()
+    for (const area of scheduleQuery.data.areas) {
+      const completedCount = completedCounts.get(area.id) ?? 0
+      const sorted = [...area.tasks].sort((a, b) => a.orderIndex - b.orderIndex)
+      sorted.forEach((task, idx) => {
+        initial.set(task.id, idx < completedCount)
+      })
+    }
 
-  // Derive overallRate from local state for immediate feedback on toggle
+    setLocalChecked(initial)
+    setInitialized(true)
+  }, [scheduleQuery.data, progressQuery.data, progressQuery.isLoading, initialized])
+
+  // Derive enriched areas from schedule data + localChecked.
+  // Recomputes on any localChecked mutation — never touches server state.
+  const enrichedAreas = useMemo((): EnrichedArea[] => {
+    if (!scheduleQuery.data) return []
+    return scheduleQuery.data.areas.map((area) => {
+      const sorted = [...area.tasks].sort((a, b) => a.orderIndex - b.orderIndex)
+      return {
+        ...area,
+        tasks: sorted.map((task) => {
+          const done = localChecked.get(task.id) ?? false
+          return {
+            ...task,
+            completed: done,
+            completedAt: done ? new Date().toISOString() : null,
+          }
+        }),
+      }
+    })
+  }, [scheduleQuery.data, localChecked])
+
   const overallRate = computeOverallRate(enrichedAreas)
-
   const isLoading = scheduleQuery.isLoading || progressQuery.isLoading
   const error = scheduleQuery.error ?? progressQuery.error
 
-  // ── Mutations ───────────────────────────────────────────────────────────────
+  // ── Mutations ────────────────────────────────────────────────────────────────
+  // Update localChecked immediately (optimistic).
+  // Revert on API failure — no invalidateQueries needed since localChecked
+  // is the source of truth and server refetches no longer overwrite it.
 
   async function completeTask(taskId: number) {
-    // Optimistic: update local state immediately
-    setEnrichedAreas((prev) => setTaskCompletion(prev, taskId, true))
+    setLocalChecked((prev) => new Map(prev).set(taskId, true))
     try {
       await checkInApi.complete(taskId)
-      // Sync overallRate with server silently
-      void queryClient.invalidateQueries({ queryKey: ['today-progress'] })
     } catch {
-      // Revert on failure
-      setEnrichedAreas((prev) => setTaskCompletion(prev, taskId, false))
+      setLocalChecked((prev) => new Map(prev).set(taskId, false))
       toast.error('Erro ao marcar tarefa. Tente novamente.')
     }
   }
 
   async function uncompleteTask(taskId: number) {
-    setEnrichedAreas((prev) => setTaskCompletion(prev, taskId, false))
+    setLocalChecked((prev) => new Map(prev).set(taskId, false))
     try {
       await checkInApi.uncomplete(taskId)
-      void queryClient.invalidateQueries({ queryKey: ['today-progress'] })
     } catch {
-      setEnrichedAreas((prev) => setTaskCompletion(prev, taskId, true))
+      setLocalChecked((prev) => new Map(prev).set(taskId, true))
       toast.error('Erro ao desmarcar tarefa. Tente novamente.')
     }
   }
