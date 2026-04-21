@@ -57,8 +57,19 @@ function heatmapColor(day: FilledHeatmapDay): string {
   return '#0071e3'
 }
 
-const CELL_PX = 10
-const GAP_PX = 2
+// GitHub-style layout: weeks run left→right (columns), days run top→bottom (rows).
+// Cells use 1fr columns so the grid fills the full card width.
+// Data from backend is week-major (Mon–Sun per week). CSS row-flow needs day-major
+// (all Mondays, then all Tuesdays…), so we transpose before rendering.
+const CELL_PX = 13
+const GAP_PX = 3
+
+const DAY_LABEL_CONFIG: { label: string; row: number }[] = [
+  { label: 'Seg', row: 0 },
+  { label: 'Qua', row: 2 },
+  { label: 'Sex', row: 4 },
+  { label: 'Dom', row: 6 },
+]
 
 function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
   const formatTip = (day: FilledHeatmapDay) => {
@@ -70,38 +81,59 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
     return `${date}: ${day.completedTasks}/${day.totalTasks} (${Math.round(day.completionRate * 100)}%)`
   }
 
-  const colTemplate = `repeat(7, ${CELL_PX}px)`
-  const gridGap = `${GAP_PX}px`
+  // Transpose week-major → day-major so CSS row-flow fills correctly:
+  // row 0 = all Mondays (wk0…wk12), row 1 = all Tuesdays, etc.
+  const weeks = Math.floor(days.length / 7) || 1
+  const transposed: FilledHeatmapDay[] = []
+  for (let d = 0; d < 7; d++) {
+    for (let w = 0; w < weeks; w++) {
+      const item = days[w * 7 + d]
+      if (item) transposed.push(item)
+    }
+  }
+
+  const rowTemplate = `repeat(7, ${CELL_PX}px)`
+  const gap = `${GAP_PX}px`
 
   return (
-    <div style={{ display: 'inline-block' }}>
-      {/* Day labels — aligned to fixed cell columns */}
+    <div className="flex items-start gap-2 w-full">
+      {/* Day labels — stacked vertically, aligned to grid rows */}
       <div
-        className="grid mb-1"
-        style={{ gridTemplateColumns: colTemplate, gap: gridGap }}
+        className="grid shrink-0"
+        style={{ gridTemplateRows: rowTemplate, gap }}
       >
-        {DAY_LABELS.map((d) => (
-          <div
-            key={d}
-            className="text-[9px] text-[#86868b] text-center leading-none"
-            style={{ width: CELL_PX }}
-          >
-            {d}
-          </div>
-        ))}
+        {Array.from({ length: 7 }, (_, row) => {
+          const config = DAY_LABEL_CONFIG.find((c) => c.row === row)
+          return (
+            <div
+              key={row}
+              className="flex items-center justify-end"
+              style={{ height: CELL_PX }}
+            >
+              {config && (
+                <span className="text-[9px] text-[#86868b] leading-none pr-1">
+                  {config.label}
+                </span>
+              )}
+            </div>
+          )
+        })}
       </div>
 
-      {/* Cells — fixed 10×10px per cell */}
+      {/* Cell grid — 1fr columns fill available width, fixed row height */}
       <div
-        className="grid"
-        style={{ gridTemplateColumns: colTemplate, gap: gridGap }}
+        className="grid flex-1 min-w-0"
+        style={{
+          gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))`,
+          gridTemplateRows: rowTemplate,
+          gap,
+        }}
       >
-        {days.map((day, i) => (
+        {transposed.map((day, i) => (
           <div
             key={i}
             className="rounded-[2px] cursor-default transition-opacity hover:opacity-80"
             style={{
-              width: CELL_PX,
               height: CELL_PX,
               backgroundColor: heatmapColor(day),
             }}
@@ -262,7 +294,7 @@ export function AnalyticsPage() {
 
       {/* ── Heatmap ─────────────────────────────────────────────────────── */}
       <Section title="Histórico de atividade">
-        <div className="rounded-xl bg-[#141414] p-4 flex flex-col items-start">
+        <div className="rounded-xl bg-[#141414] p-4 overflow-x-auto">
           {heatmapDays.length === 0 ? (
             <p className="text-sm text-[#86868b]">Sem dados de atividade.</p>
           ) : (
