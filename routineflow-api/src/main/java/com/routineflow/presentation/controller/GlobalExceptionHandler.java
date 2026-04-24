@@ -77,4 +77,11 @@ public class GlobalExceptionHandler {
         problem.setType(URI.create("/errors/bad-request"));
         return problem;
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail handleIllegalState(IllegalStateException ex) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setType(URI.create("/errors/conflict"));
+        return problem;
+    }
 }

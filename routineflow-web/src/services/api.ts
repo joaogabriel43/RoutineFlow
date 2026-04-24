@@ -19,6 +19,8 @@ import type {
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskResponse,
+  SingleTaskResponse,
+  CreateSingleTaskRequest,
 } from '@/types'
 
 // ── Axios instance ────────────────────────────────────────────────────────────
@@ -190,6 +192,31 @@ export const manageApi = {
 
   reorderTasks: (areaId: number, taskIds: number[]) =>
     api.patch<TaskResponse[]>(`/areas/${areaId}/tasks/reorder`, { taskIds }).then((r) => r.data),
+}
+
+// ── Single Tasks ──────────────────────────────────────────────────────────────
+
+export const singleTaskApi = {
+  listPending: () =>
+    api.get<SingleTaskResponse[]>('/single-tasks').then((r) => r.data),
+
+  listArchived: () =>
+    api.get<SingleTaskResponse[]>('/single-tasks/archived').then((r) => r.data),
+
+  listToday: () =>
+    api.get<SingleTaskResponse[]>('/single-tasks/today').then((r) => r.data),
+
+  create: (data: CreateSingleTaskRequest) =>
+    api.post<SingleTaskResponse>('/single-tasks', data).then((r) => r.data),
+
+  complete: (id: number) =>
+    api.post<SingleTaskResponse>(`/single-tasks/${id}/complete`).then((r) => r.data),
+
+  uncomplete: (id: number) =>
+    api.post<SingleTaskResponse>(`/single-tasks/${id}/uncomplete`).then((r) => r.data),
+
+  delete: (id: number) =>
+    api.delete(`/single-tasks/${id}`).then((r) => r.data),
 }
 
 export default api
