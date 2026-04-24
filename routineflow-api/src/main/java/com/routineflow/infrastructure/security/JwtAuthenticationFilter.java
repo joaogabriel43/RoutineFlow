@@ -29,6 +29,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // getServletPath() returns the path after the context-path (/api) is stripped.
         // So /api/auth/login → /auth/login, /api/actuator/health → /actuator/health.
         String path = request.getServletPath();
+        // OPTIONS preflight requests carry no Authorization header — skip JWT validation
+        // so the CORS filter can respond with 200 before any auth check.
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
         return path.startsWith("/auth/") || path.startsWith("/actuator/");
     }
 
