@@ -125,7 +125,7 @@ public interface DailyLogJpaRepository extends JpaRepository<DailyLogJpaEntity, 
             JOIN TaskJpaEntity t ON dl.task.id = t.id
             JOIN AreaJpaEntity a ON t.area.id = a.id
             JOIN RoutineJpaEntity r ON a.routine.id = r.id
-            WHERE r.userId = :userId
+            WHERE r.user.id = :userId
               AND dl.logDate BETWEEN :from AND :to
             ORDER BY dl.logDate ASC, a.name ASC, t.title ASC
             """)
