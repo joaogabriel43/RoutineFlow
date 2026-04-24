@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { SidebarNav, BottomNav } from './NavBar'
 import { Toaster } from '@/components/ui/sonner'
+import { InstallPrompt } from './InstallPrompt'
 
 export function AppLayout() {
   const { pathname } = useLocation()
@@ -20,6 +21,9 @@ export function AppLayout() {
 
       {/* Bottom nav — visível apenas no mobile */}
       <BottomNav />
+
+      {/* PWA install prompt — mobile only */}
+      <InstallPrompt />
 
       {/* Toasts globais */}
       <Toaster
