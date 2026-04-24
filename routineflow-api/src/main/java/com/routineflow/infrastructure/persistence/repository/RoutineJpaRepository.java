@@ -20,4 +20,7 @@ public interface RoutineJpaRepository extends JpaRepository<RoutineJpaEntity, Lo
 
     @Query("SELECT r FROM RoutineJpaEntity r WHERE r.active = true")
     List<RoutineJpaEntity> findAllActiveRoutines();
+
+    @Query("SELECT r FROM RoutineJpaEntity r WHERE r.user.id = :userId ORDER BY r.importedAt DESC")
+    List<RoutineJpaEntity> findAllByUserId(@Param("userId") Long userId);
 }
