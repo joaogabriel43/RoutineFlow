@@ -71,6 +71,27 @@ class StreakCalculationServiceTest {
     }
 
     @Test
+    @DisplayName("calculate_currentCountExceedsBestStreak_updatesBestStreak")
+    void calculate_currentCountExceedsBestStreak_updatesBestStreak() {
+        var area = buildAreaWithTask(1L, DayOfWeek.MONDAY);
+        // bestStreak = 5, currentCount = 5 → after increment currentCount=6 > bestStreak=5
+        var streak = StreakJpaEntity.builder()
+                .area(area).user(area.getUser())
+                .currentCount(5).bestStreak(5).lastActiveDate(MONDAY.minusDays(1)).build();
+
+        setupMocks(List.of(area));
+        when(dailyLogJpaRepository.findCompletedByUserIdAndAreaIdAndLogDate(USER_ID, 1L, MONDAY))
+                .thenReturn(List.of(mock(DailyLogJpaEntity.class)));
+        when(streakJpaRepository.findByAreaIdAndUserId(1L, USER_ID)).thenReturn(Optional.of(streak));
+        when(streakJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.calculate(USER_ID, MONDAY);
+
+        verify(streakJpaRepository).save(argThat(s ->
+                s.getCurrentCount() == 6 && s.getBestStreak() == 6));
+    }
+
+    @Test
     @DisplayName("calculate_areaWithNoCompletedTask_resetsStreakToZero")
     void calculate_areaWithNoCompletedTask_resetsStreakToZero() {
         var area = buildAreaWithTask(1L, DayOfWeek.MONDAY);

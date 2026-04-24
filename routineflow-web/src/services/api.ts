@@ -13,6 +13,7 @@ import type {
   WeekComparisonResponse,
   WeeklyHistoryResponse,
   AreaResponse,
+  AreaAnalyticsResponse,
   CreateAreaRequest,
   UpdateAreaRequest,
   CreateTaskRequest,
@@ -112,6 +113,9 @@ export const analyticsApi = {
 
   getWeeklyHistory: (weeks = 8) =>
     api.get<WeeklyHistoryResponse>('/analytics/weekly/history', { params: { weeks } }).then((r) => r.data),
+
+  getAreaAnalytics: (areaId: number) =>
+    api.get<AreaAnalyticsResponse>(`/areas/${areaId}/analytics`).then((r) => r.data),
 }
 
 // ── Manage (Areas + Tasks CRUD) ───────────────────────────────────────────────

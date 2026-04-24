@@ -39,6 +39,10 @@ public class StreakJpaEntity {
     @Column(name = "current_count", nullable = false)
     private Integer currentCount;
 
+    @Column(name = "best_streak", nullable = false)
+    @Builder.Default
+    private Integer bestStreak = 0;
+
     @Column(name = "last_active_date")
     private LocalDate lastActiveDate;
 }
