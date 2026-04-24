@@ -1,9 +1,13 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AreaCard } from '@/components/shared/AreaCard'
 import { DateNavBar } from '@/components/shared/DateNavBar'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
+import { SingleTaskItem } from '@/components/shared/SingleTaskItem'
+import { CreateSingleTaskModal } from '@/components/shared/CreateSingleTaskModal'
 import { useDay } from '@/hooks/useDay'
+import { useSingleTasksToday, useCompleteSingleTask, useDeleteSingleTask } from '@/hooks/useSingleTasks'
 import { formatPercent } from '@/lib/utils'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -155,6 +159,64 @@ function EmptyDayState({ dateStr }: { dateStr: string }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// ── Single Tasks Section ──────────────────────────────────────────────────────
+
+function SingleTasksSection() {
+  const [modalOpen, setModalOpen] = useState(false)
+  const { data: tasks = [], isLoading } = useSingleTasksToday()
+  const completeMutation = useCompleteSingleTask()
+  const deleteMutation = useDeleteSingleTask()
+
+  if (isLoading) return null
+
+  return (
+    <section className="mt-6">
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-medium text-[#f5f5f7]">Para fazer</h2>
+          {tasks.length > 0 && (
+            <span className="text-xs bg-[#1f1f1f] text-[#86868b] px-2 py-0.5 rounded-full">
+              {tasks.length}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1 text-xs text-[#0071e3] hover:text-[#0077ed] transition-colors"
+        >
+          <Plus size={14} />
+          Adicionar
+        </button>
+      </div>
+
+      {/* Task list */}
+      {tasks.length === 0 ? (
+        <p className="text-xs text-[#3a3a3c] py-3">
+          Nenhuma tarefa pendente — que tal adicionar algo?
+        </p>
+      ) : (
+        <div className="rounded-xl bg-[#141414] px-4">
+          {tasks.map((task, idx) => (
+            <SingleTaskItem
+              key={task.id}
+              task={task}
+              onComplete={(id) => completeMutation.mutate(id)}
+              onDelete={(id) => deleteMutation.mutate(id)}
+              isLast={idx === tasks.length - 1}
+            />
+          ))}
+        </div>
+      )}
+
+      <CreateSingleTaskModal open={modalOpen} onClose={() => setModalOpen(false)} />
+    </section>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export function TodayPage() {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr)
 
@@ -197,6 +259,9 @@ export function TodayPage() {
           ))}
         </div>
       )}
+
+      {/* Single tasks — only visible on today's date */}
+      {selectedDate === todayStr() && <SingleTasksSection />}
     </div>
   )
 }

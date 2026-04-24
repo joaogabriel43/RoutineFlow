@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.4.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
+> Versão: 2.5.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
 
 ---
 
@@ -322,6 +322,7 @@ routine:
 | Sprint 10 | Export CSV (StreamingResponseBody, BOM UTF-8) + Conversor HabitNow (parser frontend-only) | ✅ Concluído |
 | Sprint 11 | PWA instalável (vite-plugin-pwa, manifest, service worker, ícones, InstallPrompt) | ✅ Concluído |
 | Sprint 12 | Navegação temporal (DateNavBar, useDay, ?date= em check-in, data futura → 400) | ✅ Concluído |
+| Sprint 13 | Single tasks one-time (V10 migration, SingleTaskUseCase, /today endpoint, SingleTasksPage, TodayPage seção "Para fazer") | ✅ Concluído |
 
 ---
 
@@ -429,6 +430,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | Export CSV + Conversor HabitNow | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 | PWA setup + install prompt | @frontend-developer + @devops-automator | ✅ |
 | Sprint 12 — Temporal navigation (date param + DateNavBar + useDay) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
+| Single Tasks (backend + frontend) | @backend-architect + @senior-developer + @database-optimizer + @api-tester + @frontend-developer | ✅ |
 
 ---
 
@@ -444,6 +446,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 8. **Ownership check por query, não por lógica de controle**: `findByIdAndUserId` / `findByIdAndArea_User_Id` retornam `Optional.empty()` para IDs inexistentes E para IDs de outros usuários — ambos resultam em 404.
 9. **ResetFrequency por área**: cada área tem sua própria frequência de avaliação de streak. DAILY = avalia todo dia (padrão). WEEKLY = avalia apenas na segunda-feira. MONTHLY = avalia apenas no dia 1 do mês. Dias fora da janela de avaliação não quebram nem incrementam o streak — a área é simplesmente ignorada pelo `StreakCalculationService`.
 10. **ResetFrequency default**: valor ausente no request (null) é normalizado para DAILY no `AreaUseCase`. O `AreaJpaEntity` usa `@Builder.Default` para garantir DAILY mesmo quando o builder não recebe a propriedade — evita NPE nos testes existentes.
+11. **Single Tasks — tarefas one-time**: Completar arquiva automaticamente (archivedAt preenchido). Não participam do reset diário — são globais do usuário. Sem dueDate: aparecem na TodayPage todos os dias até serem marcadas. Com dueDate vencida: aparecem com flag `isOverdue=true`. `uncompleteSingleTask` reverte para pendente (para erros do usuário). Checkbox circular para diferenciar de recurring tasks (quadradas). Tabela `single_tasks` com índice parcial `WHERE completed = FALSE` para queries de pendentes.
 
 ---
 
@@ -483,4 +486,5 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.1.0 | Sprint 9 concluído — Analytics individual por área: V9 migration (best_streak), StreakJpaEntity.bestStreak, DayOfWeekStat + WeeklyTrendPoint + AreaAnalyticsResponse DTOs, AreaAnalyticsUseCase, AreaController /analytics endpoint, 8 unit tests + 4 integration tests, frontend AreaAnalyticsPage (4 summary cards + LineChart + BarChart horizontal), StreakCards clicáveis, rota analytics/area/:areaId, fix LabelFormatter TS2322 (v: unknown), DAYOFWEEK PostgreSQL erro documentado |
 | 2026-04-24 | 2.2.0 | Sprint 10 concluído — Export CSV (ExportUseCase + ExportController, BOM UTF-8, StreamingResponseBody, range 365d, 5 unit + 5 integration tests), HabitNow Converter (habitnow-parser.ts, HabitNowConverterPage, geração YAML frontend-only), botão Export CSV na AnalyticsPage, link na ImportPage, padrões 12-13 documentados |
 | 2026-04-24 | 2.3.0 | Sprint 11 concluído — PWA: vite-plugin-pwa (autoUpdate, NetworkOnly API), manifest com ícones 192/512/maskable, sw.js + workbox, meta tags iOS Safari, InstallPrompt (mobile-only, dispensável, beforeinstallprompt), vercel.json headers sw.js/manifest, react-is instalado, fix recharts rolldown |
+| 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
 | 2026-04-24 | 2.4.0 | Sprint 12 concluído — Navegação temporal: CheckInUseCase rejeita datas futuras (IllegalArgumentException → 400), CheckInController ?date= param em /complete /uncomplete /progress, alias /today/progress mantido, GET /checkins/progress novo endpoint, 7 unit tests + 4 integration tests novos (156 total), frontend: useDay hook (selectedDate, reset em mudança de data), DateNavBar (14 dias, pills com today highlight, dots via queryClient cache), TodayPage (DateNavBar integrado, label dinâmico, banner futuro, disabled prop), AreaCard + TaskItem (disabled prop), api.ts (complete/uncomplete/getDayProgress aceitam date opcional) |
