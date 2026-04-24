@@ -1,16 +1,18 @@
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { EnrichedTask } from '@/hooks/useToday'
+import type { EnrichedTask } from '@/hooks/useDay'
 
 interface TaskItemProps {
   task: EnrichedTask
   areaColor: string
   onToggle: (taskId: number, completed: boolean) => void
   isLast?: boolean
+  disabled?: boolean
 }
 
-export function TaskItem({ task, areaColor, onToggle, isLast = false }: TaskItemProps) {
+export function TaskItem({ task, areaColor, onToggle, isLast = false, disabled = false }: TaskItemProps) {
   function handleClick() {
+    if (disabled) return
     onToggle(task.id, !task.completed)
   }
 
@@ -25,12 +27,18 @@ export function TaskItem({ task, areaColor, onToggle, isLast = false }: TaskItem
       <button
         type="button"
         onClick={handleClick}
-        aria-label={task.completed ? 'Desmarcar tarefa' : 'Marcar como concluída'}
-        className="mt-0.5 shrink-0 w-5 h-5 rounded-md flex items-center justify-center transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414]"
+        disabled={disabled}
+        aria-label={
+          disabled
+            ? 'Check-in indisponível'
+            : task.completed
+              ? 'Desmarcar tarefa'
+              : 'Marcar como concluída'
+        }
+        className="mt-0.5 shrink-0 w-5 h-5 rounded-md flex items-center justify-center transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414] disabled:cursor-not-allowed disabled:opacity-40"
         style={{
-          border: task.completed ? 'none' : `1.5px solid ${areaColor}`,
-          backgroundColor: task.completed ? areaColor : 'transparent',
-          // ring color matches area
+          border: task.completed ? 'none' : `1.5px solid ${disabled ? '#3a3a3c' : areaColor}`,
+          backgroundColor: task.completed ? (disabled ? '#3a3a3c' : areaColor) : 'transparent',
           '--tw-ring-color': areaColor,
         } as React.CSSProperties}
       >

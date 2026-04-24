@@ -2,14 +2,15 @@ import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TaskItem } from './TaskItem'
-import type { EnrichedArea } from '@/hooks/useToday'
+import type { EnrichedArea } from '@/hooks/useDay'
 
 interface AreaCardProps {
   area: EnrichedArea
   onTaskToggle: (taskId: number, completed: boolean) => void
+  disabled?: boolean
 }
 
-export function AreaCard({ area, onTaskToggle }: AreaCardProps) {
+export function AreaCard({ area, onTaskToggle, disabled = false }: AreaCardProps) {
   const completedTasks = area.tasks.filter((t) => t.completed).length
   const totalTasks = area.tasks.length
   const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0
@@ -75,6 +76,7 @@ export function AreaCard({ area, onTaskToggle }: AreaCardProps) {
               areaColor={area.color}
               onToggle={onTaskToggle}
               isLast={idx === area.tasks.length - 1}
+              disabled={disabled}
             />
           ))}
         </div>

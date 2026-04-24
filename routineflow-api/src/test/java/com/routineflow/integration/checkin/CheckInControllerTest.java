@@ -15,8 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.Objects;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -124,6 +123,58 @@ class CheckInControllerTest {
     void completeTask_withoutToken_returns401() throws Exception {
         mockMvc.perform(post("/checkins/1/complete"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("getProgress_withDateParam_returns200ForSpecificDay")
+    void getProgress_withDateParam_returns200ForSpecificDay() throws Exception {
+        String yesterday = LocalDate.now().minusDays(1).toString();
+
+        mockMvc.perform(get("/checkins/progress")
+                        .param("date", yesterday)
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.logDate").value(yesterday))
+                .andExpect(jsonPath("$.overallCompletionRate").isNumber());
+    }
+
+    @Test
+    @DisplayName("getProgress_withoutDateParam_returns200WithTodayData")
+    void getProgress_withoutDateParam_returns200WithTodayData() throws Exception {
+        String today = LocalDate.now().toString();
+
+        mockMvc.perform(get("/checkins/progress")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.logDate").value(today));
+    }
+
+    @Test
+    @DisplayName("completeTask_withPastDateParam_returns200")
+    void completeTask_withPastDateParam_returns200() throws Exception {
+        if (firstTaskId == null) return;
+
+        String yesterday = LocalDate.now().minusDays(1).toString();
+
+        mockMvc.perform(post("/checkins/" + firstTaskId + "/complete")
+                        .param("date", yesterday)
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").value(true))
+                .andExpect(jsonPath("$.logDate").value(yesterday));
+    }
+
+    @Test
+    @DisplayName("completeTask_withFutureDateParam_returns400")
+    void completeTask_withFutureDateParam_returns400() throws Exception {
+        if (firstTaskId == null) return;
+
+        String tomorrow = LocalDate.now().plusDays(1).toString();
+
+        mockMvc.perform(post("/checkins/" + firstTaskId + "/complete")
+                        .param("date", tomorrow)
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isBadRequest());
     }
 
     private String registerAndGetToken(String email, String password) throws Exception {
