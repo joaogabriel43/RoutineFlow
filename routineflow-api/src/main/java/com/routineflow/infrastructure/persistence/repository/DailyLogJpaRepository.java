@@ -1,5 +1,6 @@
 package com.routineflow.infrastructure.persistence.repository;
 
+import com.routineflow.application.dto.CheckInExportRow;
 import com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -106,4 +107,30 @@ public interface DailyLogJpaRepository extends JpaRepository<DailyLogJpaEntity, 
             WHERE d.task.area.id = :areaId AND d.completed = true
             """)
     List<LocalDate> findCompletedLogDatesByAreaId(@Param("areaId") Long areaId);
+
+    /**
+     * Full export query — joins daily_logs → tasks → areas → routines to enforce
+     * userId ownership. Returns CheckInExportRow projection records ordered by
+     * logDate ASC, areaName ASC, taskTitle ASC.
+     */
+    @Query("""
+            SELECT new com.routineflow.application.dto.CheckInExportRow(
+                dl.logDate,
+                t.dayOfWeek,
+                a.name,
+                t.title,
+                dl.completed,
+                dl.completedAt)
+            FROM DailyLogJpaEntity dl
+            JOIN TaskJpaEntity t ON dl.task.id = t.id
+            JOIN AreaJpaEntity a ON t.area.id = a.id
+            JOIN RoutineJpaEntity r ON a.routine.id = r.id
+            WHERE r.userId = :userId
+              AND dl.logDate BETWEEN :from AND :to
+            ORDER BY dl.logDate ASC, a.name ASC, t.title ASC
+            """)
+    List<CheckInExportRow> findForExport(
+            @Param("userId") Long userId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
 }

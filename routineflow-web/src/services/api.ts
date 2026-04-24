@@ -118,6 +118,30 @@ export const analyticsApi = {
     api.get<AreaAnalyticsResponse>(`/areas/${areaId}/analytics`).then((r) => r.data),
 }
 
+// ── Export ────────────────────────────────────────────────────────────────────
+
+export const exportApi = {
+  exportCheckIns: async (from?: string, to?: string): Promise<void> => {
+    const params = new URLSearchParams()
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+
+    const response = await api.get(`/export/checkins?${params.toString()}`, {
+      responseType: 'blob',
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]))
+    const link = document.createElement('a')
+    link.href = url
+    const date = new Date().toISOString().split('T')[0]
+    link.setAttribute('download', `routineflow-export-${date}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  },
+}
+
 // ── Manage (Areas + Tasks CRUD) ───────────────────────────────────────────────
 
 export const manageApi = {

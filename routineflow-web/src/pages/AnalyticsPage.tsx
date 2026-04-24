@@ -7,11 +7,14 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Download, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
+import { exportApi } from '@/services/api'
 import type { StreakResponse } from '@/types'
 import type { FilledHeatmapDay, WeekHistoryPoint } from '@/hooks/useAnalytics'
 
@@ -277,6 +280,20 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function AnalyticsPage() {
   const { streaks, heatmapDays, weekHistoryData, isLoading, error } = useAnalytics()
+  const [isExporting, setIsExporting] = useState(false)
+
+  async function handleExport() {
+    if (isExporting) return
+    setIsExporting(true)
+    try {
+      await exportApi.exportCheckIns()
+      toast.success('Exportação concluída!')
+    } catch {
+      toast.error('Erro ao exportar. Tente novamente.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   if (isLoading) return <AnalyticsSkeleton />
 
@@ -285,8 +302,21 @@ export function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <header>
+      <header className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-light text-[#f5f5f7] tracking-tight">Analytics</h1>
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1f1f1f] hover:bg-[#2a2a2a]
+                     text-[#86868b] hover:text-[#f5f5f7] text-sm transition-colors disabled:opacity-50"
+        >
+          {isExporting ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Download size={14} />
+          )}
+          Exportar CSV
+        </button>
       </header>
 
       {/* ── Streaks ─────────────────────────────────────────────────────── */}
