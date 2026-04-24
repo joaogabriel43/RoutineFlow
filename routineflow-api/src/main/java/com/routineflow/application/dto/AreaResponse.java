@@ -1,5 +1,7 @@
 package com.routineflow.application.dto;
 
+import com.routineflow.domain.model.ResetFrequency;
+
 import java.util.List;
 
 public record AreaResponse(
@@ -8,5 +10,6 @@ public record AreaResponse(
         String color,
         String icon,
         int orderIndex,
+        ResetFrequency resetFrequency,
         List<TaskResponse> tasks
 ) {}

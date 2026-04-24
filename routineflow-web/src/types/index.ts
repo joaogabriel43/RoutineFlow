@@ -31,12 +31,15 @@ export interface TaskResponse {
 
 // ── Manage ───────────────────────────────────────────────────────────────────
 
+export type ResetFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY'
+
 export interface AreaResponse {
   id: number
   name: string
   color: string
   icon: string
   orderIndex: number
+  resetFrequency: ResetFrequency
   tasks: TaskResponse[]
 }
 
@@ -44,12 +47,14 @@ export interface CreateAreaRequest {
   name: string
   color: string
   icon: string
+  resetFrequency?: ResetFrequency
 }
 
 export interface UpdateAreaRequest {
   name: string
   color: string
   icon: string
+  resetFrequency?: ResetFrequency
 }
 
 export interface CreateTaskRequest {

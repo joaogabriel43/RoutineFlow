@@ -7,6 +7,7 @@ import com.routineflow.application.dto.TaskResponse;
 import com.routineflow.application.dto.UpdateAreaRequest;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
+import com.routineflow.domain.model.ResetFrequency;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepository;
@@ -49,6 +50,8 @@ public class AreaUseCase {
         // New area gets the next orderIndex
         int nextOrder = areaJpaRepository.findByRoutineId(routine.getId()).size();
 
+        var frequency = request.resetFrequency() != null ? request.resetFrequency() : ResetFrequency.DAILY;
+
         var area = AreaJpaEntity.builder()
                 .user(routine.getUser())
                 .routine(routine)
@@ -56,6 +59,7 @@ public class AreaUseCase {
                 .color(request.color())
                 .icon(request.icon())
                 .orderIndex(nextOrder)
+                .resetFrequency(frequency)
                 .build();
 
         return toResponse(areaJpaRepository.save(area));
@@ -69,6 +73,9 @@ public class AreaUseCase {
         area.setName(request.name());
         area.setColor(request.color());
         area.setIcon(request.icon());
+        if (request.resetFrequency() != null) {
+            area.setResetFrequency(request.resetFrequency());
+        }
 
         return toResponse(areaJpaRepository.save(area));
     }
@@ -143,6 +150,7 @@ public class AreaUseCase {
                 area.getColor(),
                 area.getIcon(),
                 area.getOrderIndex(),
+                area.getResetFrequency() != null ? area.getResetFrequency() : ResetFrequency.DAILY,
                 tasks
         );
     }

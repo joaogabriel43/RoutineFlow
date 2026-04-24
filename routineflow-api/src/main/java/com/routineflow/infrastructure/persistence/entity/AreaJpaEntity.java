@@ -1,5 +1,6 @@
 package com.routineflow.infrastructure.persistence.entity;
 
+import com.routineflow.domain.model.ResetFrequency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,6 +45,11 @@ public class AreaJpaEntity {
 
     @Column(name = "order_index", nullable = false)
     private int orderIndex;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reset_frequency", nullable = false, length = 10)
+    @Builder.Default
+    private ResetFrequency resetFrequency = ResetFrequency.DAILY;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -24,7 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import type { AreaResponse, TaskResponse } from '@/types'
+import type { AreaResponse, ResetFrequency, TaskResponse } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -42,13 +42,19 @@ const DAY_FULL: Record<string, string> = Object.fromEntries(
   DAYS_OF_WEEK.map((d) => [d.value, d.label]),
 )
 
+const RESET_FREQUENCIES: { value: ResetFrequency; label: string }[] = [
+  { value: 'DAILY',   label: 'Diária (todo dia)'    },
+  { value: 'WEEKLY',  label: 'Semanal (toda segunda)' },
+  { value: 'MONTHLY', label: 'Mensal (todo dia 1)'    },
+]
+
 // ── Area Modal ─────────────────────────────────────────────────────────────────
 
 interface AreaModalProps {
   open: boolean
   initial?: AreaResponse
   onClose: () => void
-  onSave: (name: string, color: string, icon: string) => void
+  onSave: (name: string, color: string, icon: string, resetFrequency: ResetFrequency) => void
   isPending: boolean
 }
 
@@ -56,13 +62,17 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
   const [name, setName] = useState(initial?.name ?? '')
   const [color, setColor] = useState(initial?.color ?? '#3B82F6')
   const [icon, setIcon] = useState(initial?.icon ?? '📚')
+  const [resetFrequency, setResetFrequency] = useState<ResetFrequency>(
+    initial?.resetFrequency ?? 'DAILY',
+  )
 
   // Reset state when modal opens with new initial values
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
+  const handleOpenChange = (o: boolean) => {
+    if (o) {
       setName(initial?.name ?? '')
       setColor(initial?.color ?? '#3B82F6')
       setIcon(initial?.icon ?? '📚')
+      setResetFrequency(initial?.resetFrequency ?? 'DAILY')
     } else {
       onClose()
     }
@@ -71,7 +81,7 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!name.trim() || !icon.trim()) return
-    onSave(name.trim(), color, icon.trim())
+    onSave(name.trim(), color, icon.trim(), resetFrequency)
   }
 
   return (
@@ -113,6 +123,20 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
               />
               <span className="text-sm text-[#86868b] font-mono">{color.toUpperCase()}</span>
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#86868b] font-medium">Frequência do streak</label>
+            <select
+              value={resetFrequency}
+              onChange={(e) => setResetFrequency(e.target.value as ResetFrequency)}
+              className="w-full h-9 rounded-md border border-[#2a2a2a] bg-[#1f1f1f] text-[#f5f5f7] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+            >
+              {RESET_FREQUENCIES.map((f) => (
+                <option key={f.value} value={f.value} className="bg-[#1f1f1f]">
+                  {f.label}
+                </option>
+              ))}
+            </select>
           </div>
           <DialogFooter className="gap-2 pt-2">
             <Button
@@ -343,15 +367,15 @@ export function ManagePage() {
 
   // ── Handlers — Areas ─────────────────────────────────────────────────────
 
-  const handleSaveArea = (name: string, color: string, icon: string) => {
+  const handleSaveArea = (name: string, color: string, icon: string, resetFrequency: ResetFrequency) => {
     if (areaModal.area) {
       updateArea.mutate(
-        { id: areaModal.area.id, data: { name, color, icon } },
+        { id: areaModal.area.id, data: { name, color, icon, resetFrequency } },
         { onSuccess: () => setAreaModal({ open: false }) },
       )
     } else {
       createArea.mutate(
-        { name, color, icon },
+        { name, color, icon, resetFrequency },
         { onSuccess: () => setAreaModal({ open: false }) },
       )
     }

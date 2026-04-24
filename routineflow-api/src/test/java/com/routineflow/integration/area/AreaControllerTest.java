@@ -6,6 +6,7 @@ import com.routineflow.application.dto.LoginRequest;
 import com.routineflow.application.dto.RegisterRequest;
 import com.routineflow.application.dto.ReorderAreasRequest;
 import com.routineflow.application.dto.UpdateAreaRequest;
+import com.routineflow.domain.model.ResetFrequency;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,7 +88,7 @@ class AreaControllerTest {
     @Test
     @DisplayName("createArea_validPayload_returns201WithAreaResponse")
     void createArea_validPayload_returns201WithAreaResponse() throws Exception {
-        var request = new CreateAreaRequest("Leitura", "#10B981", "📖");
+        var request = new CreateAreaRequest("Leitura", "#10B981", "📖", null);
 
         mockMvc.perform(post("/areas")
                         .header("Authorization", "Bearer " + jwtToken)
@@ -104,7 +105,7 @@ class AreaControllerTest {
     @Test
     @DisplayName("createArea_invalidPayload_returns400")
     void createArea_invalidPayload_returns400() throws Exception {
-        var invalidRequest = new CreateAreaRequest("", "not-a-color", "");
+        var invalidRequest = new CreateAreaRequest("", "not-a-color", "", null);
 
         mockMvc.perform(post("/areas")
                         .header("Authorization", "Bearer " + jwtToken)
@@ -133,7 +134,7 @@ class AreaControllerTest {
         var noRoutineToken = objectMapper.readTree(result.getResponse().getContentAsString())
                 .get("token").asText();
 
-        var request = new CreateAreaRequest("Teste", "#3B82F6", "📚");
+        var request = new CreateAreaRequest("Teste", "#3B82F6", "📚", null);
         mockMvc.perform(post("/areas")
                         .header("Authorization", "Bearer " + noRoutineToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +154,7 @@ class AreaControllerTest {
         var areas = objectMapper.readTree(listResult.getResponse().getContentAsString());
         long areaId = areas.get(0).get("id").asLong();
 
-        var updateRequest = new UpdateAreaRequest("Inglês Avançado", "#60A5FA", "🎯");
+        var updateRequest = new UpdateAreaRequest("Inglês Avançado", "#60A5FA", "🎯", null);
 
         mockMvc.perform(put("/areas/{id}", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -172,7 +173,7 @@ class AreaControllerTest {
     @DisplayName("deleteArea_validId_returns204")
     void deleteArea_validId_returns204() throws Exception {
         // Create a throwaway area to delete
-        var createRequest = new CreateAreaRequest("Deletar", "#EF4444", "🗑");
+        var createRequest = new CreateAreaRequest("Deletar", "#EF4444", "🗑", null);
         var createResult = mockMvc.perform(post("/areas")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -210,6 +211,54 @@ class AreaControllerTest {
                         .content(objectMapper.writeValueAsString(reorderRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    // ── resetFrequency ───────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("createArea_withWeeklyFrequency_returns201WithResetFrequencyWeekly")
+    void createArea_withWeeklyFrequency_returns201WithResetFrequencyWeekly() throws Exception {
+        var request = new CreateAreaRequest("Treino Semanal", "#F59E0B", "🏋", ResetFrequency.WEEKLY);
+
+        mockMvc.perform(post("/areas")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.resetFrequency").value("WEEKLY"));
+    }
+
+    @Test
+    @DisplayName("createArea_withoutFrequency_returns201WithResetFrequencyDaily")
+    void createArea_withoutFrequency_returns201WithResetFrequencyDaily() throws Exception {
+        var request = new CreateAreaRequest("Rotina Diária", "#6366F1", "📋", null);
+
+        mockMvc.perform(post("/areas")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.resetFrequency").value("DAILY"));
+    }
+
+    @Test
+    @DisplayName("updateArea_changingFrequencyToMonthly_returns200WithMonthly")
+    void updateArea_changingFrequencyToMonthly_returns200WithMonthly() throws Exception {
+        // Get an existing area to update
+        var listResult = mockMvc.perform(get("/areas")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andReturn();
+        var areas = objectMapper.readTree(listResult.getResponse().getContentAsString());
+        long areaId = areas.get(0).get("id").asLong();
+
+        var updateRequest = new UpdateAreaRequest("Revisão Mensal", "#EC4899", "📆", ResetFrequency.MONTHLY);
+
+        mockMvc.perform(put("/areas/{id}", areaId)
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resetFrequency").value("MONTHLY"));
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
