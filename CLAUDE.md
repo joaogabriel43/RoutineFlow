@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 1.8.0 | Criado: 2026-04-19 | Última atualização: 2026-04-20
+> Versão: 1.9.0 | Criado: 2026-04-19 | Última atualização: 2026-04-23
 
 ---
 
@@ -321,6 +321,29 @@ routine:
 **Por que**: O parser aceita tasks sem metadados opcionais (desc, min). Só o título é obrigatório.
 **Como prevenir**: Fixture de "malformado" deve ter título vazio, não linha sem pipe.
 
+### [2026-04-23] Heatmap cortava semana parcial mais recente
+**O que aconteceu**: `Math.floor(days.length / 7)` cortava silenciosamente a última semana quando o range não era múltiplo de 7.
+**Por que**: Floor arredonda para baixo — semana incompleta era ignorada. Com 88 dias (segunda Jan 26 → quinta Abr 23), `Math.floor(88/7) = 12` produzia apenas 84 células, excluindo os 4 dias mais recentes.
+**Como prevenir**: Sempre usar `Math.ceil` para calcular número de semanas em grids de heatmap. Dias ausentes (fim de semana parcial) devem ser tratados como `undefined` e filtrados com `if (item) transposed.push(item)`.
+
+### [2026-04-23] CORS bloqueando /auth/** em produção — 403 no login
+**O que aconteceu**: `POST /api/auth/login` retornava 403 em produção (Railway + Vercel).
+**Por que**: Duas causas combinadas:
+1. `allowedOriginPatterns` não incluía o domínio exato da Vercel — preflight OPTIONS era rejeitado pelo CORS filter antes mesmo do Spring Security
+2. `JwtAuthenticationFilter` não tinha `shouldNotFilter()` — podia interceptar `/auth/**` em edge cases
+**Como prevenir**:
+- Sempre adicionar o domínio de produção **explicitamente** no CORS (não depender só de `FRONTEND_URL` env var)
+- Sempre implementar `shouldNotFilter()` no `JwtAuthenticationFilter` para pular `/auth/**` e `/actuator/**`
+- Usar `/auth/**` (wildcard) em `requestMatchers` em vez de paths exatos
+```java
+// JwtAuthenticationFilter.java
+@Override
+protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getServletPath(); // retorna path SEM context-path /api
+    return path.startsWith("/auth/") || path.startsWith("/actuator/");
+}
+```
+
 ---
 
 ## 🚀 Otimizações e Performance
@@ -397,3 +420,4 @@ routine:
 | 2026-04-19 | 1.6.0 | Sprint 5 concluído — WeekPage (8 queries paralelas, grid 7×N, hoje destacado), AnalyticsPage (StreakCards, HeatmapGrid CSS, LineChart Recharts), padrão completed-por-área documentado |
 | 2026-04-19 | 1.7.0 | Sprint 6 concluído — ImportPage (drag-and-drop nativo, validação de extensão, first-login welcome), EmptyRoutineState (3 páginas), page transitions, Dockerfiles multi-stage, nginx SPA, docker-compose.yml completo, README profissional |
 | 2026-04-20 | 1.8.0 | Sprint 7 concluído — CRUD áreas e tarefas com TDD (16 unit + 15 integration tests), V7 migration (order_index em areas), ManagePage dual-panel, ADR-006 ownership 404, correção Spring Security 6 (401 vs 403), padrão deleteTask cascade |
+| 2026-04-23 | 1.9.0 | Correções pós-deploy — heatmap Math.ceil (semana parcial), CORS Vercel + shouldNotFilter JWT, DAY_LABELS TS6133, 403 auth endpoints produção |
