@@ -84,6 +84,9 @@ public class StreakCalculationService {
 
             if (hasCompletion) {
                 streak.setCurrentCount(streak.getCurrentCount() + 1);
+                if (streak.getCurrentCount() > streak.getBestStreak()) {
+                    streak.setBestStreak(streak.getCurrentCount());
+                }
             } else {
                 streak.setCurrentCount(0);
             }

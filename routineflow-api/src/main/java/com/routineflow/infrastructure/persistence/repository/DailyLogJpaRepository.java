@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+// Note: avoid DAYOFWEEK() — it is MySQL-only. Use EXTRACT(DOW FROM ...) for PostgreSQL.
+
 public interface DailyLogJpaRepository extends JpaRepository<DailyLogJpaEntity, Long> {
 
     @Query("""
@@ -81,4 +83,27 @@ public interface DailyLogJpaRepository extends JpaRepository<DailyLogJpaEntity, 
             @Param("from") LocalDate from,
             @Param("to") LocalDate to
     );
+
+    /**
+     * Total completed check-ins for all tasks in a given area.
+     * Used by AreaAnalyticsUseCase.
+     */
+    @Query("""
+            SELECT COUNT(d)
+            FROM DailyLogJpaEntity d
+            WHERE d.task.area.id = :areaId AND d.completed = true
+            """)
+    long countCompletedByAreaId(@Param("areaId") Long areaId);
+
+    /**
+     * All completed log dates for a given area (no grouping — grouped in Java to avoid
+     * DB-specific date-of-week functions like DAYOFWEEK or EXTRACT(DOW)).
+     * Used by AreaAnalyticsUseCase to build day-of-week stats and weekly trend.
+     */
+    @Query("""
+            SELECT d.logDate
+            FROM DailyLogJpaEntity d
+            WHERE d.task.area.id = :areaId AND d.completed = true
+            """)
+    List<LocalDate> findCompletedLogDatesByAreaId(@Param("areaId") Long areaId);
 }

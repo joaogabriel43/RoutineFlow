@@ -1,9 +1,11 @@
 package com.routineflow.presentation.controller;
 
+import com.routineflow.application.dto.AreaAnalyticsResponse;
 import com.routineflow.application.dto.AreaResponse;
 import com.routineflow.application.dto.CreateAreaRequest;
 import com.routineflow.application.dto.ReorderAreasRequest;
 import com.routineflow.application.dto.UpdateAreaRequest;
+import com.routineflow.application.usecase.AreaAnalyticsUseCase;
 import com.routineflow.application.usecase.AreaUseCase;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
 import jakarta.validation.Valid;
@@ -18,10 +20,16 @@ import java.util.List;
 public class AreaController {
 
     private final AreaUseCase areaUseCase;
+    private final AreaAnalyticsUseCase areaAnalyticsUseCase;
     private final AuthenticatedUserResolver userResolver;
 
-    public AreaController(AreaUseCase areaUseCase, AuthenticatedUserResolver userResolver) {
+    public AreaController(
+            AreaUseCase areaUseCase,
+            AreaAnalyticsUseCase areaAnalyticsUseCase,
+            AuthenticatedUserResolver userResolver
+    ) {
         this.areaUseCase = areaUseCase;
+        this.areaAnalyticsUseCase = areaAnalyticsUseCase;
         this.userResolver = userResolver;
     }
 
@@ -59,5 +67,11 @@ public class AreaController {
     ) {
         Long userId = userResolver.currentUserId();
         return ResponseEntity.ok(areaUseCase.reorderAreas(userId, request));
+    }
+
+    @GetMapping("/{id}/analytics")
+    public ResponseEntity<AreaAnalyticsResponse> getAreaAnalytics(@PathVariable Long id) {
+        Long userId = userResolver.currentUserId();
+        return ResponseEntity.ok(areaAnalyticsUseCase.getAreaAnalytics(userId, id));
     }
 }

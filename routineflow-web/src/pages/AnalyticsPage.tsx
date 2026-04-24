@@ -7,6 +7,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
+import { ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
@@ -16,6 +18,8 @@ import type { FilledHeatmapDay, WeekHistoryPoint } from '@/hooks/useAnalytics'
 // ── Streak card ───────────────────────────────────────────────────────────────
 
 function StreakCard({ streak }: { streak: StreakResponse }) {
+  const navigate = useNavigate()
+
   const lastActive = streak.lastActiveDate
     ? new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(
         new Date(streak.lastActiveDate + 'T00:00:00'),
@@ -24,7 +28,13 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
 
   return (
     <div
-      className="rounded-xl bg-[#141414] border-l-4 px-4 py-4 flex items-center gap-4"
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/analytics/area/${streak.areaId}`)}
+      onKeyDown={(e) => e.key === 'Enter' && navigate(`/analytics/area/${streak.areaId}`)}
+      className="rounded-xl bg-[#141414] border-l-4 px-4 py-4 flex items-center gap-4
+                 cursor-pointer transition-opacity hover:opacity-80 focus-visible:outline-none
+                 focus-visible:ring-2 focus-visible:ring-[#0071e3]"
       style={{ borderLeftColor: streak.color }}
     >
       <span className="text-2xl shrink-0">{streak.icon}</span>
@@ -40,6 +50,7 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
         </p>
         <p className="text-[10px] text-[#86868b] mt-0.5">dias</p>
       </div>
+      <ChevronRight size={14} className="text-[#3a3a3a] shrink-0" />
     </div>
   )
 }

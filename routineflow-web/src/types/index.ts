@@ -116,6 +116,40 @@ export interface DailyProgressResponse {
   overallCompletionRate: number
 }
 
+// ── Analytics — Area individual ──────────────────────────────────────────────
+
+export interface DayOfWeekStat {
+  dayOfWeek: string
+  dayLabel: string
+  completedCount: number
+  completionRate: number
+}
+
+export interface WeeklyTrendPoint {
+  weekStart: string
+  weekLabel: string
+  completedTasks: number
+  totalTasks: number
+  completionRate: number
+}
+
+export interface AreaAnalyticsResponse {
+  areaId: number
+  areaName: string
+  color: string
+  icon: string
+  resetFrequency: ResetFrequency
+  totalCheckIns: number
+  totalExpected: number
+  overallCompletionRate: number
+  currentStreak: number
+  bestStreak: number
+  weeklyTrend: WeeklyTrendPoint[]
+  dayOfWeekStats: DayOfWeekStat[]
+  bestDayOfWeek: string | null
+  bestDayLabel: string | null
+}
+
 // ── Analytics — Streaks ──────────────────────────────────────────────────────
 
 export interface StreakResponse {

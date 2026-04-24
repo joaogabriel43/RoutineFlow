@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.0.0 | Criado: 2026-04-19 | Última atualização: 2026-04-23
+> Versão: 2.1.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
 
 ---
 
@@ -286,6 +286,7 @@ routine:
 | Sprint 6 | ImportPage + Polish + Docker + README | ✅ Concluído |
 | Sprint 7 | CRUD de Áreas e Tarefas (TDD) + ManagePage | ✅ Concluído |
 | Sprint 8 | Reset Frequency por Área (DAILY/WEEKLY/MONTHLY) + TDD + Frontend badge/selector | ✅ Concluído |
+| Sprint 9 | Analytics por Área Individual (AreaAnalyticsUseCase, bestStreak, AreaAnalyticsPage) | ✅ Concluído |
 
 ---
 
@@ -327,6 +328,12 @@ routine:
 **Por que**: Floor arredonda para baixo — semana incompleta era ignorada. Com 88 dias (segunda Jan 26 → quinta Abr 23), `Math.floor(88/7) = 12` produzia apenas 84 células, excluindo os 4 dias mais recentes.
 **Como prevenir**: Sempre usar `Math.ceil` para calcular número de semanas em grids de heatmap. Dias ausentes (fim de semana parcial) devem ser tratados como `undefined` e filtrados com `if (item) transposed.push(item)`.
 
+### [2026-04-23] DAYOFWEEK() não existe no PostgreSQL
+**O que aconteceu**: Tentativa de usar `DAYOFWEEK(dl.logDate)` em `@Query` nativeQuery para agrupar logs por dia da semana — funciona no MySQL mas falha no PostgreSQL com "function dayofweek does not exist".
+**Por que**: `DAYOFWEEK()` é função proprietária do MySQL. PostgreSQL usa `EXTRACT(DOW FROM ...)` (0=domingo) ou `DATE_PART('dow', ...)`.
+**Como prevenir**: Para agrupamentos por dia da semana, buscar as datas brutas (`List<LocalDate>`) e agrupar via `Collectors.groupingBy(LocalDate::getDayOfWeek)` em Java — sem dependência de função SQL proprietária, totalmente testável em unit tests sem banco.
+**Arquivo**: `DailyLogJpaRepository.findCompletedLogDatesByAreaId` + `AreaAnalyticsUseCase.buildDayOfWeekStats()`
+
 ### [2026-04-23] CORS bloqueando /auth/** em produção — 403 no login
 **O que aconteceu**: `POST /api/auth/login` retornava 403 em produção (Railway + Vercel).
 **Por que**: Duas causas combinadas:
@@ -354,6 +361,12 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 - Query deve usar índice em `(user_id, area_id, log_date)` — criar este índice no Flyway
 - Nunca calcular streak em memória iterando todos os logs — sempre via query SQL com `LAG()`
 
+### Analytics por área — queries sem N+1
+- `countCompletedByAreaId` e `findCompletedLogDatesByAreaId` usam `@Query` JPQL com JOIN direto — uma query cada
+- Todas as datas de conclusão são buscadas uma única vez e reutilizadas para calcular weekly trend E day-of-week stats em memória (Java streams)
+- **Nunca usar `DAYOFWEEK()` em JPQL/nativeQuery** — é função MySQL. No PostgreSQL usar `EXTRACT(DOW FROM campo_date)` ou agrupar em Java via `LocalDate::getDayOfWeek`
+- `bestStreak` é persistido na coluna `streaks.best_streak` e atualizado em tempo real pelo `StreakCalculationService` — não recalcular em runtime
+
 ---
 
 ## 🤖 Agentes: Casos de Uso Confirmados
@@ -376,6 +389,8 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | ManagePage — CRUD frontend com modals e dual-panel | @frontend-developer | ✅ |
 | Sprint 8 — ResetFrequency (migration, enum, JPA, DTOs, StreakService, testes) | @backend-architect + @senior-developer + @api-tester | ✅ |
 | Sprint 8 — Frontend (types, AreaModal selector, AreaManageCard badge) | @frontend-developer | ✅ |
+| Sprint 9 — Analytics por área: V9 migration, DTOs, AreaAnalyticsUseCase, testes (TDD) | @backend-architect + @senior-developer + @database-optimizer + @api-tester | ✅ |
+| Sprint 9 — Frontend: AreaAnalyticsPage, useAreaAnalytics, StreakCards clicáveis, nova rota | @frontend-developer | ✅ |
 
 ---
 
@@ -427,3 +442,4 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-20 | 1.8.0 | Sprint 7 concluído — CRUD áreas e tarefas com TDD (16 unit + 15 integration tests), V7 migration (order_index em areas), ManagePage dual-panel, ADR-006 ownership 404, correção Spring Security 6 (401 vs 403), padrão deleteTask cascade |
 | 2026-04-23 | 1.9.0 | Correções pós-deploy — heatmap Math.ceil (semana parcial), CORS Vercel + shouldNotFilter JWT, DAY_LABELS TS6133, 403 auth endpoints produção |
 | 2026-04-23 | 2.0.0 | Sprint 8 concluído — ResetFrequency por área (V8 migration, enum, JPA @Builder.Default, DTOs, AreaUseCase, StreakCalculationService shouldEvaluateStreak), testes WEEKLY/MONTHLY (unit + integration), frontend AreaModal selector + AreaManageCard badge, regras de negócio 9-10 |
+| 2026-04-24 | 2.1.0 | Sprint 9 concluído — Analytics individual por área: V9 migration (best_streak), StreakJpaEntity.bestStreak, DayOfWeekStat + WeeklyTrendPoint + AreaAnalyticsResponse DTOs, AreaAnalyticsUseCase, AreaController /analytics endpoint, 8 unit tests + 4 integration tests, frontend AreaAnalyticsPage (4 summary cards + LineChart + BarChart horizontal), StreakCards clicáveis, rota analytics/area/:areaId, fix LabelFormatter TS2322 (v: unknown), DAYOFWEEK PostgreSQL erro documentado |

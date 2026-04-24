@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/LoginPage'
 import { TodayPage } from '@/pages/TodayPage'
 import { WeekPage } from '@/pages/WeekPage'
 import { AnalyticsPage } from '@/pages/AnalyticsPage'
+import { AreaAnalyticsPage } from '@/pages/AreaAnalyticsPage'
 import { ImportPage } from '@/pages/ImportPage'
 import { ManagePage } from '@/pages/ManagePage'
 
@@ -42,6 +43,7 @@ export default function App() {
             <Route index element={<TodayPage />} />
             <Route path="semana" element={<WeekPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="analytics/area/:areaId" element={<AreaAnalyticsPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="manage" element={<ManagePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
