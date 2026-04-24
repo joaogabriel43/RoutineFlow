@@ -81,7 +81,8 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
 
   // Transpose week-major → day-major so CSS row-flow fills correctly:
   // row 0 = all Mondays (wk0…wk12), row 1 = all Tuesdays, etc.
-  const weeks = Math.floor(days.length / 7) || 1
+  // Math.ceil to include the last partial week (e.g. Mon–Thu when today is Thursday).
+  const weeks = Math.ceil(days.length / 7) || 1
   const transposed: FilledHeatmapDay[] = []
   for (let d = 0; d < 7; d++) {
     for (let w = 0; w < weeks; w++) {
