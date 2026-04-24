@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 1.9.0 | Criado: 2026-04-19 | Última atualização: 2026-04-23
+> Versão: 2.0.0 | Criado: 2026-04-19 | Última atualização: 2026-04-23
 
 ---
 
@@ -285,6 +285,7 @@ routine:
 | Sprint 5 | Frontend React (Setup + TodayPage + WeekPage + AnalyticsPage) | ✅ Concluído |
 | Sprint 6 | ImportPage + Polish + Docker + README | ✅ Concluído |
 | Sprint 7 | CRUD de Áreas e Tarefas (TDD) + ManagePage | ✅ Concluído |
+| Sprint 8 | Reset Frequency por Área (DAILY/WEEKLY/MONTHLY) + TDD + Frontend badge/selector | ✅ Concluído |
 
 ---
 
@@ -373,6 +374,8 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | CRUD Áreas — TDD (AreaUseCase + AreaController) | @backend-architect + @senior-developer + @api-tester | ✅ |
 | CRUD Tarefas — TDD (TaskUseCase + TaskController) | @backend-architect + @senior-developer + @api-tester | ✅ |
 | ManagePage — CRUD frontend com modals e dual-panel | @frontend-developer | ✅ |
+| Sprint 8 — ResetFrequency (migration, enum, JPA, DTOs, StreakService, testes) | @backend-architect + @senior-developer + @api-tester | ✅ |
+| Sprint 8 — Frontend (types, AreaModal selector, AreaManageCard badge) | @frontend-developer | ✅ |
 
 ---
 
@@ -386,6 +389,8 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 6. **Reordenação**: `PATCH /areas/reorder` e `PATCH /areas/{id}/tasks/reorder` recebem lista completa de IDs. O backend re-atribui `orderIndex` sequencialmente pela posição na lista.
 7. **Exclusão de task não afeta DailyLog via código**: o banco faz o cascade. `DailyLog` é auditoria imutável — nunca excluir por código Java.
 8. **Ownership check por query, não por lógica de controle**: `findByIdAndUserId` / `findByIdAndArea_User_Id` retornam `Optional.empty()` para IDs inexistentes E para IDs de outros usuários — ambos resultam em 404.
+9. **ResetFrequency por área**: cada área tem sua própria frequência de avaliação de streak. DAILY = avalia todo dia (padrão). WEEKLY = avalia apenas na segunda-feira. MONTHLY = avalia apenas no dia 1 do mês. Dias fora da janela de avaliação não quebram nem incrementam o streak — a área é simplesmente ignorada pelo `StreakCalculationService`.
+10. **ResetFrequency default**: valor ausente no request (null) é normalizado para DAILY no `AreaUseCase`. O `AreaJpaEntity` usa `@Builder.Default` para garantir DAILY mesmo quando o builder não recebe a propriedade — evita NPE nos testes existentes.
 
 ---
 
@@ -421,3 +426,4 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-19 | 1.7.0 | Sprint 6 concluído — ImportPage (drag-and-drop nativo, validação de extensão, first-login welcome), EmptyRoutineState (3 páginas), page transitions, Dockerfiles multi-stage, nginx SPA, docker-compose.yml completo, README profissional |
 | 2026-04-20 | 1.8.0 | Sprint 7 concluído — CRUD áreas e tarefas com TDD (16 unit + 15 integration tests), V7 migration (order_index em areas), ManagePage dual-panel, ADR-006 ownership 404, correção Spring Security 6 (401 vs 403), padrão deleteTask cascade |
 | 2026-04-23 | 1.9.0 | Correções pós-deploy — heatmap Math.ceil (semana parcial), CORS Vercel + shouldNotFilter JWT, DAY_LABELS TS6133, 403 auth endpoints produção |
+| 2026-04-23 | 2.0.0 | Sprint 8 concluído — ResetFrequency por área (V8 migration, enum, JPA @Builder.Default, DTOs, AreaUseCase, StreakCalculationService shouldEvaluateStreak), testes WEEKLY/MONTHLY (unit + integration), frontend AreaModal selector + AreaManageCard badge, regras de negócio 9-10 |

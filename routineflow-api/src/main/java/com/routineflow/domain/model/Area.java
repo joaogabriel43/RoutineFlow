@@ -5,5 +5,6 @@ public record Area(
         String name,
         String color,
         String icon,
-        Long userId
+        Long userId,
+        ResetFrequency resetFrequency
 ) {}

@@ -6,6 +6,7 @@ import com.routineflow.application.dto.UpdateAreaRequest;
 import com.routineflow.application.usecase.AreaUseCase;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
+import com.routineflow.domain.model.ResetFrequency;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.UserJpaEntity;
@@ -50,7 +51,7 @@ class AreaUseCaseTest {
     @Test
     @DisplayName("createArea_validRequest_savesAndReturnsAreaResponse")
     void createArea_validRequest_savesAndReturnsAreaResponse() {
-        var request = new CreateAreaRequest("Inglês", "#3B82F6", "📚");
+        var request = new CreateAreaRequest("Inglês", "#3B82F6", "📚", null);
         var routine = buildRoutine(ROUTINE_ID, USER_ID);
         var savedArea = buildArea(AREA_ID, USER_ID, routine, "Inglês", "#3B82F6", "📚", 0);
 
@@ -71,7 +72,7 @@ class AreaUseCaseTest {
     @Test
     @DisplayName("createArea_noActiveRoutine_throwsResourceNotFoundException")
     void createArea_noActiveRoutine_throwsResourceNotFoundException() {
-        var request = new CreateAreaRequest("Inglês", "#3B82F6", "📚");
+        var request = new CreateAreaRequest("Inglês", "#3B82F6", "📚", null);
         when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.createArea(USER_ID, request))
@@ -84,7 +85,7 @@ class AreaUseCaseTest {
     @Test
     @DisplayName("createArea_withExistingAreas_setsOrderIndexAsNextInSequence")
     void createArea_withExistingAreas_setsOrderIndexAsNextInSequence() {
-        var request = new CreateAreaRequest("Nova", "#FFFFFF", "🆕");
+        var request = new CreateAreaRequest("Nova", "#FFFFFF", "🆕", null);
         var routine = buildRoutine(ROUTINE_ID, USER_ID);
         var existing1 = buildArea(1L, USER_ID, routine, "A", "#000000", "🅰", 0);
         var existing2 = buildArea(2L, USER_ID, routine, "B", "#111111", "🅱", 1);
@@ -106,7 +107,7 @@ class AreaUseCaseTest {
     @Test
     @DisplayName("updateArea_validRequest_updatesAndReturnsResponse")
     void updateArea_validRequest_updatesAndReturnsResponse() {
-        var request = new UpdateAreaRequest("Inglês Avançado", "#60A5FA", "📖");
+        var request = new UpdateAreaRequest("Inglês Avançado", "#60A5FA", "📖", null);
         var routine = buildRoutine(ROUTINE_ID, USER_ID);
         var area = buildArea(AREA_ID, USER_ID, routine, "Inglês", "#3B82F6", "📚", 0);
 
@@ -124,7 +125,7 @@ class AreaUseCaseTest {
     @Test
     @DisplayName("updateArea_areaNotFound_throwsResourceNotFoundException")
     void updateArea_areaNotFound_throwsResourceNotFoundException() {
-        var request = new UpdateAreaRequest("X", "#000000", "❓");
+        var request = new UpdateAreaRequest("X", "#000000", "❓", null);
         when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.updateArea(USER_ID, AREA_ID, request))
@@ -202,6 +203,58 @@ class AreaUseCaseTest {
                 .isInstanceOf(UnauthorizedException.class);
 
         verify(areaJpaRepository, never()).saveAll(any());
+    }
+
+    // ── resetFrequency ───────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("createArea_withResetFrequencyWeekly_persistsWeeklyAndReturnsIt")
+    void createArea_withResetFrequencyWeekly_persistsWeeklyAndReturnsIt() {
+        var request = new CreateAreaRequest("Weekly Area", "#3B82F6", "📅", ResetFrequency.WEEKLY);
+        var routine = buildRoutine(ROUTINE_ID, USER_ID);
+
+        when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
+        when(areaJpaRepository.findByRoutineId(ROUTINE_ID)).thenReturn(List.of());
+        when(areaJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.createArea(USER_ID, request);
+
+        assertThat(result.resetFrequency()).isEqualTo(ResetFrequency.WEEKLY);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<AreaJpaEntity> captor = ArgumentCaptor.forClass(AreaJpaEntity.class);
+        verify(areaJpaRepository).save(captor.capture());
+        assertThat(captor.getValue().getResetFrequency()).isEqualTo(ResetFrequency.WEEKLY);
+    }
+
+    @Test
+    @DisplayName("createArea_nullResetFrequency_defaultsToDaily")
+    void createArea_nullResetFrequency_defaultsToDaily() {
+        var request = new CreateAreaRequest("Daily Area", "#3B82F6", "📅", null);
+        var routine = buildRoutine(ROUTINE_ID, USER_ID);
+
+        when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
+        when(areaJpaRepository.findByRoutineId(ROUTINE_ID)).thenReturn(List.of());
+        when(areaJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.createArea(USER_ID, request);
+
+        assertThat(result.resetFrequency()).isEqualTo(ResetFrequency.DAILY);
+    }
+
+    @Test
+    @DisplayName("updateArea_withNewResetFrequency_updatesAndReturnsNewFrequency")
+    void updateArea_withNewResetFrequency_updatesAndReturnsNewFrequency() {
+        var request = new UpdateAreaRequest("Inglês", "#3B82F6", "📚", ResetFrequency.MONTHLY);
+        var routine = buildRoutine(ROUTINE_ID, USER_ID);
+        var area = buildArea(AREA_ID, USER_ID, routine, "Inglês", "#3B82F6", "📚", 0);
+
+        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.updateArea(USER_ID, AREA_ID, request);
+
+        assertThat(result.resetFrequency()).isEqualTo(ResetFrequency.MONTHLY);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

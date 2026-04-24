@@ -30,6 +30,13 @@ export function AreaManageCard({ area, isSelected, onSelect, onEdit, onDelete }:
       {/* Name */}
       <span className="flex-1 text-sm text-[#f5f5f7] font-medium truncate">{area.name}</span>
 
+      {/* Frequency badge — only shown for non-DAILY areas */}
+      {area.resetFrequency !== 'DAILY' && (
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 bg-[#0071e3]/15 text-[#0071e3]">
+          {area.resetFrequency === 'WEEKLY' ? 'semanal' : 'mensal'}
+        </span>
+      )}
+
       {/* Task count badge */}
       <span className="text-[11px] text-[#86868b] shrink-0">
         {area.tasks.length} {area.tasks.length === 1 ? 'tarefa' : 'tarefas'}

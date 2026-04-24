@@ -1,5 +1,6 @@
 package com.routineflow.application.dto;
 
+import com.routineflow.domain.model.ResetFrequency;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -16,5 +17,7 @@ public record UpdateAreaRequest(
 
         @NotBlank(message = "Icon is required")
         @Size(max = 10, message = "Icon must be at most 10 characters")
-        String icon
+        String icon,
+
+        ResetFrequency resetFrequency
 ) {}
