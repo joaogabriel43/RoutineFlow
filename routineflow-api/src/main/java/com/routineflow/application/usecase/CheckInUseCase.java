@@ -28,6 +28,10 @@ public class CheckInUseCase {
 
     @Transactional
     public DailyLogResponse completeTask(Long userId, Long taskId, LocalDate date) {
+        if (date.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Cannot check in for a future date: " + date);
+        }
+
         var task = taskJpaRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
 
