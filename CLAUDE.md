@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.2.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
+> Versão: 2.3.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
 
 ---
 
@@ -121,6 +121,15 @@ services:
 ### Testcontainers
 - Sempre usar `@Testcontainers` + `PostgreSQLContainer` nos testes de repositório
 - Nunca mockar banco nos testes de integração — usar container real
+
+### PWA — vite-plugin-pwa
+- Configurado com `registerType: 'autoUpdate'`
+- API sempre `NetworkOnly` — nunca cachear `/api/*` (padrão `/\/api\//i`)
+- `sw.js` e `manifest.webmanifest` gerados automaticamente no `npm run build`
+- Ícones em `public/icons/` gerados via `scripts/generate-icons.js` (sharp)
+- `vercel.json`: header `Cache-Control: no-cache` para `sw.js` + `Content-Type: application/manifest+json` para o manifest
+- `InstallPrompt`: só renderiza no mobile (`window.matchMedia('(max-width: 768px)')`), dispensável via localStorage (`rf_install_dismissed`)
+- `react-is` deve estar instalado como dependência — recharts depende dele e o rolldown não resolve transitivo em builds mais novos
 
 ---
 
@@ -303,6 +312,7 @@ routine:
 | Sprint 8 | Reset Frequency por Área (DAILY/WEEKLY/MONTHLY) + TDD + Frontend badge/selector | ✅ Concluído |
 | Sprint 9 | Analytics por Área Individual (AreaAnalyticsUseCase, bestStreak, AreaAnalyticsPage) | ✅ Concluído |
 | Sprint 10 | Export CSV (StreamingResponseBody, BOM UTF-8) + Conversor HabitNow (parser frontend-only) | ✅ Concluído |
+| Sprint 11 | PWA instalável (vite-plugin-pwa, manifest, service worker, ícones, InstallPrompt) | ✅ Concluído |
 
 ---
 
@@ -408,6 +418,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | Sprint 9 — Analytics por área: V9 migration, DTOs, AreaAnalyticsUseCase, testes (TDD) | @backend-architect + @senior-developer + @database-optimizer + @api-tester | ✅ |
 | Sprint 9 — Frontend: AreaAnalyticsPage, useAreaAnalytics, StreakCards clicáveis, nova rota | @frontend-developer | ✅ |
 | Export CSV + Conversor HabitNow | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
+| PWA setup + install prompt | @frontend-developer + @devops-automator | ✅ |
 
 ---
 
@@ -461,3 +472,4 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-23 | 2.0.0 | Sprint 8 concluído — ResetFrequency por área (V8 migration, enum, JPA @Builder.Default, DTOs, AreaUseCase, StreakCalculationService shouldEvaluateStreak), testes WEEKLY/MONTHLY (unit + integration), frontend AreaModal selector + AreaManageCard badge, regras de negócio 9-10 |
 | 2026-04-24 | 2.1.0 | Sprint 9 concluído — Analytics individual por área: V9 migration (best_streak), StreakJpaEntity.bestStreak, DayOfWeekStat + WeeklyTrendPoint + AreaAnalyticsResponse DTOs, AreaAnalyticsUseCase, AreaController /analytics endpoint, 8 unit tests + 4 integration tests, frontend AreaAnalyticsPage (4 summary cards + LineChart + BarChart horizontal), StreakCards clicáveis, rota analytics/area/:areaId, fix LabelFormatter TS2322 (v: unknown), DAYOFWEEK PostgreSQL erro documentado |
 | 2026-04-24 | 2.2.0 | Sprint 10 concluído — Export CSV (ExportUseCase + ExportController, BOM UTF-8, StreamingResponseBody, range 365d, 5 unit + 5 integration tests), HabitNow Converter (habitnow-parser.ts, HabitNowConverterPage, geração YAML frontend-only), botão Export CSV na AnalyticsPage, link na ImportPage, padrões 12-13 documentados |
+| 2026-04-24 | 2.3.0 | Sprint 11 concluído — PWA: vite-plugin-pwa (autoUpdate, NetworkOnly API), manifest com ícones 192/512/maskable, sw.js + workbox, meta tags iOS Safari, InstallPrompt (mobile-only, dispensável, beforeinstallprompt), vercel.json headers sw.js/manifest, react-is instalado, fix recharts rolldown |
