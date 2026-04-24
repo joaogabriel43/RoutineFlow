@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.3.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
+> Versão: 2.4.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
 
 ---
 
@@ -233,6 +233,14 @@ Sem o BOM, o Excel no Windows interpreta o arquivo como ANSI e quebra acentos.
 Máximo de 365 dias por request (lança `IllegalArgumentException` se exceder).
 Default: últimos 90 dias. Query em `DailyLogJpaRepository.findForExport` com JOIN tasks → areas → routine para garantir ownership por `userId`.
 
+### 14. Navegação temporal: date param em check-in
+`GET /checkins/progress?date=YYYY-MM-DD` e `POST /checkins/{id}/complete?date=YYYY-MM-DD` aceitam data opcional.
+Sem date param → servidor usa `LocalDate.now()` (retrocompat garantida via `GET /checkins/today/progress` alias).
+Data futura → `IllegalArgumentException` no `CheckInUseCase` → 400 via `GlobalExceptionHandler`.
+Frontend: `useDay(selectedDate)` reseta `localChecked` e `initialized` ao mudar de data; `isFuture` desabilita checkboxes.
+`DateNavBar` mostra 14 dias (7 atrás + hoje + 6 à frente); dots de conclusão via `queryClient.getQueryData`.
+Data em strings JS: sempre `new Date(dateStr + 'T12:00:00')` para evitar shift de fuso (BRT = UTC-3).
+
 ### 13. HabitNow Parser: roda 100% no frontend
 Formato `.hn`: `B[timestamp]{H[hábitos separados por |]{X[logs]...`
 Epoch de datas HabitNow: 2012-01-01 + base-36.
@@ -313,6 +321,7 @@ routine:
 | Sprint 9 | Analytics por Área Individual (AreaAnalyticsUseCase, bestStreak, AreaAnalyticsPage) | ✅ Concluído |
 | Sprint 10 | Export CSV (StreamingResponseBody, BOM UTF-8) + Conversor HabitNow (parser frontend-only) | ✅ Concluído |
 | Sprint 11 | PWA instalável (vite-plugin-pwa, manifest, service worker, ícones, InstallPrompt) | ✅ Concluído |
+| Sprint 12 | Navegação temporal (DateNavBar, useDay, ?date= em check-in, data futura → 400) | ✅ Concluído |
 
 ---
 
@@ -419,6 +428,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | Sprint 9 — Frontend: AreaAnalyticsPage, useAreaAnalytics, StreakCards clicáveis, nova rota | @frontend-developer | ✅ |
 | Export CSV + Conversor HabitNow | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 | PWA setup + install prompt | @frontend-developer + @devops-automator | ✅ |
+| Sprint 12 — Temporal navigation (date param + DateNavBar + useDay) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 
 ---
 
@@ -473,3 +483,4 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.1.0 | Sprint 9 concluído — Analytics individual por área: V9 migration (best_streak), StreakJpaEntity.bestStreak, DayOfWeekStat + WeeklyTrendPoint + AreaAnalyticsResponse DTOs, AreaAnalyticsUseCase, AreaController /analytics endpoint, 8 unit tests + 4 integration tests, frontend AreaAnalyticsPage (4 summary cards + LineChart + BarChart horizontal), StreakCards clicáveis, rota analytics/area/:areaId, fix LabelFormatter TS2322 (v: unknown), DAYOFWEEK PostgreSQL erro documentado |
 | 2026-04-24 | 2.2.0 | Sprint 10 concluído — Export CSV (ExportUseCase + ExportController, BOM UTF-8, StreamingResponseBody, range 365d, 5 unit + 5 integration tests), HabitNow Converter (habitnow-parser.ts, HabitNowConverterPage, geração YAML frontend-only), botão Export CSV na AnalyticsPage, link na ImportPage, padrões 12-13 documentados |
 | 2026-04-24 | 2.3.0 | Sprint 11 concluído — PWA: vite-plugin-pwa (autoUpdate, NetworkOnly API), manifest com ícones 192/512/maskable, sw.js + workbox, meta tags iOS Safari, InstallPrompt (mobile-only, dispensável, beforeinstallprompt), vercel.json headers sw.js/manifest, react-is instalado, fix recharts rolldown |
+| 2026-04-24 | 2.4.0 | Sprint 12 concluído — Navegação temporal: CheckInUseCase rejeita datas futuras (IllegalArgumentException → 400), CheckInController ?date= param em /complete /uncomplete /progress, alias /today/progress mantido, GET /checkins/progress novo endpoint, 7 unit tests + 4 integration tests novos (156 total), frontend: useDay hook (selectedDate, reset em mudança de data), DateNavBar (14 dias, pills com today highlight, dots via queryClient cache), TodayPage (DateNavBar integrado, label dinâmico, banner futuro, disabled prop), AreaCard + TaskItem (disabled prop), api.ts (complete/uncomplete/getDayProgress aceitam date opcional) |
