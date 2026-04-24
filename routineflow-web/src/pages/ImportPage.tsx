@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { FileText, Loader2, UploadCloud, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -40,6 +40,7 @@ const EXAMPLE_YAML = `routine:
 
 export function ImportPage() {
   const location = useLocation()
+  const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -194,6 +195,15 @@ export function ImportPage() {
         </pre>
         <p className="text-[11px] text-[#3a3a3a] mt-3">
           Dias suportados: MONDAY · TUESDAY · WEDNESDAY · THURSDAY · FRIDAY · SATURDAY · SUNDAY
+        </p>
+        <p className="text-xs text-[#86868b] mt-3">
+          Vem do HabitNow?{' '}
+          <button
+            onClick={() => navigate('/import/habitnow')}
+            className="text-[#0071e3] hover:underline"
+          >
+            Converter backup .hn →
+          </button>
         </p>
       </section>
     </div>

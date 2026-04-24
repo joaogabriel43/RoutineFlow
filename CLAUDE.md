@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.1.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
+> Versão: 2.2.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
 
 ---
 
@@ -217,6 +217,21 @@ tasks: sorted.map((task, idx) => ({
 **Trade-off aceito**: Ordem de conclusão não é preservada entre sessões (sempre as primeiras N tasks ficam marcadas). Aceitável para portfolio demo.
 **Evolução futura**: Se backend evoluir para retornar `completedTaskIds: number[]`, trocar `idx < completed` por `completedIds.has(task.id)`.
 
+### 12. Export CSV: BOM UTF-8 + StreamingResponseBody
+`ExportController` sempre escreve 3 bytes de BOM UTF-8 (0xEF 0xBB 0xBF) antes do header do CSV.
+Sem o BOM, o Excel no Windows interpreta o arquivo como ANSI e quebra acentos.
+`StreamingResponseBody` escreve linha a linha — nunca carrega todo o histórico em memória.
+Máximo de 365 dias por request (lança `IllegalArgumentException` se exceder).
+Default: últimos 90 dias. Query em `DailyLogJpaRepository.findForExport` com JOIN tasks → areas → routine para garantir ownership por `userId`.
+
+### 13. HabitNow Parser: roda 100% no frontend
+Formato `.hn`: `B[timestamp]{H[hábitos separados por |]{X[logs]...`
+Epoch de datas HabitNow: 2012-01-01 + base-36.
+Dias: 1=Dom, 2=Seg, 3=Ter, 4=Qua, 5=Qui, 6=Sex, 7=Sáb.
+Campo de dias vazio = todo dia → expande para todos os 7 dias no YAML gerado.
+Hábito ativo: dateRange com 1 data. Inativo: 2 datas (início + arquivamento).
+Parser em `src/lib/habitnow-parser.ts` — zero chamadas de API, processamento local via FileReader.
+
 ### 8. Formato do arquivo de importação (YAML)
 ```yaml
 routine:
@@ -287,6 +302,7 @@ routine:
 | Sprint 7 | CRUD de Áreas e Tarefas (TDD) + ManagePage | ✅ Concluído |
 | Sprint 8 | Reset Frequency por Área (DAILY/WEEKLY/MONTHLY) + TDD + Frontend badge/selector | ✅ Concluído |
 | Sprint 9 | Analytics por Área Individual (AreaAnalyticsUseCase, bestStreak, AreaAnalyticsPage) | ✅ Concluído |
+| Sprint 10 | Export CSV (StreamingResponseBody, BOM UTF-8) + Conversor HabitNow (parser frontend-only) | ✅ Concluído |
 
 ---
 
@@ -391,6 +407,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | Sprint 8 — Frontend (types, AreaModal selector, AreaManageCard badge) | @frontend-developer | ✅ |
 | Sprint 9 — Analytics por área: V9 migration, DTOs, AreaAnalyticsUseCase, testes (TDD) | @backend-architect + @senior-developer + @database-optimizer + @api-tester | ✅ |
 | Sprint 9 — Frontend: AreaAnalyticsPage, useAreaAnalytics, StreakCards clicáveis, nova rota | @frontend-developer | ✅ |
+| Export CSV + Conversor HabitNow | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 
 ---
 
@@ -443,3 +460,4 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-23 | 1.9.0 | Correções pós-deploy — heatmap Math.ceil (semana parcial), CORS Vercel + shouldNotFilter JWT, DAY_LABELS TS6133, 403 auth endpoints produção |
 | 2026-04-23 | 2.0.0 | Sprint 8 concluído — ResetFrequency por área (V8 migration, enum, JPA @Builder.Default, DTOs, AreaUseCase, StreakCalculationService shouldEvaluateStreak), testes WEEKLY/MONTHLY (unit + integration), frontend AreaModal selector + AreaManageCard badge, regras de negócio 9-10 |
 | 2026-04-24 | 2.1.0 | Sprint 9 concluído — Analytics individual por área: V9 migration (best_streak), StreakJpaEntity.bestStreak, DayOfWeekStat + WeeklyTrendPoint + AreaAnalyticsResponse DTOs, AreaAnalyticsUseCase, AreaController /analytics endpoint, 8 unit tests + 4 integration tests, frontend AreaAnalyticsPage (4 summary cards + LineChart + BarChart horizontal), StreakCards clicáveis, rota analytics/area/:areaId, fix LabelFormatter TS2322 (v: unknown), DAYOFWEEK PostgreSQL erro documentado |
+| 2026-04-24 | 2.2.0 | Sprint 10 concluído — Export CSV (ExportUseCase + ExportController, BOM UTF-8, StreamingResponseBody, range 365d, 5 unit + 5 integration tests), HabitNow Converter (habitnow-parser.ts, HabitNowConverterPage, geração YAML frontend-only), botão Export CSV na AnalyticsPage, link na ImportPage, padrões 12-13 documentados |

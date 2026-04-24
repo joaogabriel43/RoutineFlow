@@ -8,6 +8,7 @@ import { AnalyticsPage } from '@/pages/AnalyticsPage'
 import { AreaAnalyticsPage } from '@/pages/AreaAnalyticsPage'
 import { ImportPage } from '@/pages/ImportPage'
 import { ManagePage } from '@/pages/ManagePage'
+import { HabitNowConverterPage } from '@/pages/HabitNowConverterPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="analytics/area/:areaId" element={<AreaAnalyticsPage />} />
             <Route path="import" element={<ImportPage />} />
+            <Route path="import/habitnow" element={<HabitNowConverterPage />} />
             <Route path="manage" element={<ManagePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
