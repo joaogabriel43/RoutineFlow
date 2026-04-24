@@ -46,18 +46,21 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
-                        // In Spring Security 6, anonymous users hitting protected endpoints
-                        // trigger AccessDeniedException (→ 403) rather than AuthenticationException (→ 401).
-                        // For a stateless JWT API both unauthenticated and unauthorized should be 401.
-                        .authenticationEntryPoint((req, res, authEx) ->
-                                res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-                        .accessDeniedHandler((req, res, accessEx) ->
-                                res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Forbidden\"}");
+                        })
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -85,12 +88,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var config = new CorsConfiguration();
-        // setAllowedOriginPatterns supports both exact URLs and wildcards,
-        // and is compatible with allowCredentials=true (unlike setAllowedOrigins("*"))
+        // setAllowedOriginPatterns supports wildcards and is compatible with allowCredentials=true.
+        // Vercel production URL is hardcoded — FRONTEND_URL env var covers Railway preview and other envs.
         config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:80",
                 "http://localhost",
+                "https://routine-flow-beta.vercel.app",
                 System.getenv().getOrDefault("FRONTEND_URL", "http://localhost:5173")
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
