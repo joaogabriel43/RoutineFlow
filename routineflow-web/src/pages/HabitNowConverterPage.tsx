@@ -327,6 +327,16 @@ export function HabitNowConverterPage() {
             O histórico de check-ins do HabitNow não é importado —
             apenas a estrutura de hábitos e agendamentos.
           </p>
+
+          {/* Merge tip */}
+          <div className="rounded-xl border border-[#1f1f1f] bg-[#141414] p-3">
+            <p className="text-[11px] text-[#86868b] leading-relaxed">
+              <span className="text-[#0071e3] font-medium">Dica:</span> Se você já tem uma rotina
+              ativa e quer adicionar apenas os hábitos novos, use o modo{' '}
+              <span className="text-[#f5f5f7]">Mesclar</span> ao importar. Duplicatas são
+              ignoradas automaticamente.
+            </p>
+          </div>
         </div>
       )}
     </div>

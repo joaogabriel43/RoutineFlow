@@ -169,6 +169,73 @@ class RoutineControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // ── Import mode ───────────────────────────────────────────
+
+    @Test
+    @DisplayName("importRoutine_withModeReplace_returns201AndDeactivatesPrevious")
+    void importRoutine_withModeReplace_returns201AndDeactivatesPrevious() throws Exception {
+        importYamlRoutine(); // first import
+
+        var yaml = getClass().getClassLoader().getResourceAsStream("fixtures/valid_routine.yaml");
+
+        mockMvc.perform(multipart("/routines/import")
+                        .file(new MockMultipartFile("file", "routine.yaml",
+                                "application/x-yaml", yaml))
+                        .param("mode", "REPLACE")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.mode").value("REPLACE"))
+                .andExpect(jsonPath("$.areasCreated").value(2))
+                .andExpect(jsonPath("$.areasMerged").value(0))
+                .andExpect(jsonPath("$.tasksSkipped").value(0));
+    }
+
+    @Test
+    @DisplayName("importRoutine_withModeMerge_returns201AndKeepsPreviousActive")
+    void importRoutine_withModeMerge_returns201AndKeepsPreviousActive() throws Exception {
+        importYamlRoutine(); // creates "Minha Rotina 2026" as active
+
+        var mergeYaml = getClass().getClassLoader().getResourceAsStream("fixtures/merge_routine.yaml");
+
+        mockMvc.perform(multipart("/routines/import")
+                        .file(new MockMultipartFile("file", "merge.yaml",
+                                "application/x-yaml", mergeYaml))
+                        .param("mode", "MERGE")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.mode").value("MERGE"))
+                .andExpect(jsonPath("$.areasCreated").value(1))   // "Física" is new
+                .andExpect(jsonPath("$.areasMerged").value(1))    // "Inglês/PTE" existed
+                .andExpect(jsonPath("$.tasksCreated").value(2))   // 1 new task each
+                .andExpect(jsonPath("$.tasksSkipped").value(0));
+    }
+
+    @Test
+    @DisplayName("importRoutine_withoutModeParam_defaultsToReplace")
+    void importRoutine_withoutModeParam_defaultsToReplace() throws Exception {
+        var yaml = getClass().getClassLoader().getResourceAsStream("fixtures/valid_routine.yaml");
+
+        mockMvc.perform(multipart("/routines/import")
+                        .file(new MockMultipartFile("file", "routine.yaml",
+                                "application/x-yaml", yaml))
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.mode").value("REPLACE"));
+    }
+
+    @Test
+    @DisplayName("importRoutine_withInvalidMode_returns400")
+    void importRoutine_withInvalidMode_returns400() throws Exception {
+        var yaml = getClass().getClassLoader().getResourceAsStream("fixtures/valid_routine.yaml");
+
+        mockMvc.perform(multipart("/routines/import")
+                        .file(new MockMultipartFile("file", "routine.yaml",
+                                "application/x-yaml", yaml))
+                        .param("mode", "INVALID_MODE")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isBadRequest());
+    }
+
     private void importYamlRoutine() throws Exception {
         var yaml = getClass().getClassLoader().getResourceAsStream("fixtures/valid_routine.yaml");
         mockMvc.perform(multipart("/routines/import")

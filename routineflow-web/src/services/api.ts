@@ -3,6 +3,8 @@ import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  ImportMode,
+  ImportRoutineResponse,
   DayScheduleResponse,
   ActiveRoutineResponse,
   DailyLogResponse,
@@ -65,10 +67,10 @@ export const authApi = {
 // ── Routine ───────────────────────────────────────────────────────────────────
 
 export const routineApi = {
-  importRoutine: (file: File) => {
+  importRoutine: (file: File, mode: ImportMode = 'REPLACE') => {
     const form = new FormData()
     form.append('file', file)
-    return api.post<void>('/routines/import', form, {
+    return api.post<ImportRoutineResponse>(`/routines/import?mode=${mode}`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },

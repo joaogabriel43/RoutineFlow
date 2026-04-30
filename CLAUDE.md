@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.6.0 | Criado: 2026-04-19 | Última atualização: 2026-04-30
+> Versão: 2.7.0 | Criado: 2026-04-19 | Última atualização: 2026-04-30
 
 ---
 
@@ -290,6 +290,12 @@ routine:
 **Consequências**: (+) Simples, sem dependência externa. Histório de DailyLog sempre preservado.
 **Status**: Aceita
 
+### ADR-007: MERGE não cria nova rotina — adiciona na ativa
+**Contexto**: Usuários com rotina ativa querem enriquecer com novos hábitos sem perder histórico.
+**Decisão**: `ImportMode.MERGE` localiza a rotina ativa e adiciona apenas áreas/tarefas ausentes. Sem `deactivateAllByUserId`, sem novo `RoutineJpaEntity`. Fallback para REPLACE quando não há rotina ativa.
+**Consequências**: (+) Histórico de DailyLog preservado integralmente. (+) Idempotente (re-importar o mesmo arquivo é safe). (-) Nome da rotina não é atualizado no MERGE.
+**Status**: Aceita
+
 ### ADR-006: Ownership check retorna 404, não 403
 **Contexto**: Ao buscar área ou task por ID, verificar se pertence ao usuário autenticado.
 **Decisão**: `findByIdAndUserId` / `findByIdAndArea_User_Id` — se não encontrar (seja por não existir ou por não ser do usuário), lança `ResourceNotFoundException` → 404.
@@ -316,6 +322,7 @@ routine:
 | Sprint 12 | Navegação temporal (DateNavBar, useDay, ?date= em check-in, data futura → 400) | ✅ Concluído |
 | Sprint 13 | Single tasks one-time (V10 migration, SingleTaskUseCase, /today endpoint, SingleTasksPage, TodayPage seção "Para fazer") | ✅ Concluído |
 | Sprint 14 | ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH) + dayOfMonth em tasks — V11 migration, TDD backend, frontend toggle | ✅ Concluído |
+| Sprint 15 | Import merge mode (REPLACE \| MERGE) — ImportMode enum, ImportRoutineResponse extendido, MERGE logic, ?mode param, 10 unit + 4 integration tests, frontend modal de modo + toast detalhado | ✅ Concluído |
 
 ---
 
@@ -431,6 +438,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | Sprint 12 — Temporal navigation (date param + DateNavBar + useDay) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 | Single Tasks (backend + frontend) | @backend-architect + @senior-developer + @database-optimizer + @api-tester + @frontend-developer | ✅ |
 | Sprint 14 — ScheduleType + dayOfMonth (V11 migration, TDD, frontend toggle) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
+| Sprint 15 — Import MERGE mode (TDD backend, modal frontend, toast detalhado) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 
 ---
 
@@ -449,6 +457,10 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 11. **Single Tasks — tarefas one-time**: Completar arquiva automaticamente (archivedAt preenchido). Não participam do reset diário — são globais do usuário. Sem dueDate: aparecem na TodayPage todos os dias até serem marcadas. Com dueDate vencida: aparecem com flag `isOverdue=true`. `uncompleteSingleTask` reverte para pendente (para erros do usuário). Checkbox circular para diferenciar de recurring tasks (quadradas). Tabela `single_tasks` com índice parcial `WHERE completed = FALSE` para queries de pendentes.
 12. **ScheduleType em tasks**: `DAY_OF_WEEK` (padrão, original) ou `DAY_OF_MONTH`. Tasks DAY_OF_WEEK usam `dayOfWeek` (não nulo) e `dayOfMonth` = null. Tasks DAY_OF_MONTH usam `dayOfMonth` (1–31) e `dayOfWeek` = null. `TaskUseCase.validateSchedule()` garante a consistência — `@Builder.Default scheduleType = DAY_OF_WEEK` garante backward compat com rotinas importadas antes do Sprint 14.
 13. **taskAppliesOnDate() — filtro central**: `GetDayScheduleUseCase.taskAppliesOnDate(TaskJpaEntity, LocalDate)` é o único ponto que decide se uma task aparece num dado dia. DAY_OF_WEEK: compara `task.dayOfWeek == date.getDayOfWeek()`. DAY_OF_MONTH: compara `task.dayOfMonth == date.getDayOfMonth()` E verifica que o mês tem aquele dia (`date.lengthOfMonth()`). Reutilizado por `GetDailyProgressUseCase` e `StreakCalculationService` via referência estática — nunca duplicar essa lógica.
+16. **Import MERGE — dedup de tarefas**: chave de duplicata = `title.trim().lower() + "|" + scheduleType + "|" + dayOfWeek + "|" + dayOfMonth`. Tasks de YAML são sempre `DAY_OF_WEEK`. Comparação de nome de área: `name.trim().toLowerCase()`. MERGE com rotina ativa: nunca chama `deactivateAllByUserId`, nunca salva `RoutineJpaEntity`. MERGE sem rotina ativa: comporta como REPLACE mas retorna `mode=MERGE`.
+17. **Import REPLACE — response extendido**: `mode`, `areasCreated`, `areasMerged=0`, `tasksCreated`, `tasksSkipped=0`. Campo `totalAreas=areasCreated` e `totalTasks=tasksCreated` para retrocompat.
+18. **?mode param — default REPLACE**: `@RequestParam(value = "mode", defaultValue = "REPLACE") ImportMode mode`. String inválida → Spring retorna 400 via `DefaultHandlerExceptionResolver`.
+
 14. **GetDayScheduleUseCase — assinatura com LocalDate**: recebe `LocalDate` (não `DayOfWeek`) para poder avaliar DAY_OF_MONTH corretamente. `RoutineController.getDaySchedule(DayOfWeek)` converte para LocalDate via `TemporalAdjusters.previousOrSame(MONDAY).plusDays(dayOfWeek.getValue() - 1)` — mapeia o dia da semana para a data real na semana ISO atual.
 15. **Repositório carrega todas as tasks, filtro em Java**: `findAreasWithTasksByRoutineIdOrderByOrderIndex(routineId)` carrega tudo; o filtro por dia é aplicado em Java via `taskAppliesOnDate()`. A query antiga `findAreasWithTasksByRoutineIdAndDay(routineId, dayOfWeek)` filtrava no banco mas não suportava DAY_OF_MONTH — foi abandonada para operações de leitura.
 
@@ -492,4 +504,5 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.3.0 | Sprint 11 concluído — PWA: vite-plugin-pwa (autoUpdate, NetworkOnly API), manifest com ícones 192/512/maskable, sw.js + workbox, meta tags iOS Safari, InstallPrompt (mobile-only, dispensável, beforeinstallprompt), vercel.json headers sw.js/manifest, react-is instalado, fix recharts rolldown |
 | 2026-04-24 | 2.4.0 | Sprint 12 concluído — Navegação temporal: CheckInUseCase rejeita datas futuras (IllegalArgumentException → 400), CheckInController ?date= param em /complete /uncomplete /progress, alias /today/progress mantido, GET /checkins/progress novo endpoint, 7 unit tests + 4 integration tests novos (156 total), frontend: useDay hook (selectedDate, reset em mudança de data), DateNavBar (14 dias, pills com today highlight, dots via queryClient cache), TodayPage (DateNavBar integrado, label dinâmico, banner futuro, disabled prop), AreaCard + TaskItem (disabled prop), api.ts (complete/uncomplete/getDayProgress aceitam date opcional) |
 | 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
+| 2026-04-30 | 2.7.0 | Sprint 15 concluído — Import MERGE mode: ImportMode enum (REPLACE/MERGE), ImportRoutineResponse +5 campos (mode/areasCreated/areasMerged/tasksCreated/tasksSkipped), ImportRoutineUseCase refatorado (executeReplace/executeMerge privados, dedup key title+scheduleType+dayOfWeek+dayOfMonth), RoutineController ?mode param (defaultValue=REPLACE), fixture merge_routine.yaml, 10 unit tests ImportRoutineUseCaseTest + 4 integration tests RoutineControllerTest (170 total), frontend: ImportMode/ImportRoutineResponse em types, routineApi.importRoutine(mode), useImportRoutine toast detalhado por mode, ImportPage modal REPLACE/MERGE com ModeCard, HabitNowConverterPage tip sobre MERGE. ADR-007 + regras 16-18 |
 | 2026-04-30 | 2.6.0 | Sprint 14 concluído — ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH): V11 migration (day_of_week nullable, schedule_type NOT NULL DEFAULT 'DAY_OF_WEEK', day_of_month INT, CHECK constraints), ScheduleType enum, Task domain record atualizado, TaskJpaEntity (@Builder.Default scheduleType=DAY_OF_WEEK), CreateTaskRequest/UpdateTaskRequest/TaskResponse com scheduleType+dayOfMonth, TaskUseCase.validateSchedule() cross-field, GetDayScheduleUseCase assinatura LocalDate + taskAppliesOnDate() public static + filtro Java-side, GetDailyProgressUseCase + StreakCalculationService migrados para filtro Java, RoutineController getDaySchedule usa TemporalAdjusters ISO week, 13 unit tests TaskUseCaseTest + 4 GetDayScheduleUseCaseTest + 5 GetDailyProgressUseCaseTest + 9 StreakCalculationServiceTest, 9 TaskControllerTest integration — 160 total. Frontend: ScheduleType type, TaskResponse/CreateTaskRequest/UpdateTaskRequest atualizados, TaskManageRow scheduleLabel() (Seg / D25), ManagePage TaskModal toggle DAY_OF_WEEK/DAY_OF_MONTH + dayOfMonth input, agrupamento "Mensal" separado. Fix UnnecessaryStubbingException (stubs removidos de 4 testes de validação). Regras de negócio 12–15 documentadas. |

@@ -1,3 +1,20 @@
+// ── Import ───────────────────────────────────────────────────────────────────
+
+export type ImportMode = 'REPLACE' | 'MERGE'
+
+export interface ImportRoutineResponse {
+  routineId: number
+  name: string
+  totalAreas: number
+  totalTasks: number
+  importedAt: string
+  mode: ImportMode
+  areasCreated: number
+  areasMerged: number
+  tasksCreated: number
+  tasksSkipped: number
+}
+
 // ── Auth ────────────────────────────────────────────────────────────────────
 
 export interface AuthResponse {
