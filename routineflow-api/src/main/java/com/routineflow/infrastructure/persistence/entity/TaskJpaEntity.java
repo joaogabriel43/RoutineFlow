@@ -1,5 +1,6 @@
 package com.routineflow.infrastructure.persistence.entity;
 
+import com.routineflow.domain.model.ScheduleType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,12 +38,22 @@ public class TaskJpaEntity {
     @Column(name = "estimated_minutes")
     private Integer estimatedMinutes;
 
+    /** Non-null for DAY_OF_WEEK tasks; null for DAY_OF_MONTH tasks. */
     @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week", nullable = false, length = 10)
+    @Column(name = "day_of_week", length = 10)
     private DayOfWeek dayOfWeek;
 
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "schedule_type", nullable = false, length = 15)
+    @Builder.Default
+    private ScheduleType scheduleType = ScheduleType.DAY_OF_WEEK;
+
+    /** Non-null for DAY_OF_MONTH tasks (1-31); null for DAY_OF_WEEK tasks. */
+    @Column(name = "day_of_month")
+    private Integer dayOfMonth;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

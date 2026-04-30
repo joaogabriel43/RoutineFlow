@@ -1,9 +1,11 @@
 package com.routineflow.unit.service;
 
 import com.routineflow.domain.model.ResetFrequency;
+import com.routineflow.domain.model.ScheduleType;
 import com.routineflow.domain.service.StreakCalculationService;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity;
+import com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.StreakJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.TaskJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.UserJpaEntity;
@@ -61,7 +63,7 @@ class StreakCalculationServiceTest {
 
         setupMocks(List.of(area));
         when(dailyLogJpaRepository.findCompletedByUserIdAndAreaIdAndLogDate(USER_ID, 1L, MONDAY))
-                .thenReturn(List.of(mock(com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity.class)));
+                .thenReturn(List.of(mock(DailyLogJpaEntity.class)));
         when(streakJpaRepository.findByAreaIdAndUserId(1L, USER_ID)).thenReturn(Optional.of(streak));
         when(streakJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -74,7 +76,6 @@ class StreakCalculationServiceTest {
     @DisplayName("calculate_currentCountExceedsBestStreak_updatesBestStreak")
     void calculate_currentCountExceedsBestStreak_updatesBestStreak() {
         var area = buildAreaWithTask(1L, DayOfWeek.MONDAY);
-        // bestStreak = 5, currentCount = 5 → after increment currentCount=6 > bestStreak=5
         var streak = StreakJpaEntity.builder()
                 .area(area).user(area.getUser())
                 .currentCount(5).bestStreak(5).lastActiveDate(MONDAY.minusDays(1)).build();
@@ -101,7 +102,7 @@ class StreakCalculationServiceTest {
 
         setupMocks(List.of(area));
         when(dailyLogJpaRepository.findCompletedByUserIdAndAreaIdAndLogDate(USER_ID, 1L, MONDAY))
-                .thenReturn(List.of()); // nenhum check-in
+                .thenReturn(List.of());
         when(streakJpaRepository.findByAreaIdAndUserId(1L, USER_ID)).thenReturn(Optional.of(streak));
         when(streakJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -131,7 +132,7 @@ class StreakCalculationServiceTest {
 
         setupMocks(List.of(area));
         when(dailyLogJpaRepository.findCompletedByUserIdAndAreaIdAndLogDate(USER_ID, 1L, MONDAY))
-                .thenReturn(List.of(mock(com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity.class)));
+                .thenReturn(List.of(mock(DailyLogJpaEntity.class)));
         when(streakJpaRepository.findByAreaIdAndUserId(1L, USER_ID)).thenReturn(Optional.empty());
         when(streakJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -149,10 +150,9 @@ class StreakCalculationServiceTest {
         var tuesday = LocalDate.of(2026, 4, 21);
         var area = buildAreaWithTaskAndFrequency(1L, DayOfWeek.TUESDAY, ResetFrequency.WEEKLY);
 
-        var routine = com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity.builder()
-                .id(1L).active(true).build();
+        var routine = RoutineJpaEntity.builder().id(1L).active(true).build();
         when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(eq(1L), eq(DayOfWeek.TUESDAY)))
+        when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(eq(1L)))
                 .thenReturn(List.of(area));
 
         service.calculate(USER_ID, tuesday);
@@ -198,10 +198,9 @@ class StreakCalculationServiceTest {
         var firstOfMonth = LocalDate.of(2026, 4, 1);
         var area = buildAreaWithTaskAndFrequency(1L, DayOfWeek.WEDNESDAY, ResetFrequency.MONTHLY);
 
-        var routine = com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity.builder()
-                .id(1L).active(true).build();
+        var routine = RoutineJpaEntity.builder().id(1L).active(true).build();
         when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(eq(1L), eq(DayOfWeek.WEDNESDAY)))
+        when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(eq(1L)))
                 .thenReturn(List.of(area));
         when(dailyLogJpaRepository.findCompletedByUserIdAndAreaIdAndLogDate(USER_ID, 1L, firstOfMonth))
                 .thenReturn(List.of(mock(DailyLogJpaEntity.class)));
@@ -215,11 +214,11 @@ class StreakCalculationServiceTest {
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
+    /** Stubs findAreasWithTasksByRoutineIdOrderByOrderIndex for MONDAY scenarios. */
     private void setupMocks(List<AreaJpaEntity> areas) {
-        var routine = com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity.builder()
-                .id(1L).active(true).build();
+        var routine = RoutineJpaEntity.builder().id(1L).active(true).build();
         when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(eq(1L), eq(DayOfWeek.MONDAY)))
+        when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(eq(1L)))
                 .thenReturn(areas);
     }
 
@@ -227,12 +226,16 @@ class StreakCalculationServiceTest {
         return buildAreaWithTaskAndFrequency(areaId, day, ResetFrequency.DAILY);
     }
 
-    private AreaJpaEntity buildAreaWithTaskAndFrequency(Long areaId, DayOfWeek day, ResetFrequency frequency) {
+    private AreaJpaEntity buildAreaWithTaskAndFrequency(Long areaId, DayOfWeek day,
+                                                        ResetFrequency frequency) {
         var user = UserJpaEntity.builder().id(USER_ID).build();
         var area = AreaJpaEntity.builder().id(areaId).name("Area").color("#000").icon("🎯")
                 .user(user).resetFrequency(frequency).build();
-        var task = TaskJpaEntity.builder().id(areaId * 10).title("Task")
-                .dayOfWeek(day).orderIndex(0).area(area).build();
+        var task = TaskJpaEntity.builder()
+                .id(areaId * 10).title("Task")
+                .scheduleType(ScheduleType.DAY_OF_WEEK)
+                .dayOfWeek(day)
+                .orderIndex(0).area(area).build();
         area.getTasks().add(task);
         return area;
     }

@@ -39,13 +39,11 @@ public class GetDailyProgressUseCase {
             return new DailyProgressResponse(date, List.of(), 0.0);
         }
 
-        var routine = routineOpt.get();
-        var dayOfWeek = date.getDayOfWeek();
+        // Load all tasks — filter in Java to support DAY_OF_WEEK and DAY_OF_MONTH
+        var areas = areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(
+                routineOpt.get().getId());
 
-        // Busca tarefas do dia via JOIN FETCH — zero N+1
-        var areas = areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(routine.getId(), dayOfWeek);
-
-        // Busca todos os logs do usuário para o dia em uma única query
+        // Fetch all completed logs for this user and date in one query
         var logs = dailyLogJpaRepository.findAllByUserIdAndLogDate(userId, date);
         Set<Long> completedTaskIds = logs.stream()
                 .filter(DailyLogJpaEntity::isCompleted)
@@ -55,7 +53,7 @@ public class GetDailyProgressUseCase {
         List<AreaProgressResponse> areaResponses = areas.stream()
                 .map(area -> {
                     List<TaskJpaEntity> dayTasks = area.getTasks().stream()
-                            .filter(t -> t.getDayOfWeek() == dayOfWeek)
+                            .filter(t -> GetDayScheduleUseCase.taskAppliesOnDate(t, date))
                             .toList();
                     int total = dayTasks.size();
                     int completed = (int) dayTasks.stream()
@@ -67,11 +65,12 @@ public class GetDailyProgressUseCase {
                             total, completed, rate
                     );
                 })
+                .filter(a -> a.totalTasks() > 0) // exclude areas with no applicable tasks
                 .toList();
 
-        int totalTasks = areaResponses.stream().mapToInt(AreaProgressResponse::totalTasks).sum();
+        int totalTasks     = areaResponses.stream().mapToInt(AreaProgressResponse::totalTasks).sum();
         int totalCompleted = areaResponses.stream().mapToInt(AreaProgressResponse::completedTasks).sum();
-        double overall = totalTasks == 0 ? 0.0 : (double) totalCompleted / totalTasks;
+        double overall     = totalTasks == 0 ? 0.0 : (double) totalCompleted / totalTasks;
 
         return new DailyProgressResponse(date, areaResponses, overall);
     }
