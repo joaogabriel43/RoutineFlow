@@ -1,10 +1,18 @@
 import { useRef, useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { FileText, Loader2, UploadCloud, X } from 'lucide-react'
+import { FileText, Loader2, RefreshCw, GitMerge, UploadCloud, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { useImportRoutine } from '@/hooks/useImportRoutine'
 import { cn } from '@/lib/utils'
+import type { ImportMode } from '@/types'
 
 // ── File size formatter ───────────────────────────────────────────────────────
 
@@ -36,6 +44,49 @@ const EXAMPLE_YAML = `routine:
             description: "30 minutos"
             estimatedMinutes: 30`
 
+// ── Mode card ─────────────────────────────────────────────────────────────────
+
+interface ModeCardProps {
+  selected: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  title: string
+  description: string
+  badge?: string
+}
+
+function ModeCard({ selected, onClick, icon, title, description, badge }: ModeCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'w-full text-left rounded-xl border-2 p-4 transition-all duration-150',
+        selected
+          ? 'border-[#0071e3] bg-[#0071e3]/10'
+          : 'border-[#2a2a2a] bg-[#141414] hover:border-[#3a3a3a]',
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span className={cn('mt-0.5 shrink-0', selected ? 'text-[#0071e3]' : 'text-[#86868b]')}>
+          {icon}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#f5f5f7]">{title}</span>
+            {badge && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#0071e3]/20 text-[#0071e3]">
+                {badge}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-[#86868b] mt-1 leading-relaxed">{description}</p>
+        </div>
+      </div>
+    </button>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function ImportPage() {
@@ -44,6 +95,8 @@ export function ImportPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
+  const [showModeModal, setShowModeModal] = useState(false)
+  const [selectedMode, setSelectedMode] = useState<ImportMode>('REPLACE')
   const { mutate, isPending } = useImportRoutine()
 
   // Welcome toast on first login redirect
@@ -87,9 +140,15 @@ export function ImportPage() {
     e.target.value = ''
   }
 
-  function handleUpload() {
+  function handleUploadClick() {
     if (!file || isPending) return
-    mutate(file)
+    setShowModeModal(true)
+  }
+
+  function handleConfirmImport() {
+    if (!file) return
+    setShowModeModal(false)
+    mutate(file, selectedMode)
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -170,7 +229,7 @@ export function ImportPage() {
       {/* Upload button — only visible when file is selected */}
       {file && (
         <Button
-          onClick={handleUpload}
+          onClick={handleUploadClick}
           disabled={isPending}
           className="w-full mt-4 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium h-11 rounded-xl transition-colors disabled:opacity-60"
         >
@@ -206,6 +265,54 @@ export function ImportPage() {
           </button>
         </p>
       </section>
+
+      {/* Mode selection dialog */}
+      <Dialog open={showModeModal} onOpenChange={setShowModeModal}>
+        <DialogContent className="bg-[#1c1c1e] border border-[#2a2a2a] rounded-2xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#f5f5f7] text-base font-medium">
+              Como importar?
+            </DialogTitle>
+            <DialogDescription className="text-[#86868b] text-sm">
+              Escolha o que acontece com sua rotina atual.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-3 mt-1">
+            <ModeCard
+              selected={selectedMode === 'REPLACE'}
+              onClick={() => setSelectedMode('REPLACE')}
+              icon={<RefreshCw size={18} />}
+              title="Substituir"
+              badge="padrão"
+              description="Desativa a rotina atual e cria uma nova do zero com o arquivo enviado."
+            />
+            <ModeCard
+              selected={selectedMode === 'MERGE'}
+              onClick={() => setSelectedMode('MERGE')}
+              icon={<GitMerge size={18} />}
+              title="Mesclar"
+              description="Mantém a rotina ativa e adiciona apenas áreas e tarefas novas. Duplicatas são ignoradas silenciosamente."
+            />
+          </div>
+
+          <div className="flex gap-2 mt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setShowModeModal(false)}
+              className="flex-1 text-[#86868b] hover:text-[#f5f5f7] hover:bg-[#2a2a2a] h-10 rounded-xl"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmImport}
+              className="flex-1 bg-[#0071e3] hover:bg-[#0077ed] text-white h-10 rounded-xl"
+            >
+              Confirmar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

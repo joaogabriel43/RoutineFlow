@@ -6,6 +6,7 @@ import com.routineflow.application.dto.RoutineResponse;
 import com.routineflow.application.usecase.GetActiveRoutineUseCase;
 import com.routineflow.application.usecase.GetDayScheduleUseCase;
 import com.routineflow.application.usecase.ImportRoutineUseCase;
+import com.routineflow.domain.model.ImportMode;
 import com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepository;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
@@ -48,11 +49,12 @@ public class RoutineController {
 
     @PostMapping(value = "/import", consumes = "multipart/form-data")
     public ResponseEntity<ImportRoutineResponse> importRoutine(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "mode", defaultValue = "REPLACE") ImportMode mode
     ) throws IOException {
         String extension = extractExtension(file.getOriginalFilename());
         Long userId = userResolver.currentUserId();
-        var response = importRoutineUseCase.execute(userId, file.getInputStream(), extension);
+        var response = importRoutineUseCase.execute(userId, file.getInputStream(), extension, mode);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

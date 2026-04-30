@@ -1,0 +1,18 @@
+routine:
+  name: "Rotina Merge"
+  areas:
+    - name: "Inglês/PTE"
+      color: "#3B82F6"
+      icon: "📚"
+      schedule:
+        FRIDAY:
+          - title: "Writing Task"
+            description: "Essay de 200 palavras"
+            estimatedMinutes: 45
+    - name: "Física"
+      color: "#10B981"
+      icon: "⚛️"
+      schedule:
+        THURSDAY:
+          - title: "Exercícios mecânica"
+            estimatedMinutes: 60
