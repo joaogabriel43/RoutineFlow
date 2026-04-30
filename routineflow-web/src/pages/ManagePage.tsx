@@ -24,7 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import type { AreaResponse, ResetFrequency, TaskResponse } from '@/types'
+import type { AreaResponse, ResetFrequency, ScheduleType, TaskResponse } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -167,7 +167,14 @@ interface TaskModalProps {
   open: boolean
   initial?: TaskResponse
   onClose: () => void
-  onSave: (title: string, description: string | null, estimatedMinutes: number | null, dayOfWeek: string) => void
+  onSave: (
+    title: string,
+    description: string | null,
+    estimatedMinutes: number | null,
+    scheduleType: ScheduleType,
+    dayOfWeek: string | null,
+    dayOfMonth: number | null,
+  ) => void
   isPending: boolean
 }
 
@@ -177,24 +184,45 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     initial?.estimatedMinutes?.toString() ?? '',
   )
-  const [dayOfWeek, setDayOfWeek] = useState(initial?.dayOfWeek ?? 'MONDAY')
+  const [scheduleType, setScheduleType] = useState<ScheduleType>(
+    initial?.scheduleType ?? 'DAY_OF_WEEK',
+  )
+  const [dayOfWeek, setDayOfWeek] = useState<string>(initial?.dayOfWeek ?? 'MONDAY')
+  const [dayOfMonth, setDayOfMonth] = useState<string>(
+    initial?.dayOfMonth?.toString() ?? '',
+  )
 
   const handleOpenChange = (o: boolean) => {
     if (o) {
       setTitle(initial?.title ?? '')
       setDescription(initial?.description ?? '')
       setEstimatedMinutes(initial?.estimatedMinutes?.toString() ?? '')
+      setScheduleType(initial?.scheduleType ?? 'DAY_OF_WEEK')
       setDayOfWeek(initial?.dayOfWeek ?? 'MONDAY')
+      setDayOfMonth(initial?.dayOfMonth?.toString() ?? '')
     } else {
       onClose()
     }
   }
 
+  const isValid =
+    title.trim().length > 0 &&
+    (scheduleType === 'DAY_OF_WEEK'
+      ? !!dayOfWeek
+      : !!dayOfMonth && parseInt(dayOfMonth, 10) >= 1 && parseInt(dayOfMonth, 10) <= 31)
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
+    if (!isValid) return
     const mins = estimatedMinutes ? parseInt(estimatedMinutes, 10) : null
-    onSave(title.trim(), description.trim() || null, mins, dayOfWeek)
+    onSave(
+      title.trim(),
+      description.trim() || null,
+      mins,
+      scheduleType,
+      scheduleType === 'DAY_OF_WEEK' ? dayOfWeek : null,
+      scheduleType === 'DAY_OF_MONTH' ? parseInt(dayOfMonth, 10) : null,
+    )
   }
 
   return (
@@ -216,20 +244,76 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
               autoFocus
             />
           </div>
+
+          {/* Schedule type toggle */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">Dia da semana</label>
-            <select
-              value={dayOfWeek}
-              onChange={(e) => setDayOfWeek(e.target.value)}
-              className="w-full h-9 rounded-md border border-[#2a2a2a] bg-[#1f1f1f] text-[#f5f5f7] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
-            >
-              {DAYS_OF_WEEK.map((d) => (
-                <option key={d.value} value={d.value} className="bg-[#1f1f1f]">
-                  {d.label}
-                </option>
-              ))}
-            </select>
+            <label className="text-xs text-[#86868b] font-medium">Tipo de recorrência</label>
+            <div className="flex rounded-lg border border-[#2a2a2a] overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setScheduleType('DAY_OF_WEEK')}
+                className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                  scheduleType === 'DAY_OF_WEEK'
+                    ? 'bg-[#0071e3] text-white'
+                    : 'bg-[#1f1f1f] text-[#86868b] hover:text-[#f5f5f7]'
+                }`}
+              >
+                Dia da semana
+              </button>
+              <button
+                type="button"
+                onClick={() => setScheduleType('DAY_OF_MONTH')}
+                className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                  scheduleType === 'DAY_OF_MONTH'
+                    ? 'bg-[#0071e3] text-white'
+                    : 'bg-[#1f1f1f] text-[#86868b] hover:text-[#f5f5f7]'
+                }`}
+              >
+                Dia do mês
+              </button>
+            </div>
           </div>
+
+          {/* Conditional: day of week selector */}
+          {scheduleType === 'DAY_OF_WEEK' && (
+            <div className="space-y-1.5">
+              <label className="text-xs text-[#86868b] font-medium">Dia da semana</label>
+              <select
+                value={dayOfWeek}
+                onChange={(e) => setDayOfWeek(e.target.value)}
+                className="w-full h-9 rounded-md border border-[#2a2a2a] bg-[#1f1f1f] text-[#f5f5f7] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+              >
+                {DAYS_OF_WEEK.map((d) => (
+                  <option key={d.value} value={d.value} className="bg-[#1f1f1f]">
+                    {d.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Conditional: day of month input */}
+          {scheduleType === 'DAY_OF_MONTH' && (
+            <div className="space-y-1.5">
+              <label className="text-xs text-[#86868b] font-medium">
+                Dia do mês <span className="text-[#3a3a3a]">(1–31)</span>
+              </label>
+              <Input
+                type="number"
+                min={1}
+                max={31}
+                value={dayOfMonth}
+                onChange={(e) => setDayOfMonth(e.target.value)}
+                placeholder="ex: 25"
+                className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3]"
+              />
+              <p className="text-[10px] text-[#86868b]">
+                A tarefa aparecerá todo dia {dayOfMonth || 'N'} do mês.
+                Em meses com menos dias, não aparecerá.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label className="text-xs text-[#86868b] font-medium">
               Duração estimada (min) <span className="text-[#3a3a3a]">— opcional</span>
@@ -266,7 +350,7 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
             </Button>
             <Button
               type="submit"
-              disabled={isPending || !title.trim()}
+              disabled={isPending || !isValid}
               className="bg-[#0071e3] hover:bg-[#0077ed] text-white"
             >
               {isPending ? 'Salvando…' : 'Salvar'}
@@ -391,17 +475,20 @@ export function ManagePage() {
     title: string,
     description: string | null,
     estimatedMinutes: number | null,
-    dayOfWeek: string,
+    scheduleType: ScheduleType,
+    dayOfWeek: string | null,
+    dayOfMonth: number | null,
   ) => {
     if (!selectedArea) return
+    const data = { title, description, estimatedMinutes, scheduleType, dayOfWeek, dayOfMonth }
     if (taskModal.task) {
       updateTask.mutate(
-        { areaId: selectedArea.id, taskId: taskModal.task.id, data: { title, description, estimatedMinutes, dayOfWeek } },
+        { areaId: selectedArea.id, taskId: taskModal.task.id, data },
         { onSuccess: () => setTaskModal({ open: false }) },
       )
     } else {
       createTask.mutate(
-        { areaId: selectedArea.id, data: { title, description, estimatedMinutes, dayOfWeek } },
+        { areaId: selectedArea.id, data },
         { onSuccess: () => setTaskModal({ open: false }) },
       )
     }
@@ -435,12 +522,23 @@ export function ManagePage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const tasksByDay = selectedArea
-    ? [...selectedArea.tasks].sort((a, b) => {
-        const dayOrder = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
-        const dayDiff = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek)
-        return dayDiff !== 0 ? dayDiff : a.orderIndex - b.orderIndex
-      })
+  const DAY_ORDER = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
+
+  const dayOfWeekTasks = selectedArea
+    ? [...selectedArea.tasks]
+        .filter((t) => t.scheduleType === 'DAY_OF_WEEK')
+        .sort((a, b) => {
+          const dayDiff = DAY_ORDER.indexOf(a.dayOfWeek ?? '') - DAY_ORDER.indexOf(b.dayOfWeek ?? '')
+          return dayDiff !== 0 ? dayDiff : a.orderIndex - b.orderIndex
+        })
+    : []
+
+  const dayOfMonthTasks = selectedArea
+    ? [...selectedArea.tasks]
+        .filter((t) => t.scheduleType === 'DAY_OF_MONTH')
+        .sort((a, b) =>
+          (a.dayOfMonth ?? 0) - (b.dayOfMonth ?? 0) || a.orderIndex - b.orderIndex,
+        )
     : []
 
   return (
@@ -534,7 +632,7 @@ export function ManagePage() {
               </div>
 
               {/* Tasks list */}
-              {tasksByDay.length === 0 ? (
+              {dayOfWeekTasks.length === 0 && dayOfMonthTasks.length === 0 ? (
                 <div className="py-8 text-center text-sm text-[#86868b]">
                   Nenhuma tarefa nesta área.{' '}
                   <button
@@ -546,10 +644,10 @@ export function ManagePage() {
                 </div>
               ) : (
                 <div className="space-y-0.5">
-                  {/* Group tasks by day */}
-                  {DAYS_OF_WEEK.filter((d) => tasksByDay.some((t) => t.dayOfWeek === d.value)).map(
+                  {/* Group DAY_OF_WEEK tasks by weekday */}
+                  {DAYS_OF_WEEK.filter((d) => dayOfWeekTasks.some((t) => t.dayOfWeek === d.value)).map(
                     (day) => {
-                      const dayTasks = tasksByDay.filter((t) => t.dayOfWeek === day.value)
+                      const dayTasks = dayOfWeekTasks.filter((t) => t.dayOfWeek === day.value)
                       return (
                         <div key={day.value} className="mb-3">
                           <div className="px-3 mb-1">
@@ -568,6 +666,25 @@ export function ManagePage() {
                         </div>
                       )
                     },
+                  )}
+
+                  {/* DAY_OF_MONTH tasks */}
+                  {dayOfMonthTasks.length > 0 && (
+                    <div className="mb-3">
+                      <div className="px-3 mb-1">
+                        <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-widest">
+                          Mensal
+                        </span>
+                      </div>
+                      {dayOfMonthTasks.map((task) => (
+                        <TaskManageRow
+                          key={task.id}
+                          task={task}
+                          onEdit={() => setTaskModal({ open: true, task })}
+                          onDelete={() => handleDeleteTask(task)}
+                        />
+                      ))}
+                    </div>
                   )}
                 </div>
               )}

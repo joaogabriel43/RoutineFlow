@@ -7,7 +7,9 @@ public record Task(
         String title,
         String description,
         Integer estimatedMinutes,
-        DayOfWeek dayOfWeek,
+        DayOfWeek dayOfWeek,     // null when scheduleType = DAY_OF_MONTH
         Long areaId,
-        Integer orderIndex
+        Integer orderIndex,
+        ScheduleType scheduleType,
+        Integer dayOfMonth       // null when scheduleType = DAY_OF_WEEK (1-31)
 ) {}

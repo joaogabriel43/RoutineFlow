@@ -6,6 +6,7 @@ import com.routineflow.application.dto.LoginRequest;
 import com.routineflow.application.dto.RegisterRequest;
 import com.routineflow.application.dto.ReorderTasksRequest;
 import com.routineflow.application.dto.UpdateTaskRequest;
+import com.routineflow.domain.model.ScheduleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,6 @@ class TaskControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // Register or login
         var register = new RegisterRequest("Task User", "taskuser@test.com", "SecurePass123!");
         var registerResult = mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -56,10 +56,8 @@ class TaskControllerTest {
         var body = objectMapper.readTree(registerResult.getResponse().getContentAsString());
         jwtToken = body.get("token").asText();
 
-        // Import routine to get an active routine with areas
         importYamlRoutine();
 
-        // Resolve the first area ID dynamically — area IDs change each test run (new import = new entities)
         var areasResult = mockMvc.perform(get("/areas")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andReturn();
@@ -67,12 +65,14 @@ class TaskControllerTest {
         areaId = areas.get(0).get("id").asLong();
     }
 
-    // ── POST /areas/{areaId}/tasks ────────────────────────────────────────────
+    // ── POST /areas/{areaId}/tasks — DAY_OF_WEEK ─────────────────────────────
 
     @Test
-    @DisplayName("createTask_validPayload_returns201WithTaskResponse")
-    void createTask_validPayload_returns201WithTaskResponse() throws Exception {
-        var request = new CreateTaskRequest("Shadowing", "10min audio shadowing", 10, DayOfWeek.FRIDAY);
+    @DisplayName("createTask_dayOfWeek_validPayload_returns201WithTaskResponse")
+    void createTask_dayOfWeek_validPayload_returns201WithTaskResponse() throws Exception {
+        var request = new CreateTaskRequest(
+                "Shadowing", "10min audio shadowing", 10,
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.FRIDAY, null);
 
         mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -81,17 +81,17 @@ class TaskControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.title").value("Shadowing"))
-                .andExpect(jsonPath("$.description").value("10min audio shadowing"))
-                .andExpect(jsonPath("$.estimatedMinutes").value(10))
+                .andExpect(jsonPath("$.scheduleType").value("DAY_OF_WEEK"))
                 .andExpect(jsonPath("$.dayOfWeek").value("FRIDAY"))
+                .andExpect(jsonPath("$.dayOfMonth").doesNotExist())
                 .andExpect(jsonPath("$.orderIndex").isNumber());
     }
 
     @Test
-    @DisplayName("createTask_invalidPayload_returns400")
-    void createTask_invalidPayload_returns400() throws Exception {
-        // Missing title (blank) and missing dayOfWeek
-        var invalidRequest = new CreateTaskRequest("", null, -5, null);
+    @DisplayName("createTask_dayOfWeek_missingScheduleType_returns400")
+    void createTask_dayOfWeek_missingScheduleType_returns400() throws Exception {
+        // scheduleType is @NotNull — must fail bean validation
+        var invalidRequest = new CreateTaskRequest("", null, -5, null, null, null);
 
         mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -104,7 +104,9 @@ class TaskControllerTest {
     @Test
     @DisplayName("createTask_areaNotFound_returns404")
     void createTask_areaNotFound_returns404() throws Exception {
-        var request = new CreateTaskRequest("Test", null, null, DayOfWeek.MONDAY);
+        var request = new CreateTaskRequest(
+                "Test", null, null,
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null);
 
         mockMvc.perform(post("/areas/{areaId}/tasks", 999999L)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -122,13 +124,48 @@ class TaskControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // ── POST /areas/{areaId}/tasks — DAY_OF_MONTH ────────────────────────────
+
+    @Test
+    @DisplayName("createTask_dayOfMonth_validPayload_returns201")
+    void createTask_dayOfMonth_validPayload_returns201() throws Exception {
+        var request = new CreateTaskRequest(
+                "Monthly Bill", "Pay invoice", null,
+                ScheduleType.DAY_OF_MONTH, null, 25);
+
+        mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Monthly Bill"))
+                .andExpect(jsonPath("$.scheduleType").value("DAY_OF_MONTH"))
+                .andExpect(jsonPath("$.dayOfMonth").value(25))
+                .andExpect(jsonPath("$.dayOfWeek").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("createTask_dayOfMonth_withoutDayOfMonth_returns400")
+    void createTask_dayOfMonth_withoutDayOfMonth_returns400() throws Exception {
+        var request = new CreateTaskRequest(
+                "Missing Day", null, null,
+                ScheduleType.DAY_OF_MONTH, null, null); // dayOfMonth missing
+
+        mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
     // ── PUT /areas/{areaId}/tasks/{id} ────────────────────────────────────────
 
     @Test
     @DisplayName("updateTask_validPayload_returns200WithUpdatedTask")
     void updateTask_validPayload_returns200WithUpdatedTask() throws Exception {
-        // Create a task to update
-        var createRequest = new CreateTaskRequest("Original Title", "original desc", 15, DayOfWeek.THURSDAY);
+        var createRequest = new CreateTaskRequest(
+                "Original Title", "original desc", 15,
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.THURSDAY, null);
         var createResult = mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,7 +174,9 @@ class TaskControllerTest {
         var taskId = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
 
-        var updateRequest = new UpdateTaskRequest("Updated Title", "updated desc", 25, DayOfWeek.SATURDAY);
+        var updateRequest = new UpdateTaskRequest(
+                "Updated Title", "updated desc", 25,
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.SATURDAY, null);
 
         mockMvc.perform(put("/areas/{areaId}/tasks/{id}", areaId, taskId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -146,8 +185,7 @@ class TaskControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(taskId))
                 .andExpect(jsonPath("$.title").value("Updated Title"))
-                .andExpect(jsonPath("$.description").value("updated desc"))
-                .andExpect(jsonPath("$.estimatedMinutes").value(25))
+                .andExpect(jsonPath("$.scheduleType").value("DAY_OF_WEEK"))
                 .andExpect(jsonPath("$.dayOfWeek").value("SATURDAY"));
     }
 
@@ -156,8 +194,9 @@ class TaskControllerTest {
     @Test
     @DisplayName("deleteTask_validId_returns204")
     void deleteTask_validId_returns204() throws Exception {
-        // Create a task then delete it
-        var createRequest = new CreateTaskRequest("To Delete", null, null, DayOfWeek.SUNDAY);
+        var createRequest = new CreateTaskRequest(
+                "To Delete", null, null,
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.SUNDAY, null);
         var createResult = mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -176,9 +215,12 @@ class TaskControllerTest {
     @Test
     @DisplayName("reorderTasks_validPayload_returns200WithReorderedList")
     void reorderTasks_validPayload_returns200WithReorderedList() throws Exception {
-        // Create two tasks to reorder
-        var req1 = new CreateTaskRequest("Task Alpha", null, null, DayOfWeek.MONDAY);
-        var req2 = new CreateTaskRequest("Task Beta", null, null, DayOfWeek.MONDAY);
+        var req1 = new CreateTaskRequest(
+                "Task Alpha", null, null,
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null);
+        var req2 = new CreateTaskRequest(
+                "Task Beta", null, null,
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null);
 
         var r1 = mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -194,7 +236,6 @@ class TaskControllerTest {
         var id1 = objectMapper.readTree(r1.getResponse().getContentAsString()).get("id").asLong();
         var id2 = objectMapper.readTree(r2.getResponse().getContentAsString()).get("id").asLong();
 
-        // Reverse: Beta first, Alpha second
         var reorderRequest = new ReorderTasksRequest(List.of(id2, id1));
 
         mockMvc.perform(patch("/areas/{areaId}/tasks/reorder", areaId)

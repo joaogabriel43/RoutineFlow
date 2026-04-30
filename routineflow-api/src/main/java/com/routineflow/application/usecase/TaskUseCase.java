@@ -6,6 +6,7 @@ import com.routineflow.application.dto.TaskResponse;
 import com.routineflow.application.dto.UpdateTaskRequest;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
+import com.routineflow.domain.model.ScheduleType;
 import com.routineflow.infrastructure.persistence.entity.TaskJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.TaskJpaRepository;
@@ -32,6 +33,8 @@ public class TaskUseCase {
         var area = areaJpaRepository.findByIdAndUserId(areaId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Area not found: " + areaId));
 
+        validateSchedule(request.scheduleType(), request.dayOfWeek(), request.dayOfMonth());
+
         int nextOrder = taskJpaRepository.findByAreaIdOrderByOrderIndex(areaId).size();
 
         var task = TaskJpaEntity.builder()
@@ -39,7 +42,9 @@ public class TaskUseCase {
                 .title(request.title())
                 .description(request.description())
                 .estimatedMinutes(request.estimatedMinutes())
-                .dayOfWeek(request.dayOfWeek())
+                .scheduleType(request.scheduleType())
+                .dayOfWeek(request.scheduleType() == ScheduleType.DAY_OF_WEEK ? request.dayOfWeek() : null)
+                .dayOfMonth(request.scheduleType() == ScheduleType.DAY_OF_MONTH ? request.dayOfMonth() : null)
                 .orderIndex(nextOrder)
                 .build();
 
@@ -51,10 +56,14 @@ public class TaskUseCase {
         var task = taskJpaRepository.findByIdAndArea_User_Id(taskId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
 
+        validateSchedule(request.scheduleType(), request.dayOfWeek(), request.dayOfMonth());
+
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setEstimatedMinutes(request.estimatedMinutes());
-        task.setDayOfWeek(request.dayOfWeek());
+        task.setScheduleType(request.scheduleType());
+        task.setDayOfWeek(request.scheduleType() == ScheduleType.DAY_OF_WEEK ? request.dayOfWeek() : null);
+        task.setDayOfMonth(request.scheduleType() == ScheduleType.DAY_OF_MONTH ? request.dayOfMonth() : null);
 
         return toResponse(taskJpaRepository.save(task));
     }
@@ -73,7 +82,6 @@ public class TaskUseCase {
     public List<TaskResponse> reorderTasks(Long userId, Long areaId, ReorderTasksRequest request) {
         var tasks = taskJpaRepository.findAllById(request.taskIds());
 
-        // Validate all tasks belong to the requesting user
         for (var task : tasks) {
             if (!task.getArea().getUser().getId().equals(userId)) {
                 throw new UnauthorizedException(
@@ -101,7 +109,30 @@ public class TaskUseCase {
                 .toList();
     }
 
-    // ── mapping ──────────────────────────────────────────────────────────────
+    // ── validation ────────────────────────────────────────────────────────────
+
+    /**
+     * Cross-field validation between scheduleType and the corresponding field.
+     * Bean validation annotations enforce format (e.g. @Min @Max), but cannot enforce
+     * the inter-field constraint — this method fills that gap.
+     */
+    private void validateSchedule(ScheduleType scheduleType,
+                                   java.time.DayOfWeek dayOfWeek,
+                                   Integer dayOfMonth) {
+        if (scheduleType == ScheduleType.DAY_OF_MONTH) {
+            if (dayOfMonth == null || dayOfMonth < 1 || dayOfMonth > 31) {
+                throw new IllegalArgumentException(
+                        "dayOfMonth must be between 1 and 31 for DAY_OF_MONTH tasks");
+            }
+        } else {
+            if (dayOfWeek == null) {
+                throw new IllegalArgumentException(
+                        "dayOfWeek is required for DAY_OF_WEEK tasks");
+            }
+        }
+    }
+
+    // ── mapping ───────────────────────────────────────────────────────────────
 
     private TaskResponse toResponse(TaskJpaEntity task) {
         return new TaskResponse(
@@ -110,7 +141,9 @@ public class TaskUseCase {
                 task.getDescription(),
                 task.getEstimatedMinutes(),
                 task.getOrderIndex(),
-                task.getDayOfWeek()
+                task.getScheduleType(),
+                task.getDayOfWeek(),
+                task.getDayOfMonth()
         );
     }
 }

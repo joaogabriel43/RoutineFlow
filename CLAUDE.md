@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.5.0 | Criado: 2026-04-19 | Última atualização: 2026-04-24
+> Versão: 2.6.0 | Criado: 2026-04-19 | Última atualização: 2026-04-30
 
 ---
 
@@ -233,14 +233,6 @@ Sem o BOM, o Excel no Windows interpreta o arquivo como ANSI e quebra acentos.
 Máximo de 365 dias por request (lança `IllegalArgumentException` se exceder).
 Default: últimos 90 dias. Query em `DailyLogJpaRepository.findForExport` com JOIN tasks → areas → routine para garantir ownership por `userId`.
 
-### 14. Navegação temporal: date param em check-in
-`GET /checkins/progress?date=YYYY-MM-DD` e `POST /checkins/{id}/complete?date=YYYY-MM-DD` aceitam data opcional.
-Sem date param → servidor usa `LocalDate.now()` (retrocompat garantida via `GET /checkins/today/progress` alias).
-Data futura → `IllegalArgumentException` no `CheckInUseCase` → 400 via `GlobalExceptionHandler`.
-Frontend: `useDay(selectedDate)` reseta `localChecked` e `initialized` ao mudar de data; `isFuture` desabilita checkboxes.
-`DateNavBar` mostra 14 dias (7 atrás + hoje + 6 à frente); dots de conclusão via `queryClient.getQueryData`.
-Data em strings JS: sempre `new Date(dateStr + 'T12:00:00')` para evitar shift de fuso (BRT = UTC-3).
-
 ### 13. HabitNow Parser: roda 100% no frontend
 Formato `.hn`: `B[timestamp]{H[hábitos separados por |]{X[logs]...`
 Epoch de datas HabitNow: 2012-01-01 + base-36.
@@ -323,6 +315,7 @@ routine:
 | Sprint 11 | PWA instalável (vite-plugin-pwa, manifest, service worker, ícones, InstallPrompt) | ✅ Concluído |
 | Sprint 12 | Navegação temporal (DateNavBar, useDay, ?date= em check-in, data futura → 400) | ✅ Concluído |
 | Sprint 13 | Single tasks one-time (V10 migration, SingleTaskUseCase, /today endpoint, SingleTasksPage, TodayPage seção "Para fazer") | ✅ Concluído |
+| Sprint 14 | ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH) + dayOfMonth em tasks — V11 migration, TDD backend, frontend toggle | ✅ Concluído |
 
 ---
 
@@ -369,6 +362,12 @@ routine:
 **Por que**: `DAYOFWEEK()` é função proprietária do MySQL. PostgreSQL usa `EXTRACT(DOW FROM ...)` (0=domingo) ou `DATE_PART('dow', ...)`.
 **Como prevenir**: Para agrupamentos por dia da semana, buscar as datas brutas (`List<LocalDate>`) e agrupar via `Collectors.groupingBy(LocalDate::getDayOfWeek)` em Java — sem dependência de função SQL proprietária, totalmente testável em unit tests sem banco.
 **Arquivo**: `DailyLogJpaRepository.findCompletedLogDatesByAreaId` + `AreaAnalyticsUseCase.buildDayOfWeekStats()`
+
+### [2026-04-30] UnnecessaryStubbingException em testes de validação com Mockito
+**O que aconteceu**: Testes que esperam `IllegalArgumentException` em `TaskUseCase.createTask()` stubavam `taskJpaRepository.findByAreaIdOrderByOrderIndex()`, mas `validateSchedule()` é chamado ANTES dessa linha — o stub nunca é invocado.
+**Por que**: Mockito's `@ExtendWith(MockitoExtension.class)` habilita strict stubbing por padrão — stubs não utilizados são erro.
+**Como prevenir**: Em testes que esperam exceção lançada ANTES de uma chamada de repositório, não stubar esse repositório. Inspecionar o fluxo de chamadas no use case antes de adicionar stubs.
+**Regra**: Apenas stubar o que realmente será chamado no caminho de código que o teste exercita.
 
 ### [2026-04-23] CORS bloqueando /auth/** em produção — 403 no login
 **O que aconteceu**: `POST /api/auth/login` retornava 403 em produção (Railway + Vercel).
@@ -431,6 +430,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | PWA setup + install prompt | @frontend-developer + @devops-automator | ✅ |
 | Sprint 12 — Temporal navigation (date param + DateNavBar + useDay) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 | Single Tasks (backend + frontend) | @backend-architect + @senior-developer + @database-optimizer + @api-tester + @frontend-developer | ✅ |
+| Sprint 14 — ScheduleType + dayOfMonth (V11 migration, TDD, frontend toggle) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 
 ---
 
@@ -447,6 +447,10 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 9. **ResetFrequency por área**: cada área tem sua própria frequência de avaliação de streak. DAILY = avalia todo dia (padrão). WEEKLY = avalia apenas na segunda-feira. MONTHLY = avalia apenas no dia 1 do mês. Dias fora da janela de avaliação não quebram nem incrementam o streak — a área é simplesmente ignorada pelo `StreakCalculationService`.
 10. **ResetFrequency default**: valor ausente no request (null) é normalizado para DAILY no `AreaUseCase`. O `AreaJpaEntity` usa `@Builder.Default` para garantir DAILY mesmo quando o builder não recebe a propriedade — evita NPE nos testes existentes.
 11. **Single Tasks — tarefas one-time**: Completar arquiva automaticamente (archivedAt preenchido). Não participam do reset diário — são globais do usuário. Sem dueDate: aparecem na TodayPage todos os dias até serem marcadas. Com dueDate vencida: aparecem com flag `isOverdue=true`. `uncompleteSingleTask` reverte para pendente (para erros do usuário). Checkbox circular para diferenciar de recurring tasks (quadradas). Tabela `single_tasks` com índice parcial `WHERE completed = FALSE` para queries de pendentes.
+12. **ScheduleType em tasks**: `DAY_OF_WEEK` (padrão, original) ou `DAY_OF_MONTH`. Tasks DAY_OF_WEEK usam `dayOfWeek` (não nulo) e `dayOfMonth` = null. Tasks DAY_OF_MONTH usam `dayOfMonth` (1–31) e `dayOfWeek` = null. `TaskUseCase.validateSchedule()` garante a consistência — `@Builder.Default scheduleType = DAY_OF_WEEK` garante backward compat com rotinas importadas antes do Sprint 14.
+13. **taskAppliesOnDate() — filtro central**: `GetDayScheduleUseCase.taskAppliesOnDate(TaskJpaEntity, LocalDate)` é o único ponto que decide se uma task aparece num dado dia. DAY_OF_WEEK: compara `task.dayOfWeek == date.getDayOfWeek()`. DAY_OF_MONTH: compara `task.dayOfMonth == date.getDayOfMonth()` E verifica que o mês tem aquele dia (`date.lengthOfMonth()`). Reutilizado por `GetDailyProgressUseCase` e `StreakCalculationService` via referência estática — nunca duplicar essa lógica.
+14. **GetDayScheduleUseCase — assinatura com LocalDate**: recebe `LocalDate` (não `DayOfWeek`) para poder avaliar DAY_OF_MONTH corretamente. `RoutineController.getDaySchedule(DayOfWeek)` converte para LocalDate via `TemporalAdjusters.previousOrSame(MONDAY).plusDays(dayOfWeek.getValue() - 1)` — mapeia o dia da semana para a data real na semana ISO atual.
+15. **Repositório carrega todas as tasks, filtro em Java**: `findAreasWithTasksByRoutineIdOrderByOrderIndex(routineId)` carrega tudo; o filtro por dia é aplicado em Java via `taskAppliesOnDate()`. A query antiga `findAreasWithTasksByRoutineIdAndDay(routineId, dayOfWeek)` filtrava no banco mas não suportava DAY_OF_MONTH — foi abandonada para operações de leitura.
 
 ---
 
@@ -486,5 +490,6 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.1.0 | Sprint 9 concluído — Analytics individual por área: V9 migration (best_streak), StreakJpaEntity.bestStreak, DayOfWeekStat + WeeklyTrendPoint + AreaAnalyticsResponse DTOs, AreaAnalyticsUseCase, AreaController /analytics endpoint, 8 unit tests + 4 integration tests, frontend AreaAnalyticsPage (4 summary cards + LineChart + BarChart horizontal), StreakCards clicáveis, rota analytics/area/:areaId, fix LabelFormatter TS2322 (v: unknown), DAYOFWEEK PostgreSQL erro documentado |
 | 2026-04-24 | 2.2.0 | Sprint 10 concluído — Export CSV (ExportUseCase + ExportController, BOM UTF-8, StreamingResponseBody, range 365d, 5 unit + 5 integration tests), HabitNow Converter (habitnow-parser.ts, HabitNowConverterPage, geração YAML frontend-only), botão Export CSV na AnalyticsPage, link na ImportPage, padrões 12-13 documentados |
 | 2026-04-24 | 2.3.0 | Sprint 11 concluído — PWA: vite-plugin-pwa (autoUpdate, NetworkOnly API), manifest com ícones 192/512/maskable, sw.js + workbox, meta tags iOS Safari, InstallPrompt (mobile-only, dispensável, beforeinstallprompt), vercel.json headers sw.js/manifest, react-is instalado, fix recharts rolldown |
-| 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
 | 2026-04-24 | 2.4.0 | Sprint 12 concluído — Navegação temporal: CheckInUseCase rejeita datas futuras (IllegalArgumentException → 400), CheckInController ?date= param em /complete /uncomplete /progress, alias /today/progress mantido, GET /checkins/progress novo endpoint, 7 unit tests + 4 integration tests novos (156 total), frontend: useDay hook (selectedDate, reset em mudança de data), DateNavBar (14 dias, pills com today highlight, dots via queryClient cache), TodayPage (DateNavBar integrado, label dinâmico, banner futuro, disabled prop), AreaCard + TaskItem (disabled prop), api.ts (complete/uncomplete/getDayProgress aceitam date opcional) |
+| 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
+| 2026-04-30 | 2.6.0 | Sprint 14 concluído — ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH): V11 migration (day_of_week nullable, schedule_type NOT NULL DEFAULT 'DAY_OF_WEEK', day_of_month INT, CHECK constraints), ScheduleType enum, Task domain record atualizado, TaskJpaEntity (@Builder.Default scheduleType=DAY_OF_WEEK), CreateTaskRequest/UpdateTaskRequest/TaskResponse com scheduleType+dayOfMonth, TaskUseCase.validateSchedule() cross-field, GetDayScheduleUseCase assinatura LocalDate + taskAppliesOnDate() public static + filtro Java-side, GetDailyProgressUseCase + StreakCalculationService migrados para filtro Java, RoutineController getDaySchedule usa TemporalAdjusters ISO week, 13 unit tests TaskUseCaseTest + 4 GetDayScheduleUseCaseTest + 5 GetDailyProgressUseCaseTest + 9 StreakCalculationServiceTest, 9 TaskControllerTest integration — 160 total. Frontend: ScheduleType type, TaskResponse/CreateTaskRequest/UpdateTaskRequest atualizados, TaskManageRow scheduleLabel() (Seg / D25), ManagePage TaskModal toggle DAY_OF_WEEK/DAY_OF_MONTH + dayOfMonth input, agrupamento "Mensal" separado. Fix UnnecessaryStubbingException (stubs removidos de 4 testes de validação). Regras de negócio 12–15 documentadas. |

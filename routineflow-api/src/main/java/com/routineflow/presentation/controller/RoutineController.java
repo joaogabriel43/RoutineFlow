@@ -65,8 +65,7 @@ public class RoutineController {
     @GetMapping("/active/today")
     public ResponseEntity<DayScheduleResponse> getTodaySchedule() {
         Long userId = userResolver.currentUserId();
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
-        return ResponseEntity.ok(getDayScheduleUseCase.execute(userId, today));
+        return ResponseEntity.ok(getDayScheduleUseCase.execute(userId, LocalDate.now()));
     }
 
     @GetMapping("/active/day/{dayOfWeek}")
@@ -74,7 +73,12 @@ public class RoutineController {
             @PathVariable DayOfWeek dayOfWeek
     ) {
         Long userId = userResolver.currentUserId();
-        return ResponseEntity.ok(getDayScheduleUseCase.execute(userId, dayOfWeek));
+        // Compute the actual date of this weekday in the current ISO week
+        // (ISO week: Monday = 1 … Sunday = 7). This ensures DAY_OF_MONTH tasks
+        // appear in the correct column when that day of the month falls this week.
+        LocalDate monday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate targetDate = monday.plusDays(dayOfWeek.getValue() - 1);
+        return ResponseEntity.ok(getDayScheduleUseCase.execute(userId, targetDate));
     }
 
     // ── Temporary recovery endpoints ──────────────────────────────────────────

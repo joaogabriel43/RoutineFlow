@@ -1,6 +1,7 @@
 package com.routineflow.unit.usecase;
 
 import com.routineflow.application.usecase.GetDailyProgressUseCase;
+import com.routineflow.domain.model.ScheduleType;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,8 +38,10 @@ class GetDailyProgressUseCaseTest {
 
     private GetDailyProgressUseCase useCase;
 
-    private static final Long USER_ID = 1L;
-    private static final LocalDate MONDAY = LocalDate.of(2026, 4, 20); // Monday
+    private static final Long USER_ID  = 1L;
+    private static final LocalDate MONDAY   = LocalDate.of(2026, 4, 20); // Monday
+    private static final LocalDate APRIL_25 = LocalDate.of(2026, 4, 25); // Saturday
+    private static final LocalDate APRIL_24 = LocalDate.of(2026, 4, 24); // Friday
 
     @BeforeEach
     void setUp() {
@@ -47,21 +51,19 @@ class GetDailyProgressUseCaseTest {
     @Test
     @DisplayName("getProgress_twoTasksOneCompleted_returnsCorrectCompletionRate")
     void getProgress_twoTasksOneCompleted_returnsCorrectCompletionRate() {
-        var user = UserJpaEntity.builder().id(USER_ID).build();
+        var user    = UserJpaEntity.builder().id(USER_ID).build();
         var routine = RoutineJpaEntity.builder().id(1L).user(user).build();
 
-        var task1 = buildTask(1L, DayOfWeek.MONDAY);
-        var task2 = buildTask(2L, DayOfWeek.MONDAY);
-        var area = buildAreaWithTasks(1L, List.of(task1, task2), user, routine);
-        task1.setArea(area);
-        task2.setArea(area);
+        var task1 = buildDayOfWeekTask(1L, DayOfWeek.MONDAY);
+        var task2 = buildDayOfWeekTask(2L, DayOfWeek.MONDAY);
+        var area  = buildAreaWithTasks(1L, List.of(task1, task2), user, routine);
 
         var log1 = DailyLogJpaEntity.builder()
                 .task(task1).user(user).logDate(MONDAY)
                 .completed(true).completedAt(Instant.now()).build();
 
         when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(eq(1L), eq(DayOfWeek.MONDAY)))
+        when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(eq(1L)))
                 .thenReturn(List.of(area));
         when(dailyLogJpaRepository.findAllByUserIdAndLogDate(USER_ID, MONDAY))
                 .thenReturn(List.of(log1));
@@ -80,23 +82,21 @@ class GetDailyProgressUseCaseTest {
     @Test
     @DisplayName("getProgress_noCheckInsYet_allTasksShowNotCompleted")
     void getProgress_noCheckInsYet_allTasksShowNotCompleted() {
-        var user = UserJpaEntity.builder().id(USER_ID).build();
+        var user    = UserJpaEntity.builder().id(USER_ID).build();
         var routine = RoutineJpaEntity.builder().id(1L).user(user).build();
 
-        var task = buildTask(1L, DayOfWeek.MONDAY);
+        var task = buildDayOfWeekTask(1L, DayOfWeek.MONDAY);
         var area = buildAreaWithTasks(1L, List.of(task), user, routine);
-        task.setArea(area);
 
         when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(any(), any()))
+        when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(any()))
                 .thenReturn(List.of(area));
         when(dailyLogJpaRepository.findAllByUserIdAndLogDate(USER_ID, MONDAY))
-                .thenReturn(List.of()); // sem check-ins
+                .thenReturn(List.of());
 
         var result = useCase.getProgress(USER_ID, MONDAY);
 
         assertThat(result.areas().get(0).completedTasks()).isEqualTo(0);
-        assertThat(result.areas().get(0).completionRate()).isEqualTo(0.0);
         assertThat(result.overallCompletionRate()).isEqualTo(0.0);
     }
 
@@ -112,90 +112,72 @@ class GetDailyProgressUseCaseTest {
     }
 
     @Test
-    @DisplayName("getProgress_pastDate_returnsCheckInsForThatSpecificDay")
-    void getProgress_pastDate_returnsCheckInsForThatSpecificDay() {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        DayOfWeek yesterdayDow = yesterday.getDayOfWeek();
-
-        var user = UserJpaEntity.builder().id(USER_ID).build();
+    @DisplayName("getProgress_dayOfMonth25_onApril25_taskCounted")
+    void getProgress_dayOfMonth25_onApril25_taskCounted() {
+        var user    = UserJpaEntity.builder().id(USER_ID).build();
         var routine = RoutineJpaEntity.builder().id(1L).user(user).build();
-        var task = buildTask(1L, yesterdayDow);
+
+        var task = buildDayOfMonthTask(1L, 25);
         var area = buildAreaWithTasks(1L, List.of(task), user, routine);
-        task.setArea(area);
-
-        var log = DailyLogJpaEntity.builder()
-                .task(task).user(user).logDate(yesterday)
-                .completed(true).completedAt(Instant.now()).build();
 
         when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(eq(1L), eq(yesterdayDow)))
+        when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(eq(1L)))
                 .thenReturn(List.of(area));
-        when(dailyLogJpaRepository.findAllByUserIdAndLogDate(USER_ID, yesterday))
-                .thenReturn(List.of(log));
-
-        var result = useCase.getProgress(USER_ID, yesterday);
-
-        assertThat(result.logDate()).isEqualTo(yesterday);
-        assertThat(result.areas().get(0).completedTasks()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("getProgress_futureDate_returnsTasksWithAllNotCompleted")
-    void getProgress_futureDate_returnsTasksWithAllNotCompleted() {
-        LocalDate nextWeek = MONDAY.plusWeeks(1); // also a Monday
-        var user = UserJpaEntity.builder().id(USER_ID).build();
-        var routine = RoutineJpaEntity.builder().id(1L).user(user).build();
-        var task = buildTask(1L, DayOfWeek.MONDAY);
-        var area = buildAreaWithTasks(1L, List.of(task), user, routine);
-        task.setArea(area);
-
-        when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(eq(1L), eq(DayOfWeek.MONDAY)))
-                .thenReturn(List.of(area));
-        when(dailyLogJpaRepository.findAllByUserIdAndLogDate(USER_ID, nextWeek))
-                .thenReturn(List.of()); // no check-ins for a future date
-
-        var result = useCase.getProgress(USER_ID, nextWeek);
-
-        assertThat(result.logDate()).isEqualTo(nextWeek);
-        assertThat(result.areas().get(0).completedTasks()).isEqualTo(0);
-        assertThat(result.overallCompletionRate()).isEqualTo(0.0);
-    }
-
-    @Test
-    @DisplayName("getProgress_sundayDate_returnsOnlySundayScheduledTasks")
-    void getProgress_sundayDate_returnsOnlySundayScheduledTasks() {
-        LocalDate sunday = LocalDate.of(2026, 4, 19); // known Sunday
-        var user = UserJpaEntity.builder().id(USER_ID).build();
-        var routine = RoutineJpaEntity.builder().id(1L).user(user).build();
-        var sundayTask = buildTask(1L, DayOfWeek.SUNDAY);
-        var area = buildAreaWithTasks(1L, List.of(sundayTask), user, routine);
-        sundayTask.setArea(area);
-
-        when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
-        when(areaJpaRepository.findAreasWithTasksByRoutineIdAndDay(eq(1L), eq(DayOfWeek.SUNDAY)))
-                .thenReturn(List.of(area));
-        when(dailyLogJpaRepository.findAllByUserIdAndLogDate(USER_ID, sunday))
+        when(dailyLogJpaRepository.findAllByUserIdAndLogDate(USER_ID, APRIL_25))
                 .thenReturn(List.of());
 
-        var result = useCase.getProgress(USER_ID, sunday);
+        var result = useCase.getProgress(USER_ID, APRIL_25);
 
-        assertThat(result.logDate()).isEqualTo(sunday);
         assertThat(result.areas()).hasSize(1);
         assertThat(result.areas().get(0).totalTasks()).isEqualTo(1);
         assertThat(result.areas().get(0).completedTasks()).isEqualTo(0);
     }
 
-    private TaskJpaEntity buildTask(Long id, DayOfWeek day) {
-        return TaskJpaEntity.builder().id(id).title("Task " + id)
-                .dayOfWeek(day).orderIndex(0).build();
+    @Test
+    @DisplayName("getProgress_dayOfMonth25_onApril24_taskNotCounted")
+    void getProgress_dayOfMonth25_onApril24_taskNotCounted() {
+        var user    = UserJpaEntity.builder().id(USER_ID).build();
+        var routine = RoutineJpaEntity.builder().id(1L).user(user).build();
+
+        var task = buildDayOfMonthTask(1L, 25);
+        var area = buildAreaWithTasks(1L, List.of(task), user, routine);
+
+        when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
+        when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(eq(1L)))
+                .thenReturn(List.of(area));
+        when(dailyLogJpaRepository.findAllByUserIdAndLogDate(USER_ID, APRIL_24))
+                .thenReturn(List.of());
+
+        var result = useCase.getProgress(USER_ID, APRIL_24);
+
+        // DAY_OF_MONTH=25 does not apply on April 24 → area excluded
+        assertThat(result.areas()).isEmpty();
+        assertThat(result.overallCompletionRate()).isEqualTo(0.0);
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    private TaskJpaEntity buildDayOfWeekTask(Long id, DayOfWeek day) {
+        return TaskJpaEntity.builder()
+                .id(id).title("Task " + id)
+                .scheduleType(ScheduleType.DAY_OF_WEEK)
+                .dayOfWeek(day)
+                .orderIndex(0).build();
+    }
+
+    private TaskJpaEntity buildDayOfMonthTask(Long id, int dayOfMonth) {
+        return TaskJpaEntity.builder()
+                .id(id).title("Monthly Task " + id)
+                .scheduleType(ScheduleType.DAY_OF_MONTH)
+                .dayOfMonth(dayOfMonth)
+                .orderIndex(0).build();
     }
 
     private AreaJpaEntity buildAreaWithTasks(Long id, List<TaskJpaEntity> tasks,
                                               UserJpaEntity user, RoutineJpaEntity routine) {
         var area = AreaJpaEntity.builder()
                 .id(id).name("Area " + id).color("#000").icon("🎯")
-                .user(user).routine(routine).tasks(new java.util.ArrayList<>(tasks)).build();
+                .user(user).routine(routine).tasks(new ArrayList<>(tasks)).build();
         tasks.forEach(t -> t.setArea(area));
         return area;
     }

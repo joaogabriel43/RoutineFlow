@@ -11,6 +11,17 @@ const DAY_SHORT: Record<string, string> = {
   SUNDAY: 'Dom',
 }
 
+/** Returns a short schedule label for the badge column. */
+function scheduleLabel(task: TaskResponse): string {
+  if (task.scheduleType === 'DAY_OF_MONTH') {
+    return `D${task.dayOfMonth}`
+  }
+  if (task.dayOfWeek) {
+    return DAY_SHORT[task.dayOfWeek] ?? task.dayOfWeek.slice(0, 3)
+  }
+  return '—'
+}
+
 interface Props {
   task: TaskResponse
   onEdit: () => void
@@ -20,9 +31,9 @@ interface Props {
 export function TaskManageRow({ task, onEdit, onDelete }: Props) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#141414] group transition-colors">
-      {/* Day badge */}
+      {/* Schedule badge */}
       <span className="text-[10px] font-semibold text-[#86868b] w-7 shrink-0 text-center uppercase tracking-wide">
-        {DAY_SHORT[task.dayOfWeek] ?? task.dayOfWeek.slice(0, 3)}
+        {scheduleLabel(task)}
       </span>
 
       {/* Title */}
@@ -36,9 +47,7 @@ export function TaskManageRow({ task, onEdit, onDelete }: Props) {
       )}
 
       {/* Actions */}
-      <div
-        className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={onEdit}
           className="p-1.5 rounded-lg text-[#86868b] hover:text-[#f5f5f7] hover:bg-[#2a2a2a] transition-colors"

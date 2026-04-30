@@ -1,5 +1,6 @@
 package com.routineflow.domain.service;
 
+import com.routineflow.application.usecase.GetDayScheduleUseCase;
 import com.routineflow.domain.model.ResetFrequency;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.StreakJpaEntity;
@@ -27,6 +28,10 @@ import java.util.List;
  *   DAILY   — avalia todo dia (comportamento original).
  *   WEEKLY  — avalia apenas na segunda-feira.
  *   MONTHLY — avalia apenas no dia 1 do mês.
+ *
+ * scheduleType:
+ *   DAY_OF_WEEK  — tarefa cíclica por dia da semana (original).
+ *   DAY_OF_MONTH — tarefa cíclica por dia do mês (ex: todo dia 25).
  */
 @Service
 public class StreakCalculationService {
@@ -53,13 +58,13 @@ public class StreakCalculationService {
         var routineOpt = routineJpaRepository.findActiveByUserId(userId);
         if (routineOpt.isEmpty()) return;
 
-        var dayOfWeek = date.getDayOfWeek();
+        // Load all tasks — filter using taskAppliesOnDate to support DAY_OF_MONTH
         List<AreaJpaEntity> areas = areaJpaRepository
-                .findAreasWithTasksByRoutineIdAndDay(routineOpt.get().getId(), dayOfWeek);
+                .findAreasWithTasksByRoutineIdOrderByOrderIndex(routineOpt.get().getId());
 
         for (AreaJpaEntity area : areas) {
             boolean hasTasksToday = area.getTasks().stream()
-                    .anyMatch(t -> t.getDayOfWeek() == dayOfWeek);
+                    .anyMatch(t -> GetDayScheduleUseCase.taskAppliesOnDate(t, date));
 
             if (!hasTasksToday) continue;
 

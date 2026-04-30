@@ -140,7 +140,9 @@ public class AreaUseCase {
                                 t.getDescription(),
                                 t.getEstimatedMinutes(),
                                 t.getOrderIndex(),
-                                t.getDayOfWeek()))
+                                t.getScheduleType(),
+                                t.getDayOfWeek(),
+                                t.getDayOfMonth()))
                         .sorted(java.util.Comparator.comparingInt(TaskResponse::orderIndex))
                         .toList();
 

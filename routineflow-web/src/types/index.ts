@@ -20,13 +20,17 @@ export interface RegisterRequest {
 
 // ── Routine / Schedule ───────────────────────────────────────────────────────
 
+export type ScheduleType = 'DAY_OF_WEEK' | 'DAY_OF_MONTH'
+
 export interface TaskResponse {
   id: number
   title: string
   description: string | null
   estimatedMinutes: number | null
   orderIndex: number
-  dayOfWeek: string
+  scheduleType: ScheduleType
+  dayOfWeek: string | null
+  dayOfMonth: number | null
 }
 
 // ── Manage ───────────────────────────────────────────────────────────────────
@@ -61,14 +65,18 @@ export interface CreateTaskRequest {
   title: string
   description: string | null
   estimatedMinutes: number | null
-  dayOfWeek: string
+  scheduleType: ScheduleType
+  dayOfWeek: string | null
+  dayOfMonth: number | null
 }
 
 export interface UpdateTaskRequest {
   title: string
   description: string | null
   estimatedMinutes: number | null
-  dayOfWeek: string
+  scheduleType: ScheduleType
+  dayOfWeek: string | null
+  dayOfMonth: number | null
 }
 
 export interface AreaWithTasksResponse {
