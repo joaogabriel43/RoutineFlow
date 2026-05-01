@@ -1,6 +1,7 @@
 package com.routineflow.infrastructure.scheduler;
 
 import com.routineflow.domain.service.StreakCalculationService;
+import com.routineflow.infrastructure.config.AppTimeZone;
 import com.routineflow.infrastructure.persistence.entity.SchedulerRunJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.SchedulerRunJpaRepository;
@@ -37,7 +38,7 @@ public class DailyResetJob {
     @Scheduled(cron = "0 0 0 * * *", zone = "America/Sao_Paulo")
     public void execute() {
         Instant startedAt = Instant.now();
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate yesterday = LocalDate.now(AppTimeZone.ZONE).minusDays(1);
         log.info("[{}] Starting — evaluating streaks for date={}", JOB_NAME, yesterday);
 
         var run = SchedulerRunJpaEntity.builder()

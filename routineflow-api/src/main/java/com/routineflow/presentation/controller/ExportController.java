@@ -2,7 +2,10 @@ package com.routineflow.presentation.controller;
 
 import com.routineflow.application.dto.CheckInExportRow;
 import com.routineflow.application.usecase.ExportUseCase;
+import com.routineflow.infrastructure.config.AppTimeZone;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Export", description = "CSV export of check-in history")
 @RestController
 @RequestMapping("/export")
 public class ExportController {
@@ -46,6 +50,7 @@ public class ExportController {
         this.userResolver = userResolver;
     }
 
+    @Operation(summary = "Export check-ins as CSV (UTF-8 BOM, max 365 days, default 90)")
     @GetMapping(value = "/checkins", produces = "text/csv")
     public ResponseEntity<StreamingResponseBody> exportCheckIns(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -54,7 +59,7 @@ public class ExportController {
         Long userId = userResolver.currentUserId();
         List<CheckInExportRow> rows = exportUseCase.getCheckInsForExport(userId, from, to);
 
-        String filename = "routineflow-export-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".csv";
+        String filename = "routineflow-export-" + LocalDate.now(AppTimeZone.ZONE).format(DateTimeFormatter.ISO_LOCAL_DATE) + ".csv";
 
         StreamingResponseBody body = outputStream -> {
             // UTF-8 BOM — required for Excel on Windows to recognise accented characters

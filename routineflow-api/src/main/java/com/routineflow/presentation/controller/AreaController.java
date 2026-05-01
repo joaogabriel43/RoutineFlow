@@ -8,6 +8,7 @@ import com.routineflow.application.dto.UpdateAreaRequest;
 import com.routineflow.application.usecase.AreaAnalyticsUseCase;
 import com.routineflow.application.usecase.AreaUseCase;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Areas", description = "Routine area CRUD, reordering, and per-area analytics")
 @RestController
 @RequestMapping("/areas")
 public class AreaController {

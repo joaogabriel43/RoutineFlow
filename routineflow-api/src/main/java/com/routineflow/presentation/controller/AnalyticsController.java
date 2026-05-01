@@ -10,7 +10,10 @@ import com.routineflow.application.usecase.GetStreakUseCase;
 import com.routineflow.application.usecase.GetWeekComparisonUseCase;
 import com.routineflow.application.usecase.GetWeeklyCompletionUseCase;
 import com.routineflow.application.usecase.GetWeeklyHistoryUseCase;
+import com.routineflow.infrastructure.config.AppTimeZone;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +25,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 
+@Tag(name = "Analytics", description = "Streaks, heatmap, and weekly completion analytics")
 @RestController
 @RequestMapping("/analytics")
 public class AnalyticsController {
@@ -49,6 +53,7 @@ public class AnalyticsController {
         this.userResolver = userResolver;
     }
 
+    @Operation(summary = "Get current streak for all areas")
     @GetMapping("/streaks")
     public ResponseEntity<StreakListResponse> getStreaks() {
         Long userId = userResolver.currentUserId();
@@ -60,13 +65,14 @@ public class AnalyticsController {
      * Defaults: to=today, from=90 days before today.
      * Range must be ≤ 365 days; from must not be after to.
      */
+    @Operation(summary = "Get completion heatmap (defaults: last 90 days, max 365)")
     @GetMapping("/heatmap")
     public ResponseEntity<HeatmapResponse> getHeatmap(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
         Long userId = userResolver.currentUserId();
-        LocalDate effectiveTo   = to   != null ? to   : LocalDate.now();
+        LocalDate effectiveTo   = to   != null ? to   : LocalDate.now(AppTimeZone.ZONE);
         LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(89);
         return ResponseEntity.ok(getHeatmapUseCase.getHeatmap(userId, effectiveFrom, effectiveTo));
     }
@@ -78,7 +84,7 @@ public class AnalyticsController {
     @GetMapping("/weekly/current")
     public ResponseEntity<WeeklyCompletionResponse> getCurrentWeek() {
         Long userId = userResolver.currentUserId();
-        LocalDate weekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate weekStart = LocalDate.now(AppTimeZone.ZONE).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         return ResponseEntity.ok(getWeeklyCompletionUseCase.getWeeklyCompletion(userId, weekStart));
     }
 
@@ -89,7 +95,7 @@ public class AnalyticsController {
     @GetMapping("/weekly/comparison")
     public ResponseEntity<WeekComparisonResponse> getWeekComparison() {
         Long userId = userResolver.currentUserId();
-        return ResponseEntity.ok(getWeekComparisonUseCase.getComparison(userId, LocalDate.now()));
+        return ResponseEntity.ok(getWeekComparisonUseCase.getComparison(userId, LocalDate.now(AppTimeZone.ZONE)));
     }
 
     /**
@@ -101,6 +107,6 @@ public class AnalyticsController {
             @RequestParam(defaultValue = "8") int weeks
     ) {
         Long userId = userResolver.currentUserId();
-        return ResponseEntity.ok(getWeeklyHistoryUseCase.getHistory(userId, weeks, LocalDate.now()));
+        return ResponseEntity.ok(getWeeklyHistoryUseCase.getHistory(userId, weeks, LocalDate.now(AppTimeZone.ZONE)));
     }
 }

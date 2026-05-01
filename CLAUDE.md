@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.8.0 | Criado: 2026-04-19 | Última atualização: 2026-05-01
+> Versão: 2.9.0 | Criado: 2026-04-19 | Última atualização: 2026-05-01
 
 ---
 
@@ -251,6 +251,26 @@ Debounce de 200ms no ManagePage via `rawSearch` + `deferredSearch` + `useEffect`
 `MOBILE_NAV_ITEMS` filtra Importar — mantém 5 itens no bottom nav mobile.
 `SidebarNav` usa `NAV_ITEMS`, `BottomNav` usa `MOBILE_NAV_ITEMS`.
 
+### 16. AppTimeZone.ZONE — constante central de fuso horário
+`AppTimeZone` em `infrastructure/config/`: `ZoneId.of("America/Sao_Paulo")`.
+**Todo** `LocalDate.now()` deve usar `LocalDate.now(AppTimeZone.ZONE)` — Railway e outros clouds rodam em UTC; sem isso o "hoje" do sistema é UTC, não BRT.
+`ZoneId.systemDefault()` em `AreaAnalyticsUseCase` (conversão Instant → LocalDate) também trocado por `AppTimeZone.ZONE`.
+Arquivos corrigidos: DailyResetJob, ExportUseCase, ExportController, CheckInController, RoutineController, AnalyticsController, AreaAnalyticsUseCase (3 ocorrências ZoneId + 2 LocalDate.now).
+
+### 17. Rate Limiting — Bucket4j em POST /auth/login
+`RateLimitFilter` em `infrastructure/security/`: `@Order(1)`, `OncePerRequestFilter`.
+`shouldNotFilter()` limita a ação ao `POST /auth/login` — outros endpoints ignorados.
+Limite: 10 req/min por IP (janela intervalar, não deslizante).
+`X-Forwarded-For` preferido sobre `remoteAddr` para deployments atrás de proxy (Railway, Vercel).
+Bucket criado on-demand via `ConcurrentHashMap<String, Bucket>` — sem dependência de Redis.
+
+### 18. Swagger/OpenAPI — springdoc 2.6
+URL: `GET /api/swagger-ui.html` (sem auth).
+Bearer JWT configurado em `OpenApiConfig`: botão "Authorize" aceita o token diretamente.
+Rotas abertas no `SecurityConfig`: `/swagger-ui/**`, `/swagger-ui.html`, `/api-docs/**`.
+Todos os controllers têm `@Tag`. Endpoints-chave têm `@Operation(summary = "...")`.
+springdoc artifact: `springdoc-openapi-starter-webmvc-ui:2.6.0`.
+
 ### 8. Formato do arquivo de importação (YAML)
 ```yaml
 routine:
@@ -334,6 +354,7 @@ routine:
 | Sprint 14 | ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH) + dayOfMonth em tasks — V11 migration, TDD backend, frontend toggle | ✅ Concluído |
 | Sprint 15 | Import merge mode (REPLACE \| MERGE) — ImportMode enum, ImportRoutineResponse extendido, MERGE logic, ?mode param, 10 unit + 4 integration tests, frontend modal de modo + toast detalhado | ✅ Concluído |
 | Sprint 16 | Filter Lists — FilterBar + FilterPills<T> reutilizáveis, ManagePage área/tarefa com filtros e debounce 200ms, SingleTasksPage (Tabs Pendentes/Arquivadas, deadline pills, create modal), useSingleTasks hooks, SingleTaskItem (circular checkbox, isOverdue badge, fade-out 280ms), NavBar Tarefas + mobile sem Importar | ✅ Concluído |
+| Sprint 17 | Rate Limiting (Bucket4j 8.14, POST /auth/login, 10 req/min/IP, X-Forwarded-For), Timezone BRT (AppTimeZone.ZONE, 17 ocorrências LocalDate.now() + ZoneId.systemDefault() corrigidas em 8 arquivos), Swagger/OpenAPI (springdoc 2.6, Bearer JWT, @Tag em 7 controllers, @Operation em endpoints-chave) | ✅ Concluído |
 
 ---
 
@@ -386,6 +407,23 @@ routine:
 **Por que**: Mockito's `@ExtendWith(MockitoExtension.class)` habilita strict stubbing por padrão — stubs não utilizados são erro.
 **Como prevenir**: Em testes que esperam exceção lançada ANTES de uma chamada de repositório, não stubar esse repositório. Inspecionar o fluxo de chamadas no use case antes de adicionar stubs.
 **Regra**: Apenas stubar o que realmente será chamado no caminho de código que o teste exercita.
+
+### [2026-05-01] Bucket4j: groupId mudou na v8.x, artefato por JDK
+**O que aconteceu**: `com.github.bucket4j:bucket4j-core` não existe no Maven Central. Tentativas com versões 8.3.0 e 8.10.1 falharam.
+**Por que**: Na versão 8.x o projeto Bucket4j mudou o groupId para `com.bucket4j` e separou artefatos por JDK target.
+**Como prevenir**: Usar `com.bucket4j:bucket4j_jdk17-core` para projetos Java 17. Import dos pacotes permanece `io.github.bucket4j.*`.
+**Versão estável**: `8.14.0` (verificado em Maven Central).
+
+### [2026-05-01] Bucket4j 8.x: Bandwidth.classic() foi deprecated
+**O que aconteceu**: `Bandwidth.classic(capacity, Refill.intervally(...))` gera warning de deprecation no 8.14.
+**Por que**: A API evoluiu para um builder fluente.
+**Como prevenir**: Usar o novo builder:
+```java
+Bandwidth.builder()
+    .capacity(10)
+    .refillIntervally(10, Duration.ofMinutes(1))
+    .build()
+```
 
 ### [2026-04-23] CORS bloqueando /auth/** em produção — 403 no login
 **O que aconteceu**: `POST /api/auth/login` retornava 403 em produção (Railway + Vercel).
@@ -451,6 +489,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | Sprint 14 — ScheduleType + dayOfMonth (V11 migration, TDD, frontend toggle) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 | Sprint 15 — Import MERGE mode (TDD backend, modal frontend, toast detalhado) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 | Sprint 16 — FilterBar + FilterPills + ManagePage filters + SingleTasksPage completa | @frontend-developer | ✅ |
+| Sprint 17 — Rate Limiting (Bucket4j) + Timezone BRT (AppTimeZone) + Swagger (springdoc) | @security-engineer + @backend-architect + @senior-developer | ✅ |
 
 ---
 
@@ -517,5 +556,6 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.4.0 | Sprint 12 concluído — Navegação temporal: CheckInUseCase rejeita datas futuras (IllegalArgumentException → 400), CheckInController ?date= param em /complete /uncomplete /progress, alias /today/progress mantido, GET /checkins/progress novo endpoint, 7 unit tests + 4 integration tests novos (156 total), frontend: useDay hook (selectedDate, reset em mudança de data), DateNavBar (14 dias, pills com today highlight, dots via queryClient cache), TodayPage (DateNavBar integrado, label dinâmico, banner futuro, disabled prop), AreaCard + TaskItem (disabled prop), api.ts (complete/uncomplete/getDayProgress aceitam date opcional) |
 | 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
 | 2026-04-30 | 2.7.0 | Sprint 15 concluído — Import MERGE mode: ImportMode enum (REPLACE/MERGE), ImportRoutineResponse +5 campos (mode/areasCreated/areasMerged/tasksCreated/tasksSkipped), ImportRoutineUseCase refatorado (executeReplace/executeMerge privados, dedup key title+scheduleType+dayOfWeek+dayOfMonth), RoutineController ?mode param (defaultValue=REPLACE), fixture merge_routine.yaml, 10 unit tests ImportRoutineUseCaseTest + 4 integration tests RoutineControllerTest (170 total), frontend: ImportMode/ImportRoutineResponse em types, routineApi.importRoutine(mode), useImportRoutine toast detalhado por mode, ImportPage modal REPLACE/MERGE com ModeCard, HabitNowConverterPage tip sobre MERGE. ADR-007 + regras 16-18 |
+| 2026-05-01 | 2.9.0 | Sprint 17 concluído — Rate Limiting (Bucket4j 8.14 / com.bucket4j:bucket4j_jdk17-core, RateLimitFilter @Order(1), ConcurrentHashMap, X-Forwarded-For, 5 unit tests), Timezone BRT (AppTimeZone.ZONE, 17 LocalDate.now() + 3 ZoneId.systemDefault() corrigidos em 8 arquivos), Swagger/OpenAPI (springdoc 2.6, OpenApiConfig Bearer JWT, SecurityConfig +3 rotas abertas, @Tag em 7 controllers, @Operation em 10 endpoints). 175 testes ✅ |
 | 2026-05-01 | 2.8.0 | Sprint 16 concluído — Filter Lists: FilterBar (search + Escape + X button + children slot), FilterPills<T extends string> (Todos pill + aria-pressed + deselect on re-click), ManagePage áreas (search debounce 200ms + ResetFrequency pills + empty SearchX state) e tarefas (search + ScheduleType pills + day-of-week pills condicionais + reset on area change), SingleTasksPage (Tabs Pendentes/Arquivadas + deadline FilterPills OVERDUE/TODAY/FUTURE/NO_DATE + CreateSingleTaskModal date picker), useSingleTasks (5 hooks: listPending/listArchived/create/complete/uncomplete/delete, optimistic update em complete e delete), SingleTaskItem (circular checkbox + strikethrough archived + isOverdue badge + fade-out 280ms + hover delete), NavBar adicionado Tarefas/CheckSquare + MOBILE_NAV_ITEMS sem Importar, rota /tasks em App.tsx. Build ✅ tsc ✅ 170 testes ✅ |
 | 2026-04-30 | 2.6.0 | Sprint 14 concluído — ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH): V11 migration (day_of_week nullable, schedule_type NOT NULL DEFAULT 'DAY_OF_WEEK', day_of_month INT, CHECK constraints), ScheduleType enum, Task domain record atualizado, TaskJpaEntity (@Builder.Default scheduleType=DAY_OF_WEEK), CreateTaskRequest/UpdateTaskRequest/TaskResponse com scheduleType+dayOfMonth, TaskUseCase.validateSchedule() cross-field, GetDayScheduleUseCase assinatura LocalDate + taskAppliesOnDate() public static + filtro Java-side, GetDailyProgressUseCase + StreakCalculationService migrados para filtro Java, RoutineController getDaySchedule usa TemporalAdjusters ISO week, 13 unit tests TaskUseCaseTest + 4 GetDayScheduleUseCaseTest + 5 GetDailyProgressUseCaseTest + 9 StreakCalculationServiceTest, 9 TaskControllerTest integration — 160 total. Frontend: ScheduleType type, TaskResponse/CreateTaskRequest/UpdateTaskRequest atualizados, TaskManageRow scheduleLabel() (Seg / D25), ManagePage TaskModal toggle DAY_OF_WEEK/DAY_OF_MONTH + dayOfMonth input, agrupamento "Mensal" separado. Fix UnnecessaryStubbingException (stubs removidos de 4 testes de validação). Regras de negócio 12–15 documentadas. |
