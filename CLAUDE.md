@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 2.7.0 | Criado: 2026-04-19 | Última atualização: 2026-04-30
+> Versão: 2.8.0 | Criado: 2026-04-19 | Última atualização: 2026-05-01
 
 ---
 
@@ -241,6 +241,16 @@ Campo de dias vazio = todo dia → expande para todos os 7 dias no YAML gerado.
 Hábito ativo: dateRange com 1 data. Inativo: 2 datas (início + arquivamento).
 Parser em `src/lib/habitnow-parser.ts` — zero chamadas de API, processamento local via FileReader.
 
+### 14. FilterBar + FilterPills: componentes reutilizáveis de filtro
+`FilterBar` (`src/components/shared/FilterBar.tsx`): input de busca com ícone Search, botão X (aparece quando `search !== ''`), Escape limpa, `children` recebe FilterPills ou outros controles.
+`FilterPills<T extends string>` (`src/components/shared/FilterPills.tsx`): genérico, pílula "Todos" fixa (value=null), `aria-pressed` em cada botão, clicar na pílula ativa desseleciona (retorna null).
+Debounce de 200ms no ManagePage via `rawSearch` + `deferredSearch` + `useEffect` com `setTimeout` + cleanup.
+
+### 15. NavBar: desktop mostra todos os itens, mobile exclui Importar
+`NAV_ITEMS` contém todos os 6 itens (Hoje, Semana, Tarefas, Analytics, Gerenciar, Importar).
+`MOBILE_NAV_ITEMS` filtra Importar — mantém 5 itens no bottom nav mobile.
+`SidebarNav` usa `NAV_ITEMS`, `BottomNav` usa `MOBILE_NAV_ITEMS`.
+
 ### 8. Formato do arquivo de importação (YAML)
 ```yaml
 routine:
@@ -323,6 +333,7 @@ routine:
 | Sprint 13 | Single tasks one-time (V10 migration, SingleTaskUseCase, /today endpoint, SingleTasksPage, TodayPage seção "Para fazer") | ✅ Concluído |
 | Sprint 14 | ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH) + dayOfMonth em tasks — V11 migration, TDD backend, frontend toggle | ✅ Concluído |
 | Sprint 15 | Import merge mode (REPLACE \| MERGE) — ImportMode enum, ImportRoutineResponse extendido, MERGE logic, ?mode param, 10 unit + 4 integration tests, frontend modal de modo + toast detalhado | ✅ Concluído |
+| Sprint 16 | Filter Lists — FilterBar + FilterPills<T> reutilizáveis, ManagePage área/tarefa com filtros e debounce 200ms, SingleTasksPage (Tabs Pendentes/Arquivadas, deadline pills, create modal), useSingleTasks hooks, SingleTaskItem (circular checkbox, isOverdue badge, fade-out 280ms), NavBar Tarefas + mobile sem Importar | ✅ Concluído |
 
 ---
 
@@ -439,6 +450,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | Single Tasks (backend + frontend) | @backend-architect + @senior-developer + @database-optimizer + @api-tester + @frontend-developer | ✅ |
 | Sprint 14 — ScheduleType + dayOfMonth (V11 migration, TDD, frontend toggle) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
 | Sprint 15 — Import MERGE mode (TDD backend, modal frontend, toast detalhado) | @backend-architect + @senior-developer + @api-tester + @frontend-developer | ✅ |
+| Sprint 16 — FilterBar + FilterPills + ManagePage filters + SingleTasksPage completa | @frontend-developer | ✅ |
 
 ---
 
@@ -505,4 +517,5 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.4.0 | Sprint 12 concluído — Navegação temporal: CheckInUseCase rejeita datas futuras (IllegalArgumentException → 400), CheckInController ?date= param em /complete /uncomplete /progress, alias /today/progress mantido, GET /checkins/progress novo endpoint, 7 unit tests + 4 integration tests novos (156 total), frontend: useDay hook (selectedDate, reset em mudança de data), DateNavBar (14 dias, pills com today highlight, dots via queryClient cache), TodayPage (DateNavBar integrado, label dinâmico, banner futuro, disabled prop), AreaCard + TaskItem (disabled prop), api.ts (complete/uncomplete/getDayProgress aceitam date opcional) |
 | 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
 | 2026-04-30 | 2.7.0 | Sprint 15 concluído — Import MERGE mode: ImportMode enum (REPLACE/MERGE), ImportRoutineResponse +5 campos (mode/areasCreated/areasMerged/tasksCreated/tasksSkipped), ImportRoutineUseCase refatorado (executeReplace/executeMerge privados, dedup key title+scheduleType+dayOfWeek+dayOfMonth), RoutineController ?mode param (defaultValue=REPLACE), fixture merge_routine.yaml, 10 unit tests ImportRoutineUseCaseTest + 4 integration tests RoutineControllerTest (170 total), frontend: ImportMode/ImportRoutineResponse em types, routineApi.importRoutine(mode), useImportRoutine toast detalhado por mode, ImportPage modal REPLACE/MERGE com ModeCard, HabitNowConverterPage tip sobre MERGE. ADR-007 + regras 16-18 |
+| 2026-05-01 | 2.8.0 | Sprint 16 concluído — Filter Lists: FilterBar (search + Escape + X button + children slot), FilterPills<T extends string> (Todos pill + aria-pressed + deselect on re-click), ManagePage áreas (search debounce 200ms + ResetFrequency pills + empty SearchX state) e tarefas (search + ScheduleType pills + day-of-week pills condicionais + reset on area change), SingleTasksPage (Tabs Pendentes/Arquivadas + deadline FilterPills OVERDUE/TODAY/FUTURE/NO_DATE + CreateSingleTaskModal date picker), useSingleTasks (5 hooks: listPending/listArchived/create/complete/uncomplete/delete, optimistic update em complete e delete), SingleTaskItem (circular checkbox + strikethrough archived + isOverdue badge + fade-out 280ms + hover delete), NavBar adicionado Tarefas/CheckSquare + MOBILE_NAV_ITEMS sem Importar, rota /tasks em App.tsx. Build ✅ tsc ✅ 170 testes ✅ |
 | 2026-04-30 | 2.6.0 | Sprint 14 concluído — ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH): V11 migration (day_of_week nullable, schedule_type NOT NULL DEFAULT 'DAY_OF_WEEK', day_of_month INT, CHECK constraints), ScheduleType enum, Task domain record atualizado, TaskJpaEntity (@Builder.Default scheduleType=DAY_OF_WEEK), CreateTaskRequest/UpdateTaskRequest/TaskResponse com scheduleType+dayOfMonth, TaskUseCase.validateSchedule() cross-field, GetDayScheduleUseCase assinatura LocalDate + taskAppliesOnDate() public static + filtro Java-side, GetDailyProgressUseCase + StreakCalculationService migrados para filtro Java, RoutineController getDaySchedule usa TemporalAdjusters ISO week, 13 unit tests TaskUseCaseTest + 4 GetDayScheduleUseCaseTest + 5 GetDailyProgressUseCaseTest + 9 StreakCalculationServiceTest, 9 TaskControllerTest integration — 160 total. Frontend: ScheduleType type, TaskResponse/CreateTaskRequest/UpdateTaskRequest atualizados, TaskManageRow scheduleLabel() (Seg / D25), ManagePage TaskModal toggle DAY_OF_WEEK/DAY_OF_MONTH + dayOfMonth input, agrupamento "Mensal" separado. Fix UnnecessaryStubbingException (stubs removidos de 4 testes de validação). Regras de negócio 12–15 documentadas. |

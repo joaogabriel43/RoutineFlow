@@ -10,21 +10,21 @@ interface NavItem {
 
 // Desktop sidebar — all items including Importar
 const SIDEBAR_ITEMS: NavItem[] = [
-  { to: '/',          icon: Home,         label: 'Hoje'      },
-  { to: '/tasks',     icon: CheckSquare,  label: 'Tarefas'   },
-  { to: '/semana',    icon: Calendar,     label: 'Semana'    },
-  { to: '/analytics', icon: BarChart2,    label: 'Analytics' },
-  { to: '/manage',    icon: Settings2,    label: 'Gerenciar' },
-  { to: '/import',    icon: Upload,       label: 'Importar'  },
+  { to: '/',          icon: Home,        label: 'Hoje'      },
+  { to: '/tasks',     icon: CheckSquare, label: 'Tarefas'   },
+  { to: '/semana',    icon: Calendar,    label: 'Semana'    },
+  { to: '/analytics', icon: BarChart2,   label: 'Analytics' },
+  { to: '/manage',    icon: Settings2,   label: 'Gerenciar' },
+  { to: '/import',    icon: Upload,      label: 'Importar'  },
 ]
 
-// Mobile bottom nav — 5 items, Importar replaced by Tarefas
+// Mobile bottom nav — 5 items, Importar excluded
 const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { to: '/',          icon: Home,         label: 'Hoje'      },
-  { to: '/tasks',     icon: CheckSquare,  label: 'Tarefas'   },
-  { to: '/semana',    icon: Calendar,     label: 'Semana'    },
-  { to: '/analytics', icon: BarChart2,    label: 'Analytics' },
-  { to: '/manage',    icon: Settings2,    label: 'Gerenciar' },
+  { to: '/',          icon: Home,        label: 'Hoje'      },
+  { to: '/tasks',     icon: CheckSquare, label: 'Tarefas'   },
+  { to: '/semana',    icon: Calendar,    label: 'Semana'    },
+  { to: '/analytics', icon: BarChart2,   label: 'Analytics' },
+  { to: '/manage',    icon: Settings2,   label: 'Gerenciar' },
 ]
 
 // ── Desktop Sidebar ───────────────────────────────────────────────────────────

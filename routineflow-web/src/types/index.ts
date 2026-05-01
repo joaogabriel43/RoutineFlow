@@ -252,6 +252,7 @@ export interface SingleTaskResponse {
   dueDate: string | null       // yyyy-MM-dd
   completed: boolean
   completedAt: string | null
+  archivedAt: string | null
   createdAt: string
   isOverdue: boolean
 }

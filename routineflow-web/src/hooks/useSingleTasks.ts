@@ -3,50 +3,49 @@ import { toast } from 'sonner'
 import { singleTaskApi } from '@/services/api'
 import type { CreateSingleTaskRequest, SingleTaskResponse } from '@/types'
 
-const KEYS = {
-  today:    ['single-tasks-today']    as const,
-  pending:  ['single-tasks-pending']  as const,
-  archived: ['single-tasks-archived'] as const,
+// ── Query keys ────────────────────────────────────────────────────────────────
+
+export const SINGLE_TASKS_KEYS = {
+  today:    ['single-tasks', 'today']    as const,
+  pending:  ['single-tasks', 'pending']  as const,
+  archived: ['single-tasks', 'archived'] as const,
 }
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export function useSingleTasksToday() {
   return useQuery({
-    queryKey: KEYS.today,
+    queryKey: SINGLE_TASKS_KEYS.today,
     queryFn: singleTaskApi.listToday,
     staleTime: 60_000,
-    refetchOnWindowFocus: false,
   })
 }
 
-export function useSingleTasksPending() {
+export function usePendingSingleTasks() {
   return useQuery({
-    queryKey: KEYS.pending,
+    queryKey: SINGLE_TASKS_KEYS.pending,
     queryFn: singleTaskApi.listPending,
     staleTime: 60_000,
-    refetchOnWindowFocus: false,
   })
 }
 
-export function useSingleTasksArchived() {
+export function useArchivedSingleTasks() {
   return useQuery({
-    queryKey: KEYS.archived,
+    queryKey: SINGLE_TASKS_KEYS.archived,
     queryFn: singleTaskApi.listArchived,
     staleTime: 60_000,
-    refetchOnWindowFocus: false,
   })
 }
 
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 export function useCreateSingleTask() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateSingleTaskRequest) => singleTaskApi.create(data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: KEYS.today })
-      void queryClient.invalidateQueries({ queryKey: KEYS.pending })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.today })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.pending })
       toast.success('Tarefa adicionada!')
     },
     onError: () => {
@@ -56,49 +55,46 @@ export function useCreateSingleTask() {
 }
 
 export function useCompleteSingleTask() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => singleTaskApi.complete(id),
-    // Optimistic update: remove from today and pending lists immediately
+    // Optimistic update: remove from today and pending immediately
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: KEYS.today })
-      await queryClient.cancelQueries({ queryKey: KEYS.pending })
-
-      const prevToday = queryClient.getQueryData<SingleTaskResponse[]>(KEYS.today)
-      const prevPending = queryClient.getQueryData<SingleTaskResponse[]>(KEYS.pending)
-
-      queryClient.setQueryData<SingleTaskResponse[]>(
-        KEYS.today,
+      await qc.cancelQueries({ queryKey: SINGLE_TASKS_KEYS.today })
+      await qc.cancelQueries({ queryKey: SINGLE_TASKS_KEYS.pending })
+      const prevToday   = qc.getQueryData<SingleTaskResponse[]>(SINGLE_TASKS_KEYS.today)
+      const prevPending = qc.getQueryData<SingleTaskResponse[]>(SINGLE_TASKS_KEYS.pending)
+      qc.setQueryData<SingleTaskResponse[]>(
+        SINGLE_TASKS_KEYS.today,
         (old) => old?.filter((t) => t.id !== id) ?? [],
       )
-      queryClient.setQueryData<SingleTaskResponse[]>(
-        KEYS.pending,
+      qc.setQueryData<SingleTaskResponse[]>(
+        SINGLE_TASKS_KEYS.pending,
         (old) => old?.filter((t) => t.id !== id) ?? [],
       )
-
       return { prevToday, prevPending }
     },
-    onError: (_err, _id, context) => {
-      queryClient.setQueryData(KEYS.today, context?.prevToday)
-      queryClient.setQueryData(KEYS.pending, context?.prevPending)
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prevToday)   qc.setQueryData(SINGLE_TASKS_KEYS.today,   ctx.prevToday)
+      if (ctx?.prevPending) qc.setQueryData(SINGLE_TASKS_KEYS.pending, ctx.prevPending)
       toast.error('Erro ao concluir tarefa. Tente novamente.')
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: KEYS.today })
-      void queryClient.invalidateQueries({ queryKey: KEYS.pending })
-      void queryClient.invalidateQueries({ queryKey: KEYS.archived })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.today })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.pending })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.archived })
     },
   })
 }
 
 export function useUncompleteSingleTask() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => singleTaskApi.uncomplete(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: KEYS.today })
-      void queryClient.invalidateQueries({ queryKey: KEYS.pending })
-      void queryClient.invalidateQueries({ queryKey: KEYS.archived })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.today })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.pending })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.archived })
     },
     onError: () => {
       toast.error('Erro ao desfazer conclusão. Tente novamente.')
@@ -107,15 +103,40 @@ export function useUncompleteSingleTask() {
 }
 
 export function useDeleteSingleTask() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => singleTaskApi.delete(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: KEYS.today })
-      void queryClient.invalidateQueries({ queryKey: KEYS.pending })
+    mutationFn: (id: number) => singleTaskApi.remove(id),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: SINGLE_TASKS_KEYS.today })
+      await qc.cancelQueries({ queryKey: SINGLE_TASKS_KEYS.pending })
+      await qc.cancelQueries({ queryKey: SINGLE_TASKS_KEYS.archived })
+      const prevToday   = qc.getQueryData<SingleTaskResponse[]>(SINGLE_TASKS_KEYS.today)
+      const prevPending = qc.getQueryData<SingleTaskResponse[]>(SINGLE_TASKS_KEYS.pending)
+      const prevArchived = qc.getQueryData<SingleTaskResponse[]>(SINGLE_TASKS_KEYS.archived)
+      qc.setQueryData<SingleTaskResponse[]>(
+        SINGLE_TASKS_KEYS.today,
+        (old) => old?.filter((t) => t.id !== id) ?? [],
+      )
+      qc.setQueryData<SingleTaskResponse[]>(
+        SINGLE_TASKS_KEYS.pending,
+        (old) => old?.filter((t) => t.id !== id) ?? [],
+      )
+      qc.setQueryData<SingleTaskResponse[]>(
+        SINGLE_TASKS_KEYS.archived,
+        (old) => old?.filter((t) => t.id !== id) ?? [],
+      )
+      return { prevToday, prevPending, prevArchived }
     },
-    onError: () => {
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prevToday)    qc.setQueryData(SINGLE_TASKS_KEYS.today,    ctx.prevToday)
+      if (ctx?.prevPending)  qc.setQueryData(SINGLE_TASKS_KEYS.pending,  ctx.prevPending)
+      if (ctx?.prevArchived) qc.setQueryData(SINGLE_TASKS_KEYS.archived, ctx.prevArchived)
       toast.error('Erro ao excluir tarefa. Tente novamente.')
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.today })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.pending })
+      void qc.invalidateQueries({ queryKey: SINGLE_TASKS_KEYS.archived })
     },
   })
 }

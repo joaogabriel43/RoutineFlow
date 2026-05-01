@@ -3,6 +3,8 @@ import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  SingleTaskResponse,
+  CreateSingleTaskRequest,
   ImportMode,
   ImportRoutineResponse,
   DayScheduleResponse,
@@ -21,8 +23,6 @@ import type {
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskResponse,
-  SingleTaskResponse,
-  CreateSingleTaskRequest,
 } from '@/types'
 
 // ── Axios instance ────────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ export const manageApi = {
     api.patch<TaskResponse[]>(`/areas/${areaId}/tasks/reorder`, { taskIds }).then((r) => r.data),
 }
 
-// ── Single Tasks ──────────────────────────────────────────────────────────────
+// ── Single Tasks ─────────────────────────────────────────────────────────────
 
 export const singleTaskApi = {
   listPending: () =>
@@ -217,8 +217,8 @@ export const singleTaskApi = {
   uncomplete: (id: number) =>
     api.post<SingleTaskResponse>(`/single-tasks/${id}/uncomplete`).then((r) => r.data),
 
-  delete: (id: number) =>
-    api.delete(`/single-tasks/${id}`).then((r) => r.data),
+  remove: (id: number) =>
+    api.delete<void>(`/single-tasks/${id}`),
 }
 
 export default api
