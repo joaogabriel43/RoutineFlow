@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, Plus, SearchX } from 'lucide-react'
 import { useManage } from '@/hooks/useManage'
 import { AreaManageCard } from '@/components/shared/AreaManageCard'
 import { TaskManageRow } from '@/components/shared/TaskManageRow'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
+import { FilterBar } from '@/components/shared/FilterBar'
+import { FilterPills } from '@/components/shared/FilterPills'
 import {
   Dialog,
   DialogContent,
@@ -48,6 +50,27 @@ const RESET_FREQUENCIES: { value: ResetFrequency; label: string }[] = [
   { value: 'MONTHLY', label: 'Mensal (todo dia 1)'    },
 ]
 
+const FREQ_FILTER_OPTIONS: { value: ResetFrequency; label: string }[] = [
+  { value: 'DAILY',   label: 'Diário'   },
+  { value: 'WEEKLY',  label: 'Semanal'  },
+  { value: 'MONTHLY', label: 'Mensal'   },
+]
+
+const SCHEDULE_FILTER_OPTIONS: { value: ScheduleType; label: string }[] = [
+  { value: 'DAY_OF_WEEK',  label: 'Semanal' },
+  { value: 'DAY_OF_MONTH', label: 'Mensal'  },
+]
+
+const DAY_FILTER_OPTIONS = [
+  { value: 'MONDAY',    label: 'Seg' },
+  { value: 'TUESDAY',   label: 'Ter' },
+  { value: 'WEDNESDAY', label: 'Qua' },
+  { value: 'THURSDAY',  label: 'Qui' },
+  { value: 'FRIDAY',    label: 'Sex' },
+  { value: 'SATURDAY',  label: 'Sáb' },
+  { value: 'SUNDAY',    label: 'Dom' },
+]
+
 // ── Area Modal ─────────────────────────────────────────────────────────────────
 
 interface AreaModalProps {
@@ -66,7 +89,6 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
     initial?.resetFrequency ?? 'DAILY',
   )
 
-  // Reset state when modal opens with new initial values
   const handleOpenChange = (o: boolean) => {
     if (o) {
       setName(initial?.name ?? '')
@@ -274,7 +296,6 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
             </div>
           </div>
 
-          {/* Conditional: day of week selector */}
           {scheduleType === 'DAY_OF_WEEK' && (
             <div className="space-y-1.5">
               <label className="text-xs text-[#86868b] font-medium">Dia da semana</label>
@@ -292,7 +313,6 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
             </div>
           )}
 
-          {/* Conditional: day of month input */}
           {scheduleType === 'DAY_OF_MONTH' && (
             <div className="space-y-1.5">
               <label className="text-xs text-[#86868b] font-medium">
@@ -379,8 +399,8 @@ function DeleteConfirm({ open, label, onClose, onConfirm, isPending }: DeleteCon
         <AlertDialogHeader>
           <AlertDialogTitle className="text-[#f5f5f7]">Confirmar exclusão</AlertDialogTitle>
           <AlertDialogDescription className="text-[#86868b]">
-            Tem certeza que deseja excluir <span className="text-[#f5f5f7] font-medium">"{label}"</span>?
-            Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir{' '}
+            <span className="text-[#f5f5f7] font-medium">"{label}"</span>? Esta ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -403,14 +423,18 @@ function DeleteConfirm({ open, label, onClose, onConfirm, isPending }: DeleteCon
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-type AreaModal = { open: boolean; area?: AreaResponse }
-type TaskModal = { open: boolean; task?: TaskResponse }
+type AreaModalState = { open: boolean; area?: AreaResponse }
+type TaskModalState = { open: boolean; task?: TaskResponse }
 type DeleteTarget =
   | { open: false }
   | { open: true; type: 'area'; id: number; label: string }
   | { open: true; type: 'task'; areaId: number; id: number; label: string }
+
+const DAY_ORDER = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ManagePage() {
   const {
@@ -426,11 +450,93 @@ export function ManagePage() {
   } = useManage()
 
   const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null)
-  const [areaModal, setAreaModal] = useState<AreaModal>({ open: false })
-  const [taskModal, setTaskModal] = useState<TaskModal>({ open: false })
+  const [areaModal, setAreaModal] = useState<AreaModalState>({ open: false })
+  const [taskModal, setTaskModal] = useState<TaskModalState>({ open: false })
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>({ open: false })
 
+  // ── Area filter state ──────────────────────────────────────────────────────
+  const [areaSearch, setAreaSearch] = useState('')
+  const [areaSearchDeferred, setAreaSearchDeferred] = useState('')
+  const [areaFreqFilter, setAreaFreqFilter] = useState<ResetFrequency | null>(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAreaSearchDeferred(areaSearch), 200)
+    return () => clearTimeout(timer)
+  }, [areaSearch])
+
+  // ── Task filter state ──────────────────────────────────────────────────────
+  const [taskSearch, setTaskSearch] = useState('')
+  const [taskSearchDeferred, setTaskSearchDeferred] = useState('')
+  const [taskScheduleFilter, setTaskScheduleFilter] = useState<ScheduleType | null>(null)
+  const [taskDayFilter, setTaskDayFilter] = useState<string | null>(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setTaskSearchDeferred(taskSearch), 200)
+    return () => clearTimeout(timer)
+  }, [taskSearch])
+
+  // Reset task filters when switching areas
+  useEffect(() => {
+    setTaskSearch('')
+    setTaskSearchDeferred('')
+    setTaskScheduleFilter(null)
+    setTaskDayFilter(null)
+  }, [selectedAreaId])
+
+  // ── Derived data ───────────────────────────────────────────────────────────
+
   const selectedArea = areas.find((a) => a.id === selectedAreaId) ?? null
+
+  const filteredAreas = areas.filter((area) => {
+    const matchSearch = area.name
+      .toLowerCase()
+      .includes(areaSearchDeferred.toLowerCase().trim())
+    const matchFreq = areaFreqFilter === null || area.resetFrequency === areaFreqFilter
+    return matchSearch && matchFreq
+  })
+
+  const hasAreaFilter = areaSearch !== '' || areaFreqFilter !== null
+
+  // All tasks for the selected area, filtered
+  const filteredDayOfWeekTasks = selectedArea
+    ? [...selectedArea.tasks]
+        .filter((t) => {
+          if (t.scheduleType !== 'DAY_OF_WEEK') return false
+          const matchSearch = t.title
+            .toLowerCase()
+            .includes(taskSearchDeferred.toLowerCase().trim())
+          const matchSchedule =
+            taskScheduleFilter === null || taskScheduleFilter === 'DAY_OF_WEEK'
+          const matchDay = taskDayFilter === null || t.dayOfWeek === taskDayFilter
+          return matchSearch && matchSchedule && matchDay
+        })
+        .sort((a, b) => {
+          const dayDiff =
+            DAY_ORDER.indexOf(a.dayOfWeek ?? '') - DAY_ORDER.indexOf(b.dayOfWeek ?? '')
+          return dayDiff !== 0 ? dayDiff : a.orderIndex - b.orderIndex
+        })
+    : []
+
+  const filteredDayOfMonthTasks = selectedArea
+    ? [...selectedArea.tasks]
+        .filter((t) => {
+          if (t.scheduleType !== 'DAY_OF_MONTH') return false
+          const matchSearch = t.title
+            .toLowerCase()
+            .includes(taskSearchDeferred.toLowerCase().trim())
+          const matchSchedule =
+            taskScheduleFilter === null || taskScheduleFilter === 'DAY_OF_MONTH'
+          return matchSearch && matchSchedule
+        })
+        .sort((a, b) =>
+          (a.dayOfMonth ?? 0) - (b.dayOfMonth ?? 0) || a.orderIndex - b.orderIndex,
+        )
+    : []
+
+  const hasTaskFilter = taskSearch !== '' || taskScheduleFilter !== null || taskDayFilter !== null
+  const hasFilteredTasks = filteredDayOfWeekTasks.length > 0 || filteredDayOfMonthTasks.length > 0
+  const hasAnyTasks =
+    (selectedArea?.tasks.length ?? 0) > 0
 
   // ── 404 = no active routine ───────────────────────────────────────────────
 
@@ -451,7 +557,12 @@ export function ManagePage() {
 
   // ── Handlers — Areas ─────────────────────────────────────────────────────
 
-  const handleSaveArea = (name: string, color: string, icon: string, resetFrequency: ResetFrequency) => {
+  const handleSaveArea = (
+    name: string,
+    color: string,
+    icon: string,
+    resetFrequency: ResetFrequency,
+  ) => {
     if (areaModal.area) {
       updateArea.mutate(
         { id: areaModal.area.id, data: { name, color, icon, resetFrequency } },
@@ -496,7 +607,13 @@ export function ManagePage() {
 
   const handleDeleteTask = (task: TaskResponse) => {
     if (!selectedArea) return
-    setDeleteTarget({ open: true, type: 'task', areaId: selectedArea.id, id: task.id, label: task.title })
+    setDeleteTarget({
+      open: true,
+      type: 'task',
+      areaId: selectedArea.id,
+      id: task.id,
+      label: task.title,
+    })
   }
 
   // ── Confirm delete ────────────────────────────────────────────────────────
@@ -522,25 +639,6 @@ export function ManagePage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const DAY_ORDER = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
-
-  const dayOfWeekTasks = selectedArea
-    ? [...selectedArea.tasks]
-        .filter((t) => t.scheduleType === 'DAY_OF_WEEK')
-        .sort((a, b) => {
-          const dayDiff = DAY_ORDER.indexOf(a.dayOfWeek ?? '') - DAY_ORDER.indexOf(b.dayOfWeek ?? '')
-          return dayDiff !== 0 ? dayDiff : a.orderIndex - b.orderIndex
-        })
-    : []
-
-  const dayOfMonthTasks = selectedArea
-    ? [...selectedArea.tasks]
-        .filter((t) => t.scheduleType === 'DAY_OF_MONTH')
-        .sort((a, b) =>
-          (a.dayOfMonth ?? 0) - (b.dayOfMonth ?? 0) || a.orderIndex - b.orderIndex,
-        )
-    : []
-
   return (
     <>
       <div className="mb-6">
@@ -550,7 +648,6 @@ export function ManagePage() {
         </p>
       </div>
 
-      {/* ── Two-column layout (desktop) / single-panel (mobile) ── */}
       <div className="flex flex-col md:grid md:grid-cols-[280px_1fr] gap-4 md:gap-6">
 
         {/* ── Left panel: Areas list ── */}
@@ -568,6 +665,23 @@ export function ManagePage() {
             </button>
           </div>
 
+          {/* Area filter bar */}
+          {areas.length > 0 && (
+            <div className="mb-3">
+              <FilterBar
+                search={areaSearch}
+                onSearchChange={setAreaSearch}
+                placeholder="Buscar área…"
+              >
+                <FilterPills
+                  options={FREQ_FILTER_OPTIONS}
+                  selected={areaFreqFilter}
+                  onSelect={setAreaFreqFilter}
+                />
+              </FilterBar>
+            </div>
+          )}
+
           {areas.length === 0 ? (
             <div className="py-8 text-center text-sm text-[#86868b]">
               Nenhuma área encontrada.{' '}
@@ -578,9 +692,26 @@ export function ManagePage() {
                 Criar primeira área
               </button>
             </div>
+          ) : filteredAreas.length === 0 ? (
+            /* Empty state after filter */
+            <div className="py-8 flex flex-col items-center gap-3 text-center">
+              <SearchX size={32} className="text-[#3a3a3a]" />
+              <p className="text-sm text-[#86868b]">Nenhuma área encontrada</p>
+              {hasAreaFilter && (
+                <button
+                  onClick={() => {
+                    setAreaSearch('')
+                    setAreaFreqFilter(null)
+                  }}
+                  className="text-xs text-[#0071e3] hover:underline"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
           ) : (
             <div className="space-y-1">
-              {areas.map((area) => (
+              {filteredAreas.map((area) => (
                 <AreaManageCard
                   key={area.id}
                   area={area}
@@ -616,11 +747,16 @@ export function ManagePage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
-                    style={{ backgroundColor: selectedArea.color + '22', border: `2px solid ${selectedArea.color}` }}
+                    style={{
+                      backgroundColor: selectedArea.color + '22',
+                      border: `2px solid ${selectedArea.color}`,
+                    }}
                   >
                     {selectedArea.icon}
                   </div>
-                  <span className="text-sm font-semibold text-[#f5f5f7]">{selectedArea.name}</span>
+                  <span className="text-sm font-semibold text-[#f5f5f7]">
+                    {selectedArea.name}
+                  </span>
                 </div>
                 <button
                   onClick={() => setTaskModal({ open: true })}
@@ -631,8 +767,36 @@ export function ManagePage() {
                 </button>
               </div>
 
+              {/* Task filter bar (only when there are tasks) */}
+              {hasAnyTasks && (
+                <div className="mb-3">
+                  <FilterBar
+                    search={taskSearch}
+                    onSearchChange={setTaskSearch}
+                    placeholder="Buscar tarefa…"
+                  >
+                    <FilterPills
+                      options={SCHEDULE_FILTER_OPTIONS}
+                      selected={taskScheduleFilter}
+                      onSelect={(v) => {
+                        setTaskScheduleFilter(v)
+                        setTaskDayFilter(null)
+                      }}
+                    />
+                    {/* Day-of-week pills — only visible when DAY_OF_WEEK filter active */}
+                    {taskScheduleFilter === 'DAY_OF_WEEK' && (
+                      <FilterPills
+                        options={DAY_FILTER_OPTIONS}
+                        selected={taskDayFilter}
+                        onSelect={setTaskDayFilter}
+                      />
+                    )}
+                  </FilterBar>
+                </div>
+              )}
+
               {/* Tasks list */}
-              {dayOfWeekTasks.length === 0 && dayOfMonthTasks.length === 0 ? (
+              {!hasAnyTasks ? (
                 <div className="py-8 text-center text-sm text-[#86868b]">
                   Nenhuma tarefa nesta área.{' '}
                   <button
@@ -642,41 +806,61 @@ export function ManagePage() {
                     Adicionar tarefa
                   </button>
                 </div>
+              ) : !hasFilteredTasks ? (
+                /* Empty state after filter */
+                <div className="py-8 flex flex-col items-center gap-3 text-center">
+                  <SearchX size={32} className="text-[#3a3a3a]" />
+                  <p className="text-sm text-[#86868b]">Nenhuma tarefa encontrada</p>
+                  {hasTaskFilter && (
+                    <button
+                      onClick={() => {
+                        setTaskSearch('')
+                        setTaskScheduleFilter(null)
+                        setTaskDayFilter(null)
+                      }}
+                      className="text-xs text-[#0071e3] hover:underline"
+                    >
+                      Limpar filtros
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-0.5">
-                  {/* Group DAY_OF_WEEK tasks by weekday */}
-                  {DAYS_OF_WEEK.filter((d) => dayOfWeekTasks.some((t) => t.dayOfWeek === d.value)).map(
-                    (day) => {
-                      const dayTasks = dayOfWeekTasks.filter((t) => t.dayOfWeek === day.value)
-                      return (
-                        <div key={day.value} className="mb-3">
-                          <div className="px-3 mb-1">
-                            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-widest">
-                              {DAY_FULL[day.value]}
-                            </span>
-                          </div>
-                          {dayTasks.map((task) => (
-                            <TaskManageRow
-                              key={task.id}
-                              task={task}
-                              onEdit={() => setTaskModal({ open: true, task })}
-                              onDelete={() => handleDeleteTask(task)}
-                            />
-                          ))}
+                  {/* DAY_OF_WEEK tasks grouped by weekday */}
+                  {DAYS_OF_WEEK.filter((d) =>
+                    filteredDayOfWeekTasks.some((t) => t.dayOfWeek === d.value),
+                  ).map((day) => {
+                    const dayTasks = filteredDayOfWeekTasks.filter(
+                      (t) => t.dayOfWeek === day.value,
+                    )
+                    return (
+                      <div key={day.value} className="mb-3">
+                        <div className="px-3 mb-1">
+                          <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-widest">
+                            {DAY_FULL[day.value]}
+                          </span>
                         </div>
-                      )
-                    },
-                  )}
+                        {dayTasks.map((task) => (
+                          <TaskManageRow
+                            key={task.id}
+                            task={task}
+                            onEdit={() => setTaskModal({ open: true, task })}
+                            onDelete={() => handleDeleteTask(task)}
+                          />
+                        ))}
+                      </div>
+                    )
+                  })}
 
                   {/* DAY_OF_MONTH tasks */}
-                  {dayOfMonthTasks.length > 0 && (
+                  {filteredDayOfMonthTasks.length > 0 && (
                     <div className="mb-3">
                       <div className="px-3 mb-1">
                         <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-widest">
                           Mensal
                         </span>
                       </div>
-                      {dayOfMonthTasks.map((task) => (
+                      {filteredDayOfMonthTasks.map((task) => (
                         <TaskManageRow
                           key={task.id}
                           task={task}

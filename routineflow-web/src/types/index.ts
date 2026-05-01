@@ -1,3 +1,20 @@
+// ── Single Tasks ─────────────────────────────────────────────────────────────
+
+export interface SingleTaskResponse {
+  id: number
+  title: string
+  dueDate: string | null
+  completed: boolean
+  completedAt: string | null
+  isOverdue: boolean
+  archivedAt: string | null
+}
+
+export interface CreateSingleTaskRequest {
+  title: string
+  dueDate: string | null
+}
+
 // ── Import ───────────────────────────────────────────────────────────────────
 
 export type ImportMode = 'REPLACE' | 'MERGE'

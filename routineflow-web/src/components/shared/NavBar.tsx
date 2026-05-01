@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, Calendar, Home, Settings2, Upload } from 'lucide-react'
+import { BarChart2, Calendar, CheckSquare, Home, Settings2, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -9,12 +9,16 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/',          icon: Home,      label: 'Hoje'      },
-  { to: '/semana',    icon: Calendar,  label: 'Semana'    },
-  { to: '/analytics', icon: BarChart2, label: 'Analytics' },
-  { to: '/manage',    icon: Settings2, label: 'Gerenciar' },
-  { to: '/import',    icon: Upload,    label: 'Importar'  },
+  { to: '/',          icon: Home,        label: 'Hoje'      },
+  { to: '/semana',    icon: Calendar,    label: 'Semana'    },
+  { to: '/tasks',     icon: CheckSquare, label: 'Tarefas'   },
+  { to: '/analytics', icon: BarChart2,   label: 'Analytics' },
+  { to: '/manage',    icon: Settings2,   label: 'Gerenciar' },
+  { to: '/import',    icon: Upload,      label: 'Importar'  },
 ]
+
+// Mobile shows all except Importar (less relevant on mobile)
+const MOBILE_NAV_ITEMS = NAV_ITEMS.filter((item) => item.to !== '/import')
 
 // ── Desktop Sidebar ───────────────────────────────────────────────────────────
 
@@ -55,7 +59,7 @@ export function SidebarNav() {
 export function BottomNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-[#1f1f1f] bg-[#0a0a0a]/95 backdrop-blur-md h-16">
-      {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+      {MOBILE_NAV_ITEMS.map(({ to, icon: Icon, label }) => (
         <NavLink
           key={to}
           to={to}
