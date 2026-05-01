@@ -6,6 +6,7 @@ import com.routineflow.application.dto.TaskResponse;
 import com.routineflow.application.dto.UpdateTaskRequest;
 import com.routineflow.application.usecase.TaskUseCase;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Tasks", description = "Task CRUD and reordering within an area")
 @RestController
 @RequestMapping("/areas/{areaId}/tasks")
 public class TaskController {

@@ -7,6 +7,9 @@ import com.routineflow.application.usecase.GetActiveRoutineUseCase;
 import com.routineflow.application.usecase.GetDayScheduleUseCase;
 import com.routineflow.application.usecase.ImportRoutineUseCase;
 import com.routineflow.domain.model.ImportMode;
+import com.routineflow.infrastructure.config.AppTimeZone;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepository;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
@@ -23,6 +26,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Routines", description = "Routine import, active routine, and daily/weekly schedule")
 @RestController
 @RequestMapping("/routines")
 public class RoutineController {
@@ -47,6 +51,7 @@ public class RoutineController {
         this.userResolver = userResolver;
     }
 
+    @Operation(summary = "Import a routine from YAML or TXT file (REPLACE or MERGE mode)")
     @PostMapping(value = "/import", consumes = "multipart/form-data")
     public ResponseEntity<ImportRoutineResponse> importRoutine(
             @RequestParam("file") MultipartFile file,
@@ -64,10 +69,11 @@ public class RoutineController {
         return ResponseEntity.ok(getActiveRoutineUseCase.execute(userId));
     }
 
+    @Operation(summary = "Get the task schedule for today (BRT)")
     @GetMapping("/active/today")
     public ResponseEntity<DayScheduleResponse> getTodaySchedule() {
         Long userId = userResolver.currentUserId();
-        return ResponseEntity.ok(getDayScheduleUseCase.execute(userId, LocalDate.now()));
+        return ResponseEntity.ok(getDayScheduleUseCase.execute(userId, LocalDate.now(AppTimeZone.ZONE)));
     }
 
     @GetMapping("/active/day/{dayOfWeek}")
@@ -78,7 +84,7 @@ public class RoutineController {
         // Compute the actual date of this weekday in the current ISO week
         // (ISO week: Monday = 1 … Sunday = 7). This ensures DAY_OF_MONTH tasks
         // appear in the correct column when that day of the month falls this week.
-        LocalDate monday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate monday = LocalDate.now(AppTimeZone.ZONE).with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate targetDate = monday.plusDays(dayOfWeek.getValue() - 1);
         return ResponseEntity.ok(getDayScheduleUseCase.execute(userId, targetDate));
     }

@@ -4,6 +4,7 @@ import com.routineflow.application.dto.AreaAnalyticsResponse;
 import com.routineflow.application.dto.DayOfWeekStat;
 import com.routineflow.application.dto.WeeklyTrendPoint;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
+import com.routineflow.infrastructure.config.AppTimeZone;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.TaskJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
@@ -14,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
@@ -99,9 +99,9 @@ public class AreaAnalyticsUseCase {
         if (tasks.isEmpty()) return 0;
 
         LocalDate areaCreated = area.getCreatedAt() != null
-                ? area.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate()
-                : LocalDate.now();
-        LocalDate today = LocalDate.now();
+                ? area.getCreatedAt().atZone(AppTimeZone.ZONE).toLocalDate()
+                : LocalDate.now(AppTimeZone.ZONE);
+        LocalDate today = LocalDate.now(AppTimeZone.ZONE);
 
         if (!areaCreated.isBefore(today)) return 0;
 
@@ -130,12 +130,12 @@ public class AreaAnalyticsUseCase {
      * Each point covers Mon–Sun. Weeks before area creation have totalTasks=0.
      */
     private List<WeeklyTrendPoint> buildWeeklyTrend(AreaJpaEntity area, List<LocalDate> completedDates) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(AppTimeZone.ZONE);
         LocalDate thisMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         int tasksPerWeek = area.getTasks().size();
 
         LocalDate areaCreated = area.getCreatedAt() != null
-                ? area.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate()
+                ? area.getCreatedAt().atZone(AppTimeZone.ZONE).toLocalDate()
                 : thisMonday;
 
         Set<LocalDate> completedSet = new HashSet<>(completedDates);
@@ -181,9 +181,9 @@ public class AreaAnalyticsUseCase {
                 .collect(Collectors.groupingBy(LocalDate::getDayOfWeek, Collectors.counting()));
 
         LocalDate areaCreated = area.getCreatedAt() != null
-                ? area.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate()
-                : LocalDate.now();
-        LocalDate today = LocalDate.now();
+                ? area.getCreatedAt().atZone(AppTimeZone.ZONE).toLocalDate()
+                : LocalDate.now(AppTimeZone.ZONE);
+        LocalDate today = LocalDate.now(AppTimeZone.ZONE);
 
         List<DayOfWeekStat> stats = new ArrayList<>();
         for (DayOfWeek day : DayOfWeek.values()) { // MONDAY first, per ISO
