@@ -1,0 +1,35 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  # ── Deployment Summary ────────────────────────────────────────────────────────
+  # Railway (backend) and Vercel (frontend) deploy automatically on push to main
+  # via their GitHub integrations. This job documents what was triggered and
+  # provides a quick reference to the live URLs.
+  notify-deploy:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Deployment Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend API | Railway | Auto-deploy triggered |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | Vercel | Auto-deploy triggered |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Live URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **API**: https://routineflow-production.up.railway.app/api" >> $GITHUB_STEP_SUMMARY
+          echo "- **Swagger**: https://routineflow-production.up.railway.app/api/swagger-ui.html" >> $GITHUB_STEP_SUMMARY
+          echo "- **App**: https://routine-flow-beta.vercel.app" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Commit" >> $GITHUB_STEP_SUMMARY
+          echo "- SHA: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Message: ${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
