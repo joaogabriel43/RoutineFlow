@@ -3,6 +3,9 @@
 > Sistema de gerenciamento de rotina pessoal orientado a dados.
 > Importe sua rotina via YAML, acompanhe seu progresso diário e visualize analytics detalhados.
 
+[![CI](https://github.com/joaogabriel43/RoutineFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/joaogabriel43/RoutineFlow/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-175%20passing-brightgreen)](https://github.com/joaogabriel43/RoutineFlow/actions)
+
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
