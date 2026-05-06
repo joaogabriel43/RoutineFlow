@@ -1,20 +1,3 @@
-// ── Single Tasks ─────────────────────────────────────────────────────────────
-
-export interface SingleTaskResponse {
-  id: number
-  title: string
-  dueDate: string | null
-  completed: boolean
-  completedAt: string | null
-  isOverdue: boolean
-  archivedAt: string | null
-}
-
-export interface CreateSingleTaskRequest {
-  title: string
-  dueDate: string | null
-}
-
 // ── Import ───────────────────────────────────────────────────────────────────
 
 export type ImportMode = 'REPLACE' | 'MERGE'
@@ -259,4 +242,24 @@ export interface WeekComparisonResponse {
 
 export interface WeeklyHistoryResponse {
   weeks: WeeklyCompletionResponse[]
+}
+
+// ── Single Tasks ──────────────────────────────────────────────────────────────
+
+export interface SingleTaskResponse {
+  id: number
+  title: string
+  description: string | null
+  dueDate: string | null       // yyyy-MM-dd
+  completed: boolean
+  completedAt: string | null
+  archivedAt: string | null
+  createdAt: string
+  isOverdue: boolean
+}
+
+export interface CreateSingleTaskRequest {
+  title: string
+  description: string | null
+  dueDate: string | null
 }

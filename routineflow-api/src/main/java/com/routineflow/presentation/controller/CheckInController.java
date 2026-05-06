@@ -32,21 +32,41 @@ public class CheckInController {
         this.userResolver = userResolver;
     }
 
-    @Operation(summary = "Mark a task as completed for today")
+    @Operation(summary = "Mark a task as completed for the given date (defaults to today BRT)")
     @PostMapping("/{taskId}/complete")
-    public ResponseEntity<DailyLogResponse> complete(@PathVariable Long taskId) {
+    public ResponseEntity<DailyLogResponse> complete(
+            @PathVariable Long taskId,
+            @RequestParam(required = false) LocalDate date
+    ) {
         Long userId = userResolver.currentUserId();
-        return ResponseEntity.ok(checkInUseCase.completeTask(userId, taskId, LocalDate.now(AppTimeZone.ZONE)));
+        LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
+        return ResponseEntity.ok(checkInUseCase.completeTask(userId, taskId, targetDate));
     }
 
-    @Operation(summary = "Unmark a task (undo completion)")
+    @Operation(summary = "Unmark a task (undo completion) for the given date (defaults to today BRT)")
     @PostMapping("/{taskId}/uncomplete")
-    public ResponseEntity<DailyLogResponse> uncomplete(@PathVariable Long taskId) {
+    public ResponseEntity<DailyLogResponse> uncomplete(
+            @PathVariable Long taskId,
+            @RequestParam(required = false) LocalDate date
+    ) {
         Long userId = userResolver.currentUserId();
-        return ResponseEntity.ok(checkInUseCase.uncompleteTask(userId, taskId, LocalDate.now(AppTimeZone.ZONE)));
+        LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
+        return ResponseEntity.ok(checkInUseCase.uncompleteTask(userId, taskId, targetDate));
     }
 
-    @Operation(summary = "Get completion progress for today")
+    // Primary progress endpoint — optional date param, defaults to today
+    @Operation(summary = "Get completion progress for the given date (defaults to today BRT)")
+    @GetMapping("/progress")
+    public ResponseEntity<DailyProgressResponse> progress(
+            @RequestParam(required = false) LocalDate date
+    ) {
+        Long userId = userResolver.currentUserId();
+        LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
+        return ResponseEntity.ok(getDailyProgressUseCase.getProgress(userId, targetDate));
+    }
+
+    // Alias for backward compatibility — keep until frontend is fully migrated
+    @Operation(summary = "Get completion progress for today (alias for /progress)")
     @GetMapping("/today/progress")
     public ResponseEntity<DailyProgressResponse> todayProgress() {
         Long userId = userResolver.currentUserId();

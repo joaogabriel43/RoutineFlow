@@ -48,8 +48,8 @@ export default function App() {
             <Route path="analytics/area/:areaId" element={<AreaAnalyticsPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="import/habitnow" element={<HabitNowConverterPage />} />
-            <Route path="manage" element={<ManagePage />} />
             <Route path="tasks" element={<SingleTasksPage />} />
+            <Route path="manage" element={<ManagePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

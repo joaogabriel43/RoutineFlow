@@ -122,6 +122,58 @@ class CheckInUseCaseTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
+    @Test
+    @DisplayName("completeTask_pastDate_createsLogWithCorrectLogDate")
+    void completeTask_pastDate_createsLogWithCorrectLogDate() {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        var task = buildTask(TASK_ID, USER_ID);
+        when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, yesterday))
+                .thenReturn(Optional.empty());
+        when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.completeTask(USER_ID, TASK_ID, yesterday);
+
+        assertThat(result.logDate()).isEqualTo(yesterday);
+        assertThat(result.completed()).isTrue();
+        verify(dailyLogJpaRepository).save(any());
+    }
+
+    @Test
+    @DisplayName("completeTask_futureDate_throwsIllegalArgumentException")
+    void completeTask_futureDate_throwsIllegalArgumentException() {
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+        // validation fires before any repository call — no stubbing needed
+        assertThatThrownBy(() -> useCase.completeTask(USER_ID, TASK_ID, tomorrow))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("future");
+
+        verify(taskJpaRepository, never()).findById(any());
+        verify(dailyLogJpaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("uncompleteTask_pastDate_updatesLogWithCorrectDate")
+    void uncompleteTask_pastDate_updatesLogWithCorrectDate() {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        var task = buildTask(TASK_ID, USER_ID);
+        var existingLog = DailyLogJpaEntity.builder()
+                .task(task).user(task.getArea().getUser())
+                .logDate(yesterday).completed(true).completedAt(java.time.Instant.now()).build();
+
+        when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, yesterday))
+                .thenReturn(Optional.of(existingLog));
+        when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.uncompleteTask(USER_ID, TASK_ID, yesterday);
+
+        assertThat(result.logDate()).isEqualTo(yesterday);
+        assertThat(result.completed()).isFalse();
+        assertThat(result.completedAt()).isNull();
+    }
+
     private TaskJpaEntity buildTask(Long taskId, Long ownerId) {
         var owner = UserJpaEntity.builder().id(ownerId).build();
         var area = AreaJpaEntity.builder().user(owner).build();

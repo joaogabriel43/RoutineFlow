@@ -17,6 +17,18 @@ export interface EnrichedArea extends Omit<AreaWithTasksResponse, 'tasks'> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+const DOW_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+
+function todayStr(): string {
+  return new Date().toISOString().split('T')[0] as string
+}
+
+/** Convert YYYY-MM-DD to Java DayOfWeek enum name. Uses T12:00:00 to avoid TZ shift. */
+function toDayOfWeek(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  return DOW_NAMES[d.getDay()] as string
+}
+
 function computeOverallRate(areas: EnrichedArea[]): number {
   let total = 0
   let done = 0
@@ -29,37 +41,46 @@ function computeOverallRate(areas: EnrichedArea[]): number {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useToday() {
-  // Source of truth for checkbox state.
-  // Initialized once from server counts; never overwritten by subsequent refetches.
+export function useDay(selectedDate: string) {
+  const today = todayStr()
+  const isFuture = selectedDate > today
+  const dayOfWeek = toDayOfWeek(selectedDate)
+
+  // Local checkbox state — reinitialize whenever the selected date changes.
   const [localChecked, setLocalChecked] = useState<Map<number, boolean>>(new Map())
   const [initialized, setInitialized] = useState(false)
+
+  // Reset local state on date change so we re-initialize from fresh server data.
+  useEffect(() => {
+    setLocalChecked(new Map())
+    setInitialized(false)
+  }, [selectedDate])
 
   const [scheduleQuery, progressQuery] = useQueries({
     queries: [
       {
-        queryKey: ['today-schedule'],
-        queryFn: routineApi.getToday,
-        staleTime: 5 * 60 * 1000,   // 5 min — avoid background refetches
-        refetchOnWindowFocus: false, // tab-switching never resets checkboxes
+        queryKey: ['day-schedule', dayOfWeek],
+        queryFn: () => routineApi.getDay(dayOfWeek),
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
       },
       {
-        queryKey: ['today-progress'],
-        queryFn: checkInApi.getTodayProgress,
+        queryKey: ['day-progress', selectedDate],
+        queryFn: () => checkInApi.getDayProgress(selectedDate),
         staleTime: 5 * 60 * 1000,
         refetchOnWindowFocus: false,
       },
     ],
   })
 
-  // Initialize localChecked exactly once — after both queries have resolved.
+  // Initialize localChecked exactly once per date — after both queries resolve.
   // Uses completedTaskIds from the progress response to accurately initialize
   // each task's completed state. After this point, localChecked is the
   // sole source of truth and is never overwritten by server data.
   useEffect(() => {
     if (initialized) return
     if (!scheduleQuery.data) return
-    if (progressQuery.isLoading) return // wait for progress before initializing
+    if (progressQuery.isLoading) return
 
     const completedIdsByArea = new Map<number, Set<number>>()
     for (const area of progressQuery.data?.areas ?? []) {
@@ -78,8 +99,6 @@ export function useToday() {
     setInitialized(true)
   }, [scheduleQuery.data, progressQuery.data, progressQuery.isLoading, initialized])
 
-  // Derive enriched areas from schedule data + localChecked.
-  // Recomputes on any localChecked mutation — never touches server state.
   const enrichedAreas = useMemo((): EnrichedArea[] => {
     if (!scheduleQuery.data) return []
     return scheduleQuery.data.areas.map((area) => {
@@ -102,15 +121,14 @@ export function useToday() {
   const isLoading = scheduleQuery.isLoading || progressQuery.isLoading
   const error = scheduleQuery.error ?? progressQuery.error
 
-  // ── Mutations ────────────────────────────────────────────────────────────────
-  // Update localChecked immediately (optimistic).
-  // Revert on API failure — no invalidateQueries needed since localChecked
-  // is the source of truth and server refetches no longer overwrite it.
+  // ── Mutations ─────────────────────────────────────────────────────────────────
 
   async function completeTask(taskId: number) {
+    if (isFuture) return // future dates: read-only
+
     setLocalChecked((prev) => new Map(prev).set(taskId, true))
     try {
-      await checkInApi.complete(taskId)
+      await checkInApi.complete(taskId, selectedDate)
     } catch {
       setLocalChecked((prev) => new Map(prev).set(taskId, false))
       toast.error('Erro ao marcar tarefa. Tente novamente.')
@@ -118,9 +136,11 @@ export function useToday() {
   }
 
   async function uncompleteTask(taskId: number) {
+    if (isFuture) return
+
     setLocalChecked((prev) => new Map(prev).set(taskId, false))
     try {
-      await checkInApi.uncomplete(taskId)
+      await checkInApi.uncomplete(taskId, selectedDate)
     } catch {
       setLocalChecked((prev) => new Map(prev).set(taskId, true))
       toast.error('Erro ao desmarcar tarefa. Tente novamente.')
@@ -128,6 +148,7 @@ export function useToday() {
   }
 
   function handleTaskToggle(taskId: number, completed: boolean) {
+    if (isFuture) return
     if (completed) {
       void completeTask(taskId)
     } else {
@@ -140,6 +161,7 @@ export function useToday() {
     overallRate,
     isLoading,
     error,
+    isFuture,
     handleTaskToggle,
   }
 }

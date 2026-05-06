@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { SingleTaskResponse } from '@/types'
 
@@ -8,15 +8,20 @@ interface SingleTaskItemProps {
   onComplete:   (id: number) => void
   onUncomplete: (id: number) => void
   onDelete:     (id: number) => void
-  /** When true the item is in the archived list — show uncomplete instead of complete */
+  /** When true the item is in the archived list — show undo instead of complete */
   archived?: boolean
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
-function formatDueDate(dueDate: string): string {
-  const d = new Date(dueDate + 'T00:00:00')
-  return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(d)
+function formatDueDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+}
+
+function formatCompletedAt(isoStr: string): string {
+  const d = new Date(isoStr)
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -30,93 +35,99 @@ export function SingleTaskItem({
 }: SingleTaskItemProps) {
   const [fading, setFading] = useState(false)
 
-  function handleCheck() {
-    if (archived) {
-      onUncomplete(task.id)
-      return
-    }
-    // Fade-out animation before calling parent
+  function handleComplete() {
+    if (archived) return
     setFading(true)
     setTimeout(() => onComplete(task.id), 280)
+  }
+
+  function handleUncomplete() {
+    setFading(true)
+    setTimeout(() => onUncomplete(task.id), 280)
   }
 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 py-2.5 px-3 rounded-lg group transition-opacity duration-[280ms]',
-        fading ? 'opacity-0' : 'opacity-100',
+        'flex items-start gap-3 py-3 px-1 group transition-all duration-300 ease-in-out',
+        fading && 'opacity-0 max-h-0 overflow-hidden py-0',
       )}
     >
       {/* Circular checkbox */}
       <button
         type="button"
-        onClick={handleCheck}
-        aria-label={archived ? 'Desfazer conclusão' : 'Marcar como concluída'}
+        onClick={archived ? undefined : handleComplete}
+        aria-label={archived ? 'Concluída' : 'Marcar como concluída'}
         className={cn(
-          'shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer',
+          'mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer',
+          'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3]',
           archived
-            ? 'border-[#0071e3] bg-[#0071e3]'
-            : 'border-[#3a3a3a] hover:border-[#0071e3]',
+            ? 'bg-[#30d158] border-none cursor-default'
+            : 'border-[1.5px] border-[#3a3a3c] hover:border-[#30d158]',
         )}
       >
-        {archived && (
-          <svg
-            viewBox="0 0 10 8"
-            fill="none"
-            className="w-2.5 h-2"
-            aria-hidden="true"
-          >
-            <path
-              d="M1 4l2.5 2.5L9 1"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
+        {archived && <Check size={11} strokeWidth={3} className="text-white" />}
       </button>
 
-      {/* Title + metadata */}
+      {/* Content */}
       <div className="flex-1 min-w-0">
-        <p
-          className={cn(
-            'text-sm truncate',
-            archived ? 'text-[#86868b] line-through' : 'text-[#f5f5f7]',
-          )}
-        >
-          {task.title}
-        </p>
-
-        {/* Due date + overdue badge */}
-        {task.dueDate && (
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span
-              className={cn(
-                'text-[11px]',
-                task.isOverdue && !archived ? 'text-red-400' : 'text-[#86868b]',
-              )}
-            >
-              {formatDueDate(task.dueDate)}
-            </span>
-            {task.isOverdue && !archived && (
-              <span className="text-[10px] font-medium px-1.5 py-0 rounded-full bg-red-500/15 text-red-400">
-                Atrasada
-              </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className={cn(
+              'text-sm font-medium leading-snug',
+              archived ? 'line-through text-[#86868b]' : 'text-[#f5f5f7]',
             )}
-          </div>
+          >
+            {task.title}
+          </span>
+
+          {task.isOverdue && !archived && (
+            <span className="shrink-0 text-[10px] font-medium text-red-400 uppercase tracking-wide">
+              Atrasada
+            </span>
+          )}
+
+          {task.dueDate && !task.isOverdue && !archived && (
+            <span className="shrink-0 text-xs text-[#86868b]">
+              até {formatDueDate(task.dueDate)}
+            </span>
+          )}
+        </div>
+
+        {task.description && (
+          <p className="text-xs text-[#86868b] mt-0.5 leading-relaxed">{task.description}</p>
+        )}
+
+        {archived && task.completedAt && (
+          <p className="text-xs text-[#86868b] mt-0.5">
+            Concluída em {formatCompletedAt(task.completedAt)}
+          </p>
         )}
       </div>
 
-      {/* Delete button — visible on hover */}
-      <button
-        type="button"
-        onClick={() => onDelete(task.id)}
-        aria-label="Excluir tarefa"
-        className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-[#3a3a3a] hover:text-red-400 cursor-pointer"
-      >
-        <X size={15} />
-      </button>
+      {/* Actions — visible on hover */}
+      <div className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {archived && (
+          <button
+            type="button"
+            onClick={handleUncomplete}
+            className="text-xs text-[#86868b] hover:text-[#f5f5f7] px-2 py-1 rounded hover:bg-[#1f1f1f] transition-colors cursor-pointer"
+          >
+            Desfazer
+          </button>
+        )}
+
+        {!archived && (
+          <button
+            type="button"
+            onClick={() => onDelete(task.id)}
+            aria-label="Excluir tarefa"
+            className="p-1 rounded text-[#3a3a3c] hover:text-red-400 hover:bg-[#1f1f1f] transition-colors cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
     </div>
   )
 }

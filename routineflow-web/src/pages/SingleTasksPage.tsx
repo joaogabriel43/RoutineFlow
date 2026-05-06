@@ -57,27 +57,30 @@ function applyDeadlineFilter(
 // ── Create modal ──────────────────────────────────────────────────────────────
 
 interface CreateModalProps {
-  open: boolean
-  onClose: () => void
-  onSave: (title: string, dueDate: string | null) => void
+  open:      boolean
+  onClose:   () => void
+  onSave:    (title: string, description: string | null, dueDate: string | null) => void
   isPending: boolean
 }
 
 function CreateSingleTaskModal({ open, onClose, onSave, isPending }: CreateModalProps) {
-  const [title, setTitle]     = useState('')
-  const [dueDate, setDueDate] = useState('')
+  const [title,       setTitle]       = useState('')
+  const [description, setDescription] = useState('')
+  const [dueDate,     setDueDate]     = useState('')
 
   function handleSave() {
     const trimmed = title.trim()
     if (!trimmed) return
-    onSave(trimmed, dueDate || null)
+    onSave(trimmed, description.trim() || null, dueDate || null)
     setTitle('')
+    setDescription('')
     setDueDate('')
     onClose()
   }
 
   function handleClose() {
     setTitle('')
+    setDescription('')
     setDueDate('')
     onClose()
   }
@@ -97,6 +100,12 @@ function CreateSingleTaskModal({ open, onClose, onSave, isPending }: CreateModal
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             className="bg-[#0a0a0a] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#86868b] focus-visible:ring-[#0071e3]"
             autoFocus
+          />
+          <Input
+            placeholder="Descrição (opcional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="bg-[#0a0a0a] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#86868b] focus-visible:ring-[#0071e3]"
           />
           <div>
             <label className="text-xs text-[#86868b] block mb-1">Prazo (opcional)</label>
@@ -134,9 +143,9 @@ function CreateSingleTaskModal({ open, onClose, onSave, isPending }: CreateModal
 
 function TaskListSkeleton() {
   return (
-    <div className="space-y-1">
+    <div className="rounded-xl bg-[#141414] border border-[#1f1f1f] divide-y divide-[#1f1f1f] overflow-hidden">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+        <div key={i} className="flex items-center gap-3 px-4 py-3">
           <Skeleton className="h-5 w-5 rounded-full bg-[#1f1f1f] shrink-0" />
           <div className="flex-1 space-y-1.5">
             <Skeleton className="h-4 w-3/4 bg-[#1f1f1f]" />
@@ -188,8 +197,8 @@ function EmptyFiltered({ onClear }: { onClear: () => void }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function SingleTasksPage() {
-  const [showModal,       setShowModal]       = useState(false)
-  const [deadlineFilter,  setDeadlineFilter]  = useState<DeadlineFilter | null>(null)
+  const [showModal,      setShowModal]      = useState(false)
+  const [deadlineFilter, setDeadlineFilter] = useState<DeadlineFilter | null>(null)
 
   const { data: pending,  isLoading: loadingPending  } = usePendingSingleTasks()
   const { data: archived, isLoading: loadingArchived } = useArchivedSingleTasks()
@@ -201,8 +210,8 @@ export function SingleTasksPage() {
 
   const filteredPending = applyDeadlineFilter(pending ?? [], deadlineFilter)
 
-  function handleSave(title: string, dueDate: string | null) {
-    create({ title, dueDate })
+  function handleSave(title: string, description: string | null, dueDate: string | null) {
+    create({ title, description, dueDate })
   }
 
   return (
@@ -248,7 +257,6 @@ export function SingleTasksPage() {
 
         {/* ── Pending tab ─────────────────────────────────────────────────────── */}
         <TabsContent value="pending">
-          {/* Deadline filter pills */}
           <div className="mb-4">
             <FilterPills
               options={DEADLINE_FILTER_OPTIONS}
@@ -264,7 +272,7 @@ export function SingleTasksPage() {
           ) : filteredPending.length === 0 ? (
             <EmptyFiltered onClear={() => setDeadlineFilter(null)} />
           ) : (
-            <div className="rounded-xl bg-[#141414] border border-[#1f1f1f] divide-y divide-[#1f1f1f] overflow-hidden">
+            <div className="rounded-xl bg-[#141414] border border-[#1f1f1f] divide-y divide-[#1f1f1f] overflow-hidden px-3">
               {filteredPending.map((task) => (
                 <SingleTaskItem
                   key={task.id}
@@ -285,7 +293,7 @@ export function SingleTasksPage() {
           ) : (archived?.length ?? 0) === 0 ? (
             <EmptyArchived />
           ) : (
-            <div className="rounded-xl bg-[#141414] border border-[#1f1f1f] divide-y divide-[#1f1f1f] overflow-hidden">
+            <div className="rounded-xl bg-[#141414] border border-[#1f1f1f] divide-y divide-[#1f1f1f] overflow-hidden px-3">
               {archived!.map((task) => (
                 <SingleTaskItem
                   key={task.id}

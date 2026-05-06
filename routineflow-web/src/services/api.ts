@@ -90,12 +90,29 @@ export const routineApi = {
 // ── Check-in ──────────────────────────────────────────────────────────────────
 
 export const checkInApi = {
-  complete: (taskId: number) =>
-    api.post<DailyLogResponse>(`/checkins/${taskId}/complete`).then((r) => r.data),
+  complete: (taskId: number, date?: string) =>
+    api
+      .post<DailyLogResponse>(`/checkins/${taskId}/complete`, undefined, {
+        params: date ? { date } : undefined,
+      })
+      .then((r) => r.data),
 
-  uncomplete: (taskId: number) =>
-    api.post<DailyLogResponse>(`/checkins/${taskId}/uncomplete`).then((r) => r.data),
+  uncomplete: (taskId: number, date?: string) =>
+    api
+      .post<DailyLogResponse>(`/checkins/${taskId}/uncomplete`, undefined, {
+        params: date ? { date } : undefined,
+      })
+      .then((r) => r.data),
 
+  // Primary: optional date param (defaults to today on server)
+  getDayProgress: (date?: string) =>
+    api
+      .get<DailyProgressResponse>('/checkins/progress', {
+        params: date ? { date } : undefined,
+      })
+      .then((r) => r.data),
+
+  // Alias kept for backward compat
   getTodayProgress: () =>
     api.get<DailyProgressResponse>('/checkins/today/progress').then((r) => r.data),
 }
@@ -187,6 +204,9 @@ export const singleTaskApi = {
 
   listArchived: () =>
     api.get<SingleTaskResponse[]>('/single-tasks/archived').then((r) => r.data),
+
+  listToday: () =>
+    api.get<SingleTaskResponse[]>('/single-tasks/today').then((r) => r.data),
 
   create: (data: CreateSingleTaskRequest) =>
     api.post<SingleTaskResponse>('/single-tasks', data).then((r) => r.data),
