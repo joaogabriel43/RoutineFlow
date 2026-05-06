@@ -74,23 +74,25 @@ export function useDay(selectedDate: string) {
   })
 
   // Initialize localChecked exactly once per date — after both queries resolve.
+  // Uses completedTaskIds from the progress response to accurately initialize
+  // each task's completed state. After this point, localChecked is the
+  // sole source of truth and is never overwritten by server data.
   useEffect(() => {
     if (initialized) return
     if (!scheduleQuery.data) return
     if (progressQuery.isLoading) return
 
-    const completedCounts = new Map<number, number>()
+    const completedIdsByArea = new Map<number, Set<number>>()
     for (const area of progressQuery.data?.areas ?? []) {
-      completedCounts.set(area.areaId, area.completedTasks)
+      completedIdsByArea.set(area.areaId, new Set(area.completedTaskIds))
     }
 
     const initial = new Map<number, boolean>()
     for (const area of scheduleQuery.data.areas) {
-      const completedCount = completedCounts.get(area.id) ?? 0
-      const sorted = [...area.tasks].sort((a, b) => a.orderIndex - b.orderIndex)
-      sorted.forEach((task, idx) => {
-        initial.set(task.id, idx < completedCount)
-      })
+      const completedIds = completedIdsByArea.get(area.id) ?? new Set<number>()
+      for (const task of area.tasks) {
+        initial.set(task.id, completedIds.has(task.id))
+      }
     }
 
     setLocalChecked(initial)

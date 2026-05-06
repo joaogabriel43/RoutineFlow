@@ -133,6 +133,7 @@ export interface AreaProgressResponse {
   totalTasks: number
   completedTasks: number
   completionRate: number
+  completedTaskIds: number[]
 }
 
 export interface DailyProgressResponse {

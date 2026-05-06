@@ -1,5 +1,7 @@
 package com.routineflow.application.dto;
 
+import java.util.List;
+
 public record AreaProgressResponse(
         Long areaId,
         String areaName,
@@ -7,5 +9,6 @@ public record AreaProgressResponse(
         String icon,
         int totalTasks,
         int completedTasks,
-        double completionRate
+        double completionRate,
+        List<Long> completedTaskIds
 ) {}

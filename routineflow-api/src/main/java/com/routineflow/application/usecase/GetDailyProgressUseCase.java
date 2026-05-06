@@ -56,13 +56,15 @@ public class GetDailyProgressUseCase {
                             .filter(t -> GetDayScheduleUseCase.taskAppliesOnDate(t, date))
                             .toList();
                     int total = dayTasks.size();
-                    int completed = (int) dayTasks.stream()
-                            .filter(t -> completedTaskIds.contains(t.getId()))
-                            .count();
+                    List<Long> completedIds = dayTasks.stream()
+                            .map(TaskJpaEntity::getId)
+                            .filter(completedTaskIds::contains)
+                            .toList();
+                    int completed = completedIds.size();
                     double rate = total == 0 ? 0.0 : (double) completed / total;
                     return new AreaProgressResponse(
                             area.getId(), area.getName(), area.getColor(), area.getIcon(),
-                            total, completed, rate
+                            total, completed, rate, completedIds
                     );
                 })
                 .filter(a -> a.totalTasks() > 0) // exclude areas with no applicable tasks
