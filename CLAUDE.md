@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 3.0.0 | Criado: 2026-04-19 | Última atualização: 2026-05-03
+> Versão: 3.1.0 | Criado: 2026-04-19 | Última atualização: 2026-05-06
 
 ---
 
@@ -271,6 +271,12 @@ Rotas abertas no `SecurityConfig`: `/swagger-ui/**`, `/swagger-ui.html`, `/api-d
 Todos os controllers têm `@Tag`. Endpoints-chave têm `@Operation(summary = "...")`.
 springdoc artifact: `springdoc-openapi-starter-webmvc-ui:2.6.0`.
 
+### 19. completedTaskIds — IDs exatos no AreaProgressResponse
+`AreaProgressResponse` inclui `completedTaskIds: List<Long>` com os IDs reais das tasks concluídas no dia.
+`GetDailyProgressUseCase` coleta via `dayTasks.stream().map(TaskJpaEntity::getId).filter(completedTaskIds::contains).toList()` — zero queries extras, reutiliza o `Set<Long>` já computado.
+Frontend `useToday.ts` usa `completedIds.has(task.id)` para inicializar `localChecked` — substitui o workaround `idx < completedCount` que distribuía incorretamente pelas primeiras N tarefas por `orderIndex`.
+**Nunca** reverter para distribuição por orderIndex — viola a precisão do estado histórico.
+
 ### 8. Formato do arquivo de importação (YAML)
 ```yaml
 routine:
@@ -332,6 +338,12 @@ routine:
 **Consequências**: (+) Não vaza informação sobre existência do recurso. (-) Comportamento opaco para depuração. Padrão de segurança por obscuridade intencional.
 **Status**: Aceita
 
+### ADR-008: completedTaskIds substitui distribuição por orderIndex
+**Contexto**: Frontend `useToday` inicializava estado de checkboxes marcando as primeiras N tarefas por `orderIndex` onde N = `completedTasks`. Isso era impreciso: se o usuário marcou a task id=3 mas não a id=1, a UI mostrava a id=1 como concluída.
+**Decisão**: Backend passa `completedTaskIds: List<Long>` em `AreaProgressResponse`. Frontend usa `completedIds.has(task.id)` para inicializar cada checkbox individualmente.
+**Consequências**: (+) Estado inicial dos checkboxes é preciso — reflete exatamente o que o usuário marcou. (+) Sem breaking change — `completedTasks` e `completionRate` mantidos. (-) Resposta ligeiramente maior (IDs adicionais).
+**Status**: Aceita
+
 ---
 
 ## 🗺️ Roadmap de Sprints
@@ -356,6 +368,7 @@ routine:
 | Sprint 16 | Filter Lists — FilterBar + FilterPills<T> reutilizáveis, ManagePage área/tarefa com filtros e debounce 200ms, SingleTasksPage (Tabs Pendentes/Arquivadas, deadline pills, create modal), useSingleTasks hooks, SingleTaskItem (circular checkbox, isOverdue badge, fade-out 280ms), NavBar Tarefas + mobile sem Importar | ✅ Concluído |
 | Sprint 17 | Rate Limiting (Bucket4j 8.14, POST /auth/login, 10 req/min/IP, X-Forwarded-For), Timezone BRT (AppTimeZone.ZONE, 17 ocorrências LocalDate.now() + ZoneId.systemDefault() corrigidas em 8 arquivos), Swagger/OpenAPI (springdoc 2.6, Bearer JWT, @Tag em 7 controllers, @Operation em endpoints-chave) | ✅ Concluído |
 | Sprint 18 | GitHub Actions CI/CD — ci.yml (backend tests + Testcontainers + frontend build + tsc + OWASP scan), cd.yml (deployment summary), owasp-suppressions.xml, README badges | ✅ Concluído |
+| Sprint 19 | completedTaskIds em AreaProgressResponse — TDD (4 unit + 2 integration tests), AreaProgressResponse +completedTaskIds List<Long>, GetDailyProgressUseCase coleta IDs reais, useToday.ts substituído idx-based por completedIds.has() | ✅ Concluído |
 
 ---
 
@@ -559,6 +572,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
 | 2026-04-30 | 2.7.0 | Sprint 15 concluído — Import MERGE mode: ImportMode enum (REPLACE/MERGE), ImportRoutineResponse +5 campos (mode/areasCreated/areasMerged/tasksCreated/tasksSkipped), ImportRoutineUseCase refatorado (executeReplace/executeMerge privados, dedup key title+scheduleType+dayOfWeek+dayOfMonth), RoutineController ?mode param (defaultValue=REPLACE), fixture merge_routine.yaml, 10 unit tests ImportRoutineUseCaseTest + 4 integration tests RoutineControllerTest (170 total), frontend: ImportMode/ImportRoutineResponse em types, routineApi.importRoutine(mode), useImportRoutine toast detalhado por mode, ImportPage modal REPLACE/MERGE com ModeCard, HabitNowConverterPage tip sobre MERGE. ADR-007 + regras 16-18 |
 | 2026-05-03 | 3.0.0 | Sprint 18 concluído — GitHub Actions CI/CD: ci.yml (backend tests via Testcontainers + frontend build + tsc + OWASP scan), cd.yml (deployment summary com URLs), owasp-suppressions.xml, README badges CI + tests count |
+| 2026-05-06 | 3.1.0 | Sprint 19 concluído — completedTaskIds: AreaProgressResponse +completedTaskIds List<Long>, GetDailyProgressUseCase passa IDs reais, TDD (4 unit + 2 integration tests), useToday.ts corrigido (completedIds.has vs idx-based), ADR-008, padrão 19. 113 unit tests ✅ tsc ✅ build ✅ |
 | 2026-05-01 | 2.9.0 | Sprint 17 concluído — Rate Limiting (Bucket4j 8.14 / com.bucket4j:bucket4j_jdk17-core, RateLimitFilter @Order(1), ConcurrentHashMap, X-Forwarded-For, 5 unit tests), Timezone BRT (AppTimeZone.ZONE, 17 LocalDate.now() + 3 ZoneId.systemDefault() corrigidos em 8 arquivos), Swagger/OpenAPI (springdoc 2.6, OpenApiConfig Bearer JWT, SecurityConfig +3 rotas abertas, @Tag em 7 controllers, @Operation em 10 endpoints). 175 testes ✅ |
 | 2026-05-01 | 2.8.0 | Sprint 16 concluído — Filter Lists: FilterBar (search + Escape + X button + children slot), FilterPills<T extends string> (Todos pill + aria-pressed + deselect on re-click), ManagePage áreas (search debounce 200ms + ResetFrequency pills + empty SearchX state) e tarefas (search + ScheduleType pills + day-of-week pills condicionais + reset on area change), SingleTasksPage (Tabs Pendentes/Arquivadas + deadline FilterPills OVERDUE/TODAY/FUTURE/NO_DATE + CreateSingleTaskModal date picker), useSingleTasks (5 hooks: listPending/listArchived/create/complete/uncomplete/delete, optimistic update em complete e delete), SingleTaskItem (circular checkbox + strikethrough archived + isOverdue badge + fade-out 280ms + hover delete), NavBar adicionado Tarefas/CheckSquare + MOBILE_NAV_ITEMS sem Importar, rota /tasks em App.tsx. Build ✅ tsc ✅ 170 testes ✅ |
 | 2026-04-30 | 2.6.0 | Sprint 14 concluído — ScheduleType (DAY_OF_WEEK \| DAY_OF_MONTH): V11 migration (day_of_week nullable, schedule_type NOT NULL DEFAULT 'DAY_OF_WEEK', day_of_month INT, CHECK constraints), ScheduleType enum, Task domain record atualizado, TaskJpaEntity (@Builder.Default scheduleType=DAY_OF_WEEK), CreateTaskRequest/UpdateTaskRequest/TaskResponse com scheduleType+dayOfMonth, TaskUseCase.validateSchedule() cross-field, GetDayScheduleUseCase assinatura LocalDate + taskAppliesOnDate() public static + filtro Java-side, GetDailyProgressUseCase + StreakCalculationService migrados para filtro Java, RoutineController getDaySchedule usa TemporalAdjusters ISO week, 13 unit tests TaskUseCaseTest + 4 GetDayScheduleUseCaseTest + 5 GetDailyProgressUseCaseTest + 9 StreakCalculationServiceTest, 9 TaskControllerTest integration — 160 total. Frontend: ScheduleType type, TaskResponse/CreateTaskRequest/UpdateTaskRequest atualizados, TaskManageRow scheduleLabel() (Seg / D25), ManagePage TaskModal toggle DAY_OF_WEEK/DAY_OF_MONTH + dayOfMonth input, agrupamento "Mensal" separado. Fix UnnecessaryStubbingException (stubs removidos de 4 testes de validação). Regras de negócio 12–15 documentadas. |

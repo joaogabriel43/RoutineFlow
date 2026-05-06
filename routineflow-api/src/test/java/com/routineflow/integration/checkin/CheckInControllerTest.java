@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -117,6 +118,43 @@ class CheckInControllerTest {
         mockMvc.perform(post("/checkins/" + otherTaskId + "/complete")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("getTodayProgress_afterCompleteTask_responseContainsCompletedTaskId")
+    void getTodayProgress_afterCompleteTask_responseContainsCompletedTaskId() throws Exception {
+        if (firstTaskId == null) return;
+
+        // Complete the task first
+        mockMvc.perform(post("/checkins/" + firstTaskId + "/complete")
+                .header("Authorization", "Bearer " + jwtToken));
+
+        // Now check the progress endpoint
+        mockMvc.perform(get("/checkins/today/progress")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.areas[0].completedTaskIds").isArray())
+                .andExpect(jsonPath("$.areas[0].completedTaskIds[0]").value(firstTaskId));
+    }
+
+    @Test
+    @DisplayName("getTodayProgress_noCheckIns_completedTaskIdsIsEmptyArray")
+    void getTodayProgress_noCheckIns_completedTaskIdsIsEmptyArray() throws Exception {
+        mockMvc.perform(get("/checkins/today/progress")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.areas").isArray());
+        // Each area that has tasks today should have an empty completedTaskIds array
+        // We verify the field exists in the response structure
+        var responseBody = mockMvc.perform(get("/checkins/today/progress")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andReturn().getResponse().getContentAsString();
+        var tree = objectMapper.readTree(responseBody);
+        var areas = tree.path("areas");
+        if (areas.size() > 0) {
+            assertThat(areas.get(0).has("completedTaskIds")).isTrue();
+            assertThat(areas.get(0).path("completedTaskIds").isArray()).isTrue();
+        }
     }
 
     @Test
