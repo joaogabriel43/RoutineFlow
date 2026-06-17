@@ -86,7 +86,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     public String getClientIp(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {
-            return xff.split(",")[0].trim();
+            String[] ips = xff.split(",");
+            // O proxy reverso confiavel anexa o IP real do cliente no final da lista.
+            // Pegar o ultimo IP previne bypass via spoofing trivial (onde o atacante envia o 1o IP).
+            return ips[ips.length - 1].trim();
         }
         return request.getRemoteAddr();
     }

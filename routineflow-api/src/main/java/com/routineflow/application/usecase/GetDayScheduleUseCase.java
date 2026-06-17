@@ -67,17 +67,17 @@ public class GetDayScheduleUseCase {
      * Returns true when the task should appear in the schedule for the given date.
      *
      * DAY_OF_WEEK  → task.dayOfWeek matches date.dayOfWeek
-     * DAY_OF_MONTH → task.dayOfMonth matches date.dayOfMonth AND the month has that day
-     *                (e.g. day 31 does not appear in months with fewer days)
+     * DAY_OF_MONTH → task.dayOfMonth matches date.dayOfMonth. Se a data agendada
+     *                ultrapassar os dias do mês atual (ex. dia 31 em fevereiro),
+     *                a tarefa será acionada no último dia do mês corrente.
      */
     public static boolean taskAppliesOnDate(TaskJpaEntity task, LocalDate date) {
         return switch (task.getScheduleType()) {
             case DAY_OF_WEEK -> task.getDayOfWeek() == date.getDayOfWeek();
             case DAY_OF_MONTH -> {
-                int lastDay = date.lengthOfMonth();
-                yield task.getDayOfMonth() != null
-                        && task.getDayOfMonth() <= lastDay
-                        && task.getDayOfMonth() == date.getDayOfMonth();
+                if (task.getDayOfMonth() == null) yield false;
+                int expectedDay = Math.min(task.getDayOfMonth(), date.lengthOfMonth());
+                yield expectedDay == date.getDayOfMonth();
             }
         };
     }

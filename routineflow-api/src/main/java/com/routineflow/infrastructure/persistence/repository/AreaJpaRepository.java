@@ -45,4 +45,12 @@ public interface AreaJpaRepository extends JpaRepository<AreaJpaEntity, Long> {
 
     // Busca por id + userId para validação de ownership em operações de escrita
     Optional<AreaJpaEntity> findByIdAndUserId(Long id, Long userId);
+
+    // Busca área com tarefas populadas via JOIN FETCH
+    @Query("""
+            SELECT a FROM AreaJpaEntity a
+            LEFT JOIN FETCH a.tasks
+            WHERE a.id = :id AND a.user.id = :userId
+            """)
+    Optional<AreaJpaEntity> findWithTasksByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 }

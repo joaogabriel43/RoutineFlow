@@ -41,7 +41,7 @@ server:
 # JWT — segredo e expiração via variáveis de ambiente
 security:
   jwt:
-    secret: ${JWT_SECRET:routineflow-dev-secret-key-min-256-bits-long-enough}
+    secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION:86400000}  # 24h em milissegundos
 
 # Actuator — apenas /health exposto, sem detalhes internos

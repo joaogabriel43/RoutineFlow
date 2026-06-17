@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import com.routineflow.infrastructure.config.AppTimeZone;
 
 @Service
 public class SingleTaskUseCase {
@@ -28,7 +29,7 @@ public class SingleTaskUseCase {
         if (request.title() == null || request.title().isBlank()) {
             throw new IllegalArgumentException("Single task title must not be blank");
         }
-        if (request.dueDate() != null && request.dueDate().isBefore(LocalDate.now())) {
+        if (request.dueDate() != null && request.dueDate().isBefore(LocalDate.now(AppTimeZone.ZONE))) {
             throw new IllegalArgumentException("Single task due date cannot be in the past");
         }
 
@@ -96,17 +97,13 @@ public class SingleTaskUseCase {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private SingleTaskJpaEntity findAndVerifyOwnership(Long userId, Long taskId) {
-        var entity = singleTaskJpaRepository.findById(taskId)
+        return singleTaskJpaRepository.findByIdAndUserId(taskId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Single task not found: " + taskId));
-        if (!entity.getUserId().equals(userId)) {
-            throw new UnauthorizedException("User " + userId + " does not own single task " + taskId);
-        }
-        return entity;
     }
 
     private SingleTaskResponse toResponse(SingleTaskJpaEntity e) {
         boolean overdue = e.getDueDate() != null
-                && e.getDueDate().isBefore(LocalDate.now())
+                && e.getDueDate().isBefore(LocalDate.now(AppTimeZone.ZONE))
                 && !e.isCompleted();
         return new SingleTaskResponse(
                 e.getId(),

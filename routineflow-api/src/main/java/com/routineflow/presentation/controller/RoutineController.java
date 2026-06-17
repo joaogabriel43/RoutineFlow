@@ -6,6 +6,7 @@ import com.routineflow.application.dto.RoutineResponse;
 import com.routineflow.application.usecase.GetActiveRoutineUseCase;
 import com.routineflow.application.usecase.GetDayScheduleUseCase;
 import com.routineflow.application.usecase.ImportRoutineUseCase;
+import com.routineflow.application.usecase.RecoverRoutineUseCase;
 import com.routineflow.domain.model.ImportMode;
 import com.routineflow.infrastructure.config.AppTimeZone;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,7 +16,6 @@ import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepositor
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,20 +34,20 @@ public class RoutineController {
     private final ImportRoutineUseCase importRoutineUseCase;
     private final GetActiveRoutineUseCase getActiveRoutineUseCase;
     private final GetDayScheduleUseCase getDayScheduleUseCase;
-    private final RoutineJpaRepository routineJpaRepository;
+    private final RecoverRoutineUseCase recoverRoutineUseCase;
     private final AuthenticatedUserResolver userResolver;
 
     public RoutineController(
             ImportRoutineUseCase importRoutineUseCase,
             GetActiveRoutineUseCase getActiveRoutineUseCase,
             GetDayScheduleUseCase getDayScheduleUseCase,
-            RoutineJpaRepository routineJpaRepository,
+            RecoverRoutineUseCase recoverRoutineUseCase,
             AuthenticatedUserResolver userResolver
     ) {
         this.importRoutineUseCase = importRoutineUseCase;
         this.getActiveRoutineUseCase = getActiveRoutineUseCase;
         this.getDayScheduleUseCase = getDayScheduleUseCase;
-        this.routineJpaRepository = routineJpaRepository;
+        this.recoverRoutineUseCase = recoverRoutineUseCase;
         this.userResolver = userResolver;
     }
 
@@ -96,41 +96,13 @@ public class RoutineController {
     @GetMapping("/all")
     public ResponseEntity<List<Map<String, Object>>> getAllRoutines() {
         Long userId = userResolver.currentUserId();
-        List<Map<String, Object>> result = routineJpaRepository.findAllByUserId(userId).stream()
-                .map(r -> Map.<String, Object>of(
-                        "id",         r.getId(),
-                        "name",       r.getName(),
-                        "active",     r.isActive(),
-                        "importedAt", r.getImportedAt()
-                ))
-                .toList();
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(recoverRoutineUseCase.getAllRoutines(userId));
     }
 
     @PatchMapping("/{id}/activate")
-    @Transactional
     public ResponseEntity<Map<String, Object>> activateRoutine(@PathVariable Long id) {
         Long userId = userResolver.currentUserId();
-
-        // Deactivate all routines belonging to this user
-        routineJpaRepository.deactivateAllByUserId(userId);
-
-        // Activate the requested routine (ownership enforced by userId check)
-        RoutineJpaEntity routine = routineJpaRepository.findAllByUserId(userId).stream()
-                .filter(r -> r.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new com.routineflow.application.usecase.exception.ResourceNotFoundException(
-                        "Routine not found: " + id));
-
-        routine.setActive(true);
-        routineJpaRepository.save(routine);
-
-        return ResponseEntity.ok(Map.of(
-                "id",         routine.getId(),
-                "name",       routine.getName(),
-                "active",     routine.isActive(),
-                "importedAt", routine.getImportedAt()
-        ));
+        return ResponseEntity.ok(recoverRoutineUseCase.activateRoutine(userId, id));
     }
 
     private String extractExtension(String filename) {

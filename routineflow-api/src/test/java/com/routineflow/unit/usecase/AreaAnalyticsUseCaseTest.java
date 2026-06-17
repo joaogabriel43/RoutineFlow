@@ -61,7 +61,7 @@ class AreaAnalyticsUseCaseTest {
         // Last 6 Mondays — arbitrary completed dates
         List<LocalDate> completedDates = recentMondayDates(6);
 
-        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.findWithTasksByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
         when(streakJpaRepository.findByAreaIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(streak));
         when(dailyLogJpaRepository.countCompletedByAreaId(AREA_ID)).thenReturn(6L);
         when(dailyLogJpaRepository.findCompletedLogDatesByAreaId(AREA_ID)).thenReturn(completedDates);
@@ -84,7 +84,7 @@ class AreaAnalyticsUseCaseTest {
     void getAreaAnalytics_areaWithNoCheckIns_returnsAllZeros() {
         var area = buildArea(AREA_ID, USER_ID, AREA_CREATED, DayOfWeek.MONDAY);
 
-        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.findWithTasksByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
         when(streakJpaRepository.findByAreaIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.empty());
         when(dailyLogJpaRepository.countCompletedByAreaId(AREA_ID)).thenReturn(0L);
         when(dailyLogJpaRepository.findCompletedLogDatesByAreaId(AREA_ID)).thenReturn(List.of());
@@ -106,7 +106,7 @@ class AreaAnalyticsUseCaseTest {
     @Test
     @DisplayName("getAreaAnalytics_areaNotFound_throwsResourceNotFoundException")
     void getAreaAnalytics_areaNotFound_throwsResourceNotFoundException() {
-        when(areaJpaRepository.findByIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.empty());
+        when(areaJpaRepository.findWithTasksByIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.getAreaAnalytics(USER_ID, 999L))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -116,8 +116,8 @@ class AreaAnalyticsUseCaseTest {
     @Test
     @DisplayName("getAreaAnalytics_areaOfAnotherUser_throwsResourceNotFoundException")
     void getAreaAnalytics_areaOfAnotherUser_throwsResourceNotFoundException() {
-        // findByIdAndUserId returns empty for another user's area (ADR-006)
-        when(areaJpaRepository.findByIdAndUserId(AREA_ID, 99L)).thenReturn(Optional.empty());
+        // findWithTasksByIdAndUserId returns empty for another user's area (ADR-006)
+        when(areaJpaRepository.findWithTasksByIdAndUserId(AREA_ID, 99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.getAreaAnalytics(99L, AREA_ID))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -130,7 +130,7 @@ class AreaAnalyticsUseCaseTest {
     void getWeeklyTrend_12WeeksAlwaysReturned_emptiesHaveRateZero() {
         var area = buildArea(AREA_ID, USER_ID, AREA_CREATED, DayOfWeek.MONDAY);
 
-        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.findWithTasksByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
         when(streakJpaRepository.findByAreaIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.empty());
         when(dailyLogJpaRepository.countCompletedByAreaId(AREA_ID)).thenReturn(2L);
         // Only 2 completed dates — last 2 Mondays
@@ -161,7 +161,7 @@ class AreaAnalyticsUseCaseTest {
         completedDates.addAll(recentWednesdayDates(10));
         completedDates.addAll(recentMondayDates(2));
 
-        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.findWithTasksByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
         when(streakJpaRepository.findByAreaIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.empty());
         when(dailyLogJpaRepository.countCompletedByAreaId(AREA_ID)).thenReturn((long) completedDates.size());
         when(dailyLogJpaRepository.findCompletedLogDatesByAreaId(AREA_ID)).thenReturn(completedDates);
@@ -177,7 +177,7 @@ class AreaAnalyticsUseCaseTest {
     void getBestDayOfWeek_noCheckIns_returnsNull() {
         var area = buildArea(AREA_ID, USER_ID, AREA_CREATED, DayOfWeek.MONDAY);
 
-        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.findWithTasksByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
         when(streakJpaRepository.findByAreaIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.empty());
         when(dailyLogJpaRepository.countCompletedByAreaId(AREA_ID)).thenReturn(0L);
         when(dailyLogJpaRepository.findCompletedLogDatesByAreaId(AREA_ID)).thenReturn(List.of());
@@ -194,7 +194,7 @@ class AreaAnalyticsUseCaseTest {
         var area = buildArea(AREA_ID, USER_ID, AREA_CREATED, DayOfWeek.MONDAY);
 
         // Only 4 completed Mondays — below the 5-sample threshold
-        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.findWithTasksByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
         when(streakJpaRepository.findByAreaIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.empty());
         when(dailyLogJpaRepository.countCompletedByAreaId(AREA_ID)).thenReturn(4L);
         when(dailyLogJpaRepository.findCompletedLogDatesByAreaId(AREA_ID))

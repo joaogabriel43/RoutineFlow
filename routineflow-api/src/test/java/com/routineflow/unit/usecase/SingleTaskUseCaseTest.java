@@ -90,7 +90,7 @@ class SingleTaskUseCaseTest {
     @DisplayName("completeSingleTask_pendingTask_setsCompletedAndArchivedAt")
     void completeSingleTask_pendingTask_setsCompletedAndArchivedAt() {
         var entity = pendingTask(TASK_ID, USER_ID);
-        when(singleTaskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(entity));
+        when(singleTaskJpaRepository.findByIdAndUserId(TASK_ID, USER_ID)).thenReturn(Optional.of(entity));
         when(singleTaskJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var result = useCase.completeSingleTask(USER_ID, TASK_ID);
@@ -104,7 +104,7 @@ class SingleTaskUseCaseTest {
     @DisplayName("completeSingleTask_alreadyComplete_throwsIllegalStateException")
     void completeSingleTask_alreadyComplete_throwsIllegalStateException() {
         var entity = completedTask(TASK_ID, USER_ID);
-        when(singleTaskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(entity));
+        when(singleTaskJpaRepository.findByIdAndUserId(TASK_ID, USER_ID)).thenReturn(Optional.of(entity));
 
         assertThatThrownBy(() -> useCase.completeSingleTask(USER_ID, TASK_ID))
                 .isInstanceOf(IllegalStateException.class)
@@ -117,10 +117,10 @@ class SingleTaskUseCaseTest {
     @DisplayName("completeSingleTask_otherUserTask_throwsUnauthorizedException")
     void completeSingleTask_otherUserTask_throwsUnauthorizedException() {
         var entity = pendingTask(TASK_ID, OTHER_USER_ID);
-        when(singleTaskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(entity));
+        when(singleTaskJpaRepository.findByIdAndUserId(TASK_ID, USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.completeSingleTask(USER_ID, TASK_ID))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(com.routineflow.application.usecase.exception.ResourceNotFoundException.class);
 
         verify(singleTaskJpaRepository, never()).save(any());
     }
@@ -131,7 +131,7 @@ class SingleTaskUseCaseTest {
     @DisplayName("uncompleteSingleTask_completedTask_revertsToP ending")
     void uncompleteSingleTask_completedTask_revertsToPending() {
         var entity = completedTask(TASK_ID, USER_ID);
-        when(singleTaskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(entity));
+        when(singleTaskJpaRepository.findByIdAndUserId(TASK_ID, USER_ID)).thenReturn(Optional.of(entity));
         when(singleTaskJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var result = useCase.uncompleteSingleTask(USER_ID, TASK_ID);
@@ -146,7 +146,7 @@ class SingleTaskUseCaseTest {
     @DisplayName("deleteSingleTask_ownedTask_deletesFromRepository")
     void deleteSingleTask_ownedTask_deletesFromRepository() {
         var entity = pendingTask(TASK_ID, USER_ID);
-        when(singleTaskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(entity));
+        when(singleTaskJpaRepository.findByIdAndUserId(TASK_ID, USER_ID)).thenReturn(Optional.of(entity));
 
         useCase.deleteSingleTask(USER_ID, TASK_ID);
 

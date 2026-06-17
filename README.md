@@ -4,7 +4,7 @@
 > Importe sua rotina via YAML, acompanhe seu progresso diário e visualize analytics detalhados.
 
 [![CI](https://github.com/joaogabriel43/RoutineFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/joaogabriel43/RoutineFlow/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-175%20passing-brightgreen)](https://github.com/joaogabriel43/RoutineFlow/actions)
+[![Tests](https://img.shields.io/badge/tests-209%20passing-brightgreen)](https://github.com/joaogabriel43/RoutineFlow/actions)
 
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?style=flat-square&logo=springboot&logoColor=white)
@@ -42,7 +42,7 @@
 │                    Backend (Spring Boot 3.3)                     │
 │                                                                  │
 │  Presentation  →  Application  →  Domain  ←  Infrastructure     │
-│  (Controllers)    (Use Cases)   (Entities)   (JPA / Security)   │
+│  (Controllers)    (Use Cases)   (Records)    (JPA / Security)   │
 │                                                                  │
 │  RoutineImportEngine (Strategy: YAML + TXT)                     │
 │  CheckInEngine (upsert + optimistic) │ StreakCalculationService  │
@@ -87,7 +87,7 @@ docker compose up --build
 
 | Decisão | Justificativa |
 |---------|---------------|
-| **Clean Architecture** | Domínio isolado e testável sem Spring — domain models sem anotações JPA |
+| **Arquitetura em Camadas Pragmática** | Uso direto do Spring Data JPA na camada Application (ver ADR-009) — evita complexidade acidental com mappers para um domínio de records anêmicos |
 | **Strategy Pattern (Import Engine)** | Suporta YAML e TXT sem if/else no controller — extensível para novos formatos |
 | **TDD** | 55+ testes escritos antes da implementação — use cases com Mockito + controllers com Testcontainers |
 | **Optimistic Update** | UX sem delay no check-in: estado local atualiza imediatamente, API sincroniza em background |
@@ -105,7 +105,7 @@ docker compose up --build
 | 2 — Import | YamlParser, TxtParser, ImportUseCase, RoutineController | ~15 |
 | 3 — Check-in | CheckInUseCase, StreakEngine, reset scheduler | ~10 |
 | 4 — Analytics | Streak, Heatmap, WeeklyCompletion, Comparison, History, AnalyticsController | ~20 |
-| **Total** | | **55+** |
+| **Total** | | **209** |
 
 ---
 
@@ -115,8 +115,8 @@ docker compose up --build
 routineflow/
 ├── routineflow-api/                  # Spring Boot
 │   └── src/main/java/com/routineflow/
-│       ├── domain/                   # Entidades puras (sem JPA)
-│       ├── application/              # Use cases + DTOs
+│       ├── domain/                   # Records anêmicos do domínio
+│       ├── application/              # Use cases (acessam Spring Data JPA diretamente)
 │       ├── infrastructure/           # JPA entities, parsers, security
 │       └── presentation/             # REST controllers
 │

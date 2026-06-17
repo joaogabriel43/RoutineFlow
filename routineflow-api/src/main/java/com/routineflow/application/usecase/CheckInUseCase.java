@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import com.routineflow.infrastructure.config.AppTimeZone;
 
 @Service
 public class CheckInUseCase {
@@ -28,8 +29,8 @@ public class CheckInUseCase {
 
     @Transactional
     public DailyLogResponse completeTask(Long userId, Long taskId, LocalDate date) {
-        if (date.isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("Cannot check in for a future date: " + date);
+        if (date.isAfter(LocalDate.now(AppTimeZone.ZONE))) {
+            throw new IllegalArgumentException("Cannot check in or out for future dates");
         }
 
         var task = taskJpaRepository.findById(taskId)
