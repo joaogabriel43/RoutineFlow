@@ -45,6 +45,9 @@ class GetDayScheduleUseCaseTest {
     private static final LocalDate APRIL_25 = LocalDate.of(2026, 4, 25); // Saturday
     private static final LocalDate APRIL_24 = LocalDate.of(2026, 4, 24); // Friday
     private static final LocalDate FEB_1     = LocalDate.of(2026, 2, 1);  // Feb 1 (not leap)
+    private static final LocalDate FEB_15    = LocalDate.of(2026, 2, 15);
+    private static final LocalDate FEB_28    = LocalDate.of(2026, 2, 28);
+    private static final LocalDate APRIL_30  = LocalDate.of(2026, 4, 30);
 
     @BeforeEach
     void setUp() {
@@ -110,12 +113,11 @@ class GetDayScheduleUseCaseTest {
     }
 
     @Test
-    @DisplayName("execute_dayOfMonth31_inFebruary_taskDoesNotAppear")
-    void execute_dayOfMonth31_inFebruary_taskDoesNotAppear() {
+    @DisplayName("execute_dayOfMonth31_inFebruary_clampsToLastDay")
+    void execute_dayOfMonth31_inFebruary_clampsToLastDay() {
         var user = UserJpaEntity.builder().id(USER_ID).build();
         var routine = RoutineJpaEntity.builder().id(1L).user(user).build();
 
-        // February 2026 has 28 days — day 31 must never appear
         var task = buildTask(1L, ScheduleType.DAY_OF_MONTH, null, 31);
         var area = buildAreaWithTasks(1L, List.of(task), user, routine);
 
@@ -123,9 +125,18 @@ class GetDayScheduleUseCaseTest {
         when(areaJpaRepository.findAreasWithTasksByRoutineIdOrderByOrderIndex(eq(1L)))
                 .thenReturn(List.of(area));
 
-        var result = useCase.execute(USER_ID, FEB_1);
+        // Asserção 1: task aparece no último dia de fevereiro (28)
+        var resultFeb28 = useCase.execute(USER_ID, FEB_28);
+        assertThat(resultFeb28.areas()).hasSize(1);
+        assertThat(resultFeb28.areas().get(0).tasks()).hasSize(1);
 
-        assertThat(result.areas()).isEmpty();
+        // Asserção 2: mesma task não aparece no meio do mês
+        var resultFeb15 = useCase.execute(USER_ID, FEB_15);
+        assertThat(resultFeb15.areas()).isEmpty();
+
+        // Asserção 3: task clampa no dia 30 de abril
+        var resultApr30 = useCase.execute(USER_ID, APRIL_30);
+        assertThat(resultApr30.areas()).hasSize(1);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
