@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SingleTaskJpaRepository extends JpaRepository<SingleTaskJpaEntity, Long> {
 
@@ -29,4 +30,6 @@ public interface SingleTaskJpaRepository extends JpaRepository<SingleTaskJpaEnti
             ORDER BY s.completedAt DESC
             """)
     List<SingleTaskJpaEntity> findArchivedByUserId(@Param("userId") Long userId);
+
+    Optional<SingleTaskJpaEntity> findByIdAndUserId(Long id, Long userId);
 }

@@ -159,7 +159,7 @@ public class ImportRoutineUseCase {
             } else {
                 // Area already exists — merge tasks
                 var existingArea = nameToArea.get(normalizedName);
-                var currentTasks = taskJpaRepository.findByAreaIdOrderByOrderIndex(existingArea.getId());
+                var currentTasks = existingArea.getTasks();
 
                 // Dedup key: title (case-insensitive) + scheduleType + dayOfWeek + dayOfMonth
                 Set<String> existingKeys = currentTasks.stream()

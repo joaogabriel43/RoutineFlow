@@ -40,7 +40,7 @@ public class AreaAnalyticsUseCase {
     @Transactional(readOnly = true)
     public AreaAnalyticsResponse getAreaAnalytics(Long userId, Long areaId) {
         // Validate ownership — returns 404 for non-existent OR another user's area (ADR-006)
-        var area = areaJpaRepository.findByIdAndUserId(areaId, userId)
+        var area = areaJpaRepository.findWithTasksByIdAndUserId(areaId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Area not found: " + areaId));
 
         // Streak: currentStreak and bestStreak

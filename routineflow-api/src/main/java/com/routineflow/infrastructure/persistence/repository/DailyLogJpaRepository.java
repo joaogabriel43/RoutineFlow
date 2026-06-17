@@ -28,6 +28,7 @@ public interface DailyLogJpaRepository extends JpaRepository<DailyLogJpaEntity, 
 
     @Query("""
             SELECT d FROM DailyLogJpaEntity d
+            JOIN FETCH d.task
             WHERE d.user.id = :userId
               AND d.logDate = :logDate
             """)
