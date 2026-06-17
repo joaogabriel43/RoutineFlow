@@ -4,7 +4,7 @@
 > Importe sua rotina via YAML, acompanhe seu progresso diário e visualize analytics detalhados.
 
 [![CI](https://github.com/joaogabriel43/RoutineFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/joaogabriel43/RoutineFlow/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-125%20passing-red)](https://github.com/joaogabriel43/RoutineFlow/actions)
+[![Tests](https://img.shields.io/badge/tests-209%20passing-brightgreen)](https://github.com/joaogabriel43/RoutineFlow/actions)
 
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?style=flat-square&logo=springboot&logoColor=white)
@@ -105,7 +105,7 @@ docker compose up --build
 | 2 — Import | YamlParser, TxtParser, ImportUseCase, RoutineController | ~15 |
 | 3 — Check-in | CheckInUseCase, StreakEngine, reset scheduler | ~10 |
 | 4 — Analytics | Streak, Heatmap, WeeklyCompletion, Comparison, History, AnalyticsController | ~20 |
-| **Total** | | **125** |
+| **Total** | | **209** |
 
 ---
 

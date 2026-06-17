@@ -87,9 +87,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {
             String[] ips = xff.split(",");
-            // O proxy reverso confiavel anexa o IP real do cliente no final da lista.
-            // Pegar o ultimo IP previne bypass via spoofing trivial (onde o atacante envia o 1o IP).
-            return ips[ips.length - 1].trim();
+            // Tradeoff consciente: Usamos o primeiro IP (cliente alegado) para garantir
+            // o bucketing funcional por usuário (evitando lockout global se lêssemos o último IP,
+            // que frequentemente é o proxy do cloud host, ex: Railway). Aceitamos a limitação de 
+            // que isso permite spoofing trivial por atacante que forja o X-Forwarded-For.
+            return ips[0].trim();
         }
         return request.getRemoteAddr();
     }
