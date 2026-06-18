@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 
 public record CreateTaskRequest(
 
@@ -31,5 +32,8 @@ public record CreateTaskRequest(
         /** Required when scheduleType = DAY_OF_MONTH (1-31); null for DAY_OF_WEEK. */
         @Min(value = 1, message = "dayOfMonth must be between 1 and 31")
         @Max(value = 31, message = "dayOfMonth must be between 1 and 31")
-        Integer dayOfMonth
+        Integer dayOfMonth,
+
+        /** Optional — time of day for push notification reminder (HH:mm). */
+        LocalTime reminderTime
 ) {}

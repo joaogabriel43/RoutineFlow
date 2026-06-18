@@ -11,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "tasks")
@@ -54,6 +55,10 @@ public class TaskJpaEntity {
     /** Non-null for DAY_OF_MONTH tasks (1-31); null for DAY_OF_WEEK tasks. */
     @Column(name = "day_of_month")
     private Integer dayOfMonth;
+
+    /** Optional reminder time — when set, DailyReminderJob sends a push notification at this time. */
+    @Column(name = "reminder_time")
+    private LocalTime reminderTime;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

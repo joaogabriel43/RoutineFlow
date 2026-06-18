@@ -45,6 +45,7 @@ public class TaskUseCase {
                 .scheduleType(request.scheduleType())
                 .dayOfWeek(request.scheduleType() == ScheduleType.DAY_OF_WEEK ? request.dayOfWeek() : null)
                 .dayOfMonth(request.scheduleType() == ScheduleType.DAY_OF_MONTH ? request.dayOfMonth() : null)
+                .reminderTime(request.reminderTime())
                 .orderIndex(nextOrder)
                 .build();
 
@@ -64,6 +65,7 @@ public class TaskUseCase {
         task.setScheduleType(request.scheduleType());
         task.setDayOfWeek(request.scheduleType() == ScheduleType.DAY_OF_WEEK ? request.dayOfWeek() : null);
         task.setDayOfMonth(request.scheduleType() == ScheduleType.DAY_OF_MONTH ? request.dayOfMonth() : null);
+        task.setReminderTime(request.reminderTime());
 
         return toResponse(taskJpaRepository.save(task));
     }
@@ -143,7 +145,8 @@ public class TaskUseCase {
                 task.getOrderIndex(),
                 task.getScheduleType(),
                 task.getDayOfWeek(),
-                task.getDayOfMonth()
+                task.getDayOfMonth(),
+                task.getReminderTime()
         );
     }
 }

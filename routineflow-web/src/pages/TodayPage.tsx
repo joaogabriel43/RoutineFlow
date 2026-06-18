@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Bell, X } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AreaCard } from '@/components/shared/AreaCard'
 import { DateNavBar } from '@/components/shared/DateNavBar'
@@ -8,6 +8,7 @@ import { SingleTaskItem } from '@/components/shared/SingleTaskItem'
 import { CreateSingleTaskModal } from '@/components/shared/CreateSingleTaskModal'
 import { useDay } from '@/hooks/useDay'
 import { useSingleTasksToday, useCompleteSingleTask, useDeleteSingleTask } from '@/hooks/useSingleTasks'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { formatPercent } from '@/lib/utils'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -203,8 +204,8 @@ function SingleTasksSection() {
               key={task.id}
               task={task}
               onComplete={(id) => completeMutation.mutate(id)}
+              onUncomplete={() => {}}
               onDelete={(id) => deleteMutation.mutate(id)}
-              isLast={idx === tasks.length - 1}
             />
           ))}
         </div>
@@ -216,6 +217,52 @@ function SingleTasksSection() {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
+
+// ── Push notification banner ────────────────────────────────────────────────────
+
+function PushBanner() {
+  const { isSupported, permission, subscribe, loading } = usePushNotifications()
+  const [dismissed, setDismissed] = useState(
+    () => localStorage.getItem('rf_push_dismissed') === 'true',
+  )
+
+  // Don't show if not supported, already granted, already denied, or dismissed
+  if (!isSupported || permission !== 'default' || dismissed) return null
+
+  const handleActivate = async () => {
+    await subscribe()
+  }
+
+  const handleDismiss = () => {
+    localStorage.setItem('rf_push_dismissed', 'true')
+    setDismissed(true)
+  }
+
+  return (
+    <div className="mb-4 rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] px-4 py-3 flex items-center gap-3">
+      <Bell size={18} className="text-[#0071e3] shrink-0" />
+      <p className="text-sm text-[#a1a1aa] flex-1">
+        Ativar lembretes para receber notificações nos horários configurados
+      </p>
+      <button
+        type="button"
+        onClick={handleActivate}
+        disabled={loading}
+        className="text-xs font-medium text-[#0071e3] hover:text-[#0077ed] transition-colors disabled:opacity-50 shrink-0"
+      >
+        {loading ? 'Ativando...' : 'Ativar'}
+      </button>
+      <button
+        type="button"
+        onClick={handleDismiss}
+        className="text-[#3a3a3c] hover:text-[#86868b] transition-colors shrink-0"
+        aria-label="Dispensar"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  )
+}
 
 export function TodayPage() {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr)
@@ -236,6 +283,9 @@ export function TodayPage() {
   return (
     <div>
       <DateNavBar selectedDate={selectedDate} onSelect={setSelectedDate} />
+
+      {/* Push notification permission banner — only on today */}
+      {selectedDate === todayStr() && <PushBanner />}
 
       <DayHeader
         dateStr={selectedDate}

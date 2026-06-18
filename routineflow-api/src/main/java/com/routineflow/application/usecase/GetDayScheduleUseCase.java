@@ -56,7 +56,8 @@ public class GetDayScheduleUseCase {
                 .map(t -> new TaskResponse(
                         t.getId(), t.getTitle(), t.getDescription(),
                         t.getEstimatedMinutes(), t.getOrderIndex(),
-                        t.getScheduleType(), t.getDayOfWeek(), t.getDayOfMonth()))
+                        t.getScheduleType(), t.getDayOfWeek(), t.getDayOfMonth(),
+                        t.getReminderTime()))
                 .toList();
 
         return new AreaWithTasksResponse(area.getId(), area.getName(),
