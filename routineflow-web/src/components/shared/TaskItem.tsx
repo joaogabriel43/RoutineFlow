@@ -8,9 +8,21 @@ interface TaskItemProps {
   onToggle: (taskId: number, completed: boolean) => void
   isLast?: boolean
   disabled?: boolean
+  isActiveTimer?: boolean
+  onToggleTimer?: (taskId: number) => void
 }
 
-export function TaskItem({ task, areaColor, onToggle, isLast = false, disabled = false }: TaskItemProps) {
+import { TaskTimer } from '@/components/shared/TaskTimer'
+
+export function TaskItem({
+  task,
+  areaColor,
+  onToggle,
+  isLast = false,
+  disabled = false,
+  isActiveTimer = false,
+  onToggleTimer,
+}: TaskItemProps) {
   function handleClick() {
     if (disabled) return
     onToggle(task.id, !task.completed)
@@ -48,16 +60,21 @@ export function TaskItem({ task, areaColor, onToggle, isLast = false, disabled =
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span
+          <button
+            type="button"
+            disabled={disabled || task.completed}
+            onClick={() => {
+              if (onToggleTimer && !disabled && !task.completed) onToggleTimer(task.id)
+            }}
             className={cn(
-              'text-sm font-medium leading-snug transition-all duration-200',
+              'text-sm font-medium leading-snug transition-all duration-200 text-left',
               task.completed
-                ? 'line-through text-[#86868b]'
-                : 'text-[#f5f5f7]',
+                ? 'line-through text-[#86868b] cursor-default'
+                : disabled ? 'text-[#86868b] cursor-not-allowed' : 'text-[#f5f5f7] hover:text-[#0071e3] cursor-pointer',
             )}
           >
             {task.title}
-          </span>
+          </button>
 
           {/* Time pill */}
           {task.estimatedMinutes != null && task.estimatedMinutes > 0 && (
@@ -69,6 +86,21 @@ export function TaskItem({ task, areaColor, onToggle, isLast = false, disabled =
 
         {task.description && (
           <p className="text-xs text-[#86868b] mt-0.5 leading-relaxed">{task.description}</p>
+        )}
+
+        {/* Expanded Timer */}
+        {isActiveTimer && !task.completed && (
+          <div className="mt-3">
+            <TaskTimer
+              taskId={task.id}
+              taskTitle={task.title}
+              estimatedMinutes={task.estimatedMinutes ?? 0}
+              onComplete={() => {
+                onToggle(task.id, true)
+                if (onToggleTimer) onToggleTimer(task.id)
+              }}
+            />
+          </div>
         )}
       </div>
     </div>

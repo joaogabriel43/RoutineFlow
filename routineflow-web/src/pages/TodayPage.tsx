@@ -266,6 +266,11 @@ function PushBanner() {
 
 export function TodayPage() {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr)
+  const [activeTimerTaskId, setActiveTimerTaskId] = useState<number | null>(null)
+
+  const handleToggleTimer = (taskId: number) => {
+    setActiveTimerTaskId((prev) => (prev === taskId ? null : taskId))
+  }
 
   const { enrichedAreas, overallRate, isLoading, isFuture, handleTaskToggle, error } =
     useDay(selectedDate)
@@ -305,6 +310,8 @@ export function TodayPage() {
               area={area}
               onTaskToggle={handleTaskToggle}
               disabled={isFuture}
+              activeTimerTaskId={activeTimerTaskId}
+              onToggleTimer={handleToggleTimer}
             />
           ))}
         </div>
