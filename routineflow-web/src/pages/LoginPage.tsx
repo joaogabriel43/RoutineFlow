@@ -60,14 +60,14 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#08080A] px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-10">
-          <h1 className="text-2xl font-semibold text-[#f5f5f7] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#F4F2EF] tracking-tight">
             RoutineFlow
           </h1>
-          <p className="text-sm text-[#86868b] mt-1">
+          <p className="text-sm text-[#8C8A88] mt-1">
             {mode === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
           </p>
         </div>
@@ -108,7 +108,7 @@ export function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium h-11 rounded-xl transition-colors"
+            className="w-full mt-2 bg-[#2F8BFF] hover:bg-[#4F9DFF] text-white font-medium h-11 rounded-xl transition-colors"
           >
             {loading
               ? mode === 'login' ? 'Entrando…' : 'Criando conta…'
@@ -117,12 +117,12 @@ export function LoginPage() {
         </form>
 
         {/* Toggle */}
-        <p className="text-center text-sm text-[#86868b] mt-6">
+        <p className="text-center text-sm text-[#8C8A88] mt-6">
           {mode === 'login' ? 'Não tem conta?' : 'Já tem conta?'}{' '}
           <button
             type="button"
             onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErrors({}) }}
-            className="text-[#0071e3] hover:underline font-medium"
+            className="text-[#2F8BFF] hover:underline font-medium"
           >
             {mode === 'login' ? 'Criar conta' : 'Fazer login'}
           </button>
@@ -147,7 +147,7 @@ interface FieldProps {
 function Field({ label, type, value, onChange, placeholder, error, autoFocus }: FieldProps) {
   return (
     <div>
-      <label className="block text-xs font-medium text-[#86868b] mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-[#8C8A88] mb-1.5">{label}</label>
       <input
         type={type}
         value={value}
@@ -155,11 +155,11 @@ function Field({ label, type, value, onChange, placeholder, error, autoFocus }: 
         placeholder={placeholder}
         autoFocus={autoFocus}
         className={`
-          w-full px-3.5 py-2.5 rounded-xl text-sm text-[#f5f5f7]
-          bg-[#141414] border outline-none transition-colors
-          placeholder:text-[#3a3a3a]
-          focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3]
-          ${error ? 'border-red-500/60' : 'border-[#1f1f1f]'}
+          w-full px-3.5 py-2.5 rounded-xl text-sm text-[#F4F2EF]
+          bg-[#141416] border outline-none transition-colors
+          placeholder:text-[#34343A]
+          focus:border-[#2F8BFF] focus:ring-1 focus:ring-[#2F8BFF]
+          ${error ? 'border-red-500/60' : 'border-[#26262A]'}
         `}
       />
       {error && <p className="text-xs text-red-400 mt-1">{error}</p>}

@@ -34,10 +34,10 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, icon, color }: SummaryCardProps) {
   return (
-    <div className="rounded-2xl bg-[#141414] p-5 flex flex-col gap-3">
+    <div className="rounded-2xl bg-[#141416] p-5 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[#86868b] uppercase tracking-wide font-medium">{label}</span>
-        <span className="text-[#86868b]">{icon}</span>
+        <span className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">{label}</span>
+        <span className="text-[#8C8A88]">{icon}</span>
       </div>
       <p className="text-3xl font-bold leading-none" style={{ color }}>
         {value}
@@ -57,9 +57,9 @@ interface TooltipProps {
 function DarkTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg bg-[#1c1c1e] border border-[#2a2a2a] px-3 py-2 text-xs">
-      <p className="text-[#86868b]">{label}</p>
-      <p className="text-[#f5f5f7] font-medium mt-0.5">{payload[0].value.toFixed(1)}%</p>
+    <div className="rounded-lg bg-[#1C1C1F] border border-[#26262A] px-3 py-2 text-xs">
+      <p className="text-[#8C8A88]">{label}</p>
+      <p className="text-[#F4F2EF] font-medium mt-0.5">{payload[0].value.toFixed(1)}%</p>
     </div>
   )
 }
@@ -71,7 +71,7 @@ function WeeklyTrendChart({ trend, color }: { trend: WeeklyTrendPoint[]; color: 
 
   if (allZero) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-[#86868b]">
+      <div className="flex items-center justify-center h-40 text-sm text-[#8C8A88]">
         Nenhum dado ainda — comece marcando suas tarefas.
       </div>
     )
@@ -82,22 +82,22 @@ function WeeklyTrendChart({ trend, color }: { trend: WeeklyTrendPoint[]; color: 
   return (
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#26262A" vertical={false} />
         <XAxis
           dataKey="weekLabel"
-          tick={{ fill: '#86868b', fontSize: 10 }}
+          tick={{ fill: '#8C8A88', fontSize: 10 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           domain={[0, 100]}
           tickFormatter={(v) => `${v}%`}
-          tick={{ fill: '#86868b', fontSize: 10 }}
+          tick={{ fill: '#8C8A88', fontSize: 10 }}
           axisLine={false}
           tickLine={false}
           ticks={[0, 25, 50, 75, 100]}
         />
-        <Tooltip content={<DarkTooltip />} cursor={{ stroke: '#2a2a2a', strokeWidth: 1 }} />
+        <Tooltip content={<DarkTooltip />} cursor={{ stroke: '#26262A', strokeWidth: 1 }} />
         <Line
           type="monotone"
           dataKey="rate"
@@ -123,9 +123,9 @@ function BarTooltipContent({ active, payload }: BarTooltipProps) {
   if (!active || !payload?.length) return null
   const stat = payload[0].payload
   return (
-    <div className="rounded-lg bg-[#1c1c1e] border border-[#2a2a2a] px-3 py-2 text-xs">
-      <p className="text-[#86868b]">{stat.dayLabel}</p>
-      <p className="text-[#f5f5f7] font-medium mt-0.5">
+    <div className="rounded-lg bg-[#1C1C1F] border border-[#26262A] px-3 py-2 text-xs">
+      <p className="text-[#8C8A88]">{stat.dayLabel}</p>
+      <p className="text-[#F4F2EF] font-medium mt-0.5">
         {stat.completedCount} feitos · {stat.completionRate.toFixed(1)}%
       </p>
     </div>
@@ -143,7 +143,7 @@ function DayOfWeekBarChart({
 }) {
   if (stats.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-sm text-[#86868b]">
+      <div className="flex items-center justify-center h-32 text-sm text-[#8C8A88]">
         Sem dados de conclusão por dia.
       </div>
     )
@@ -162,14 +162,14 @@ function DayOfWeekBarChart({
           type="number"
           domain={[0, 100]}
           tickFormatter={(v) => `${v}%`}
-          tick={{ fill: '#86868b', fontSize: 10 }}
+          tick={{ fill: '#8C8A88', fontSize: 10 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           type="category"
           dataKey="dayLabel"
-          tick={{ fill: '#86868b', fontSize: 11 }}
+          tick={{ fill: '#8C8A88', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
           width={56}
@@ -179,7 +179,7 @@ function DayOfWeekBarChart({
           <LabelList
             dataKey="rate"
             position="right"
-            style={{ fill: '#86868b', fontSize: 10 }}
+            style={{ fill: '#8C8A88', fontSize: 10 }}
             formatter={(v: unknown) => `${Number(v).toFixed(0)}%`}
           />
           {data.map((entry) => (
@@ -201,24 +201,24 @@ function AreaAnalyticsSkeleton() {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-3">
-        <Skeleton className="h-8 w-8 rounded-full bg-[#1f1f1f]" />
-        <Skeleton className="h-6 w-48 bg-[#1f1f1f]" />
+        <Skeleton className="h-8 w-8 rounded-full bg-[#26262A]" />
+        <Skeleton className="h-6 w-48 bg-[#26262A]" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-2xl bg-[#141414] p-5 space-y-3">
-            <Skeleton className="h-3 w-20 bg-[#1f1f1f]" />
-            <Skeleton className="h-8 w-16 bg-[#1f1f1f]" />
+          <div key={i} className="rounded-2xl bg-[#141416] p-5 space-y-3">
+            <Skeleton className="h-3 w-20 bg-[#26262A]" />
+            <Skeleton className="h-8 w-16 bg-[#26262A]" />
           </div>
         ))}
       </div>
-      <div className="rounded-xl bg-[#141414] p-4">
-        <Skeleton className="h-4 w-36 bg-[#1f1f1f] mb-4" />
-        <Skeleton className="h-44 w-full bg-[#1f1f1f] rounded-lg" />
+      <div className="rounded-xl bg-[#141416] p-4">
+        <Skeleton className="h-4 w-36 bg-[#26262A] mb-4" />
+        <Skeleton className="h-44 w-full bg-[#26262A] rounded-lg" />
       </div>
-      <div className="rounded-xl bg-[#141414] p-4">
-        <Skeleton className="h-4 w-40 bg-[#1f1f1f] mb-4" />
-        <Skeleton className="h-32 w-full bg-[#1f1f1f] rounded-lg" />
+      <div className="rounded-xl bg-[#141416] p-4">
+        <Skeleton className="h-4 w-40 bg-[#26262A] mb-4" />
+        <Skeleton className="h-32 w-full bg-[#26262A] rounded-lg" />
       </div>
     </div>
   )
@@ -229,10 +229,10 @@ function AreaAnalyticsSkeleton() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="text-xs font-semibold text-[#86868b] uppercase tracking-widest mb-3">
+      <h2 className="text-xs font-semibold text-[#8C8A88] uppercase tracking-widest mb-3">
         {title}
       </h2>
-      <div className="rounded-xl bg-[#141414] p-4">{children}</div>
+      <div className="rounded-xl bg-[#141416] p-4">{children}</div>
     </section>
   )
 }
@@ -280,7 +280,7 @@ function AreaAnalyticsContent({ data }: { data: AreaAnalyticsResponse }) {
       {/* Day of week breakdown */}
       <Section title="Melhor dia da semana">
         {data.bestDayLabel && (
-          <p className="text-xs text-[#86868b] mb-3">
+          <p className="text-xs text-[#8C8A88] mb-3">
             Melhor dia:{' '}
             <span className="font-medium" style={{ color: data.color }}>
               {data.bestDayLabel}
@@ -324,7 +324,7 @@ export function AreaAnalyticsPage() {
       <header>
         <button
           onClick={() => navigate('/analytics')}
-          className="flex items-center gap-1.5 text-sm text-[#86868b] hover:text-[#f5f5f7] mb-4 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-[#8C8A88] hover:text-[#F4F2EF] mb-4 transition-colors"
         >
           <ArrowLeft size={15} />
           Voltar para Analytics
@@ -332,8 +332,8 @@ export function AreaAnalyticsPage() {
 
         {isLoading ? (
           <div className="flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-full bg-[#1f1f1f]" />
-            <Skeleton className="h-7 w-40 bg-[#1f1f1f]" />
+            <Skeleton className="h-9 w-9 rounded-full bg-[#26262A]" />
+            <Skeleton className="h-7 w-40 bg-[#26262A]" />
           </div>
         ) : data ? (
           <div className="flex items-center gap-3">
@@ -343,7 +343,7 @@ export function AreaAnalyticsPage() {
             >
               {data.icon}
             </div>
-            <h1 className="text-2xl font-semibold text-[#f5f5f7]">{data.areaName}</h1>
+            <h1 className="text-2xl font-semibold text-[#F4F2EF]">{data.areaName}</h1>
           </div>
         ) : null}
       </header>

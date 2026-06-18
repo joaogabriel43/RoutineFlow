@@ -58,15 +58,15 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="bg-[#141414] border-[#1f1f1f] text-[#f5f5f7] max-w-md">
+      <DialogContent className="bg-[#141416] border-[#26262A] text-[#F4F2EF] max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#f5f5f7] font-medium">Nova tarefa</DialogTitle>
+          <DialogTitle className="text-[#F4F2EF] font-medium">Nova tarefa</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 py-2">
           {/* Title */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] uppercase tracking-wide font-medium">
+            <label className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
               Título *
             </label>
             <input
@@ -75,7 +75,7 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Comprar leite"
               autoFocus
-              className="w-full bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f5f5f7] placeholder:text-[#3a3a3c] focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3] transition-colors"
+              className="w-full bg-[#26262A] border border-[#26262A] rounded-lg px-3 py-2 text-sm text-[#F4F2EF] placeholder:text-[#3a3a3c] focus:outline-none focus:ring-1 focus:ring-[#2F8BFF] focus:border-[#2F8BFF] transition-colors"
             />
             {titleError && (
               <p className="text-xs text-red-400">{titleError}</p>
@@ -84,7 +84,7 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] uppercase tracking-wide font-medium">
+            <label className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
               Descrição (opcional)
             </label>
             <textarea
@@ -92,13 +92,13 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalhes adicionais..."
               rows={2}
-              className="w-full bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f5f5f7] placeholder:text-[#3a3a3c] focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3] transition-colors resize-none"
+              className="w-full bg-[#26262A] border border-[#26262A] rounded-lg px-3 py-2 text-sm text-[#F4F2EF] placeholder:text-[#3a3a3c] focus:outline-none focus:ring-1 focus:ring-[#2F8BFF] focus:border-[#2F8BFF] transition-colors resize-none"
             />
           </div>
 
           {/* Due date */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] uppercase tracking-wide font-medium">
+            <label className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
               Prazo (opcional)
             </label>
             <input
@@ -106,7 +106,7 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
               value={dueDate}
               min={todayStr()}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f5f5f7] focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3] transition-colors [color-scheme:dark]"
+              className="w-full bg-[#26262A] border border-[#26262A] rounded-lg px-3 py-2 text-sm text-[#F4F2EF] focus:outline-none focus:ring-1 focus:ring-[#2F8BFF] focus:border-[#2F8BFF] transition-colors [color-scheme:dark]"
             />
           </div>
 
@@ -114,14 +114,14 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm text-[#86868b] hover:text-[#f5f5f7] transition-colors"
+              className="px-4 py-2 text-sm text-[#8C8A88] hover:text-[#F4F2EF] transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-4 py-2 text-sm font-medium bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium bg-[#2F8BFF] hover:bg-[#4F9DFF] text-white rounded-lg transition-colors disabled:opacity-50"
             >
               {createMutation.isPending ? 'Criando...' : 'Criar tarefa'}
             </button>

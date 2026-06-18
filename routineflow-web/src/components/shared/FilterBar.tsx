@@ -21,7 +21,7 @@ export function FilterBar({
       <div className="relative w-full sm:w-64">
         <Search
           size={14}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#86868b] pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8C8A88] pointer-events-none"
         />
         <input
           type="text"
@@ -33,9 +33,9 @@ export function FilterBar({
           placeholder={placeholder}
           className={cn(
             'w-full pl-8 pr-7 py-2 text-sm rounded-lg',
-            'bg-[#141414] border border-[#1f1f1f]',
-            'text-[#f5f5f7] placeholder:text-[#86868b]',
-            'focus:outline-none focus:border-[#0071e3]',
+            'bg-[#141416] border border-[#26262A]',
+            'text-[#F4F2EF] placeholder:text-[#8C8A88]',
+            'focus:outline-none focus:border-[#2F8BFF]',
             'transition-colors',
           )}
         />
@@ -44,7 +44,7 @@ export function FilterBar({
             type="button"
             onClick={() => onSearchChange('')}
             aria-label="Limpar busca"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#86868b] hover:text-[#f5f5f7] transition-colors"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C8A88] hover:text-[#F4F2EF] transition-colors"
           >
             <X size={13} />
           </button>

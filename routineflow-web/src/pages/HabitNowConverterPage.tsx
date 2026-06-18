@@ -29,15 +29,15 @@ interface HabitRowProps {
 
 function HabitRow({ habit, checked, onChange }: HabitRowProps) {
   return (
-    <label className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-[#1f1f1f] cursor-pointer transition-colors">
+    <label className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-[#26262A] cursor-pointer transition-colors">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 accent-[#0071e3] shrink-0"
+        className="w-4 h-4 accent-[#2F8BFF] shrink-0"
       />
-      <span className="flex-1 text-sm text-[#f5f5f7] truncate">{habit.name}</span>
-      <span className="text-[11px] text-[#86868b] shrink-0 min-w-[56px] text-right">
+      <span className="flex-1 text-sm text-[#F4F2EF] truncate">{habit.name}</span>
+      <span className="text-[11px] text-[#8C8A88] shrink-0 min-w-[56px] text-right">
         {dayLabel(habit.days)}
       </span>
       <span
@@ -45,7 +45,7 @@ function HabitRow({ habit, checked, onChange }: HabitRowProps) {
           'text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0',
           habit.isActive
             ? 'bg-green-900/30 text-green-400'
-            : 'bg-[#2a2a2a] text-[#86868b]',
+            : 'bg-[#26262A] text-[#8C8A88]',
         )}
       >
         {habit.isActive ? 'ativo' : 'inativo'}
@@ -175,10 +175,10 @@ export function HabitNowConverterPage() {
     <div className="max-w-lg mx-auto">
       {/* Header */}
       <header className="mb-8">
-        <h1 className="text-2xl font-light text-[#f5f5f7] tracking-tight">
+        <h1 className="text-2xl font-light text-[#F4F2EF] tracking-tight">
           Converter backup HabitNow
         </h1>
-        <p className="text-sm text-[#86868b] mt-1">
+        <p className="text-sm text-[#8C8A88] mt-1">
           Importe seu arquivo .hn e converta para o formato RoutineFlow
         </p>
       </header>
@@ -196,35 +196,35 @@ export function HabitNowConverterPage() {
         className={cn(
           'rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition-all duration-200',
           isDragging
-            ? 'border-[#0071e3] bg-[#0071e3]/5'
-            : 'border-[#1f1f1f] hover:border-[#0071e3] hover:bg-[#0071e3]/5',
-          file && 'cursor-default hover:border-[#1f1f1f] hover:bg-transparent',
+            ? 'border-[#2F8BFF] bg-[#2F8BFF]/5'
+            : 'border-[#26262A] hover:border-[#2F8BFF] hover:bg-[#2F8BFF]/5',
+          file && 'cursor-default hover:border-[#26262A] hover:bg-transparent',
         )}
       >
         {file ? (
           <div className="flex items-center gap-3 justify-center">
-            <FileText size={24} className="text-[#0071e3] shrink-0" />
+            <FileText size={24} className="text-[#2F8BFF] shrink-0" />
             <div className="text-left min-w-0">
-              <p className="text-sm font-medium text-[#f5f5f7] truncate">{file.name}</p>
-              <p className="text-xs text-[#86868b] mt-0.5">{habits.length} hábitos</p>
+              <p className="text-sm font-medium text-[#F4F2EF] truncate">{file.name}</p>
+              <p className="text-xs text-[#8C8A88] mt-0.5">{habits.length} hábitos</p>
             </div>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); removeFile() }}
               aria-label="Remover arquivo"
-              className="ml-2 p-1 rounded-full text-[#86868b] hover:text-[#f5f5f7] hover:bg-[#1f1f1f] transition-colors"
+              className="ml-2 p-1 rounded-full text-[#8C8A88] hover:text-[#F4F2EF] hover:bg-[#26262A] transition-colors"
             >
               <X size={16} />
             </button>
           </div>
         ) : (
           <>
-            <UploadCloud size={40} className="mx-auto text-[#86868b] mb-3" strokeWidth={1.25} />
-            <p className="text-sm font-medium text-[#f5f5f7]">Arraste seu arquivo aqui</p>
-            <p className="text-xs text-[#86868b] mt-1">
-              ou <span className="text-[#0071e3] font-medium">clique para selecionar</span>
+            <UploadCloud size={40} className="mx-auto text-[#8C8A88] mb-3" strokeWidth={1.25} />
+            <p className="text-sm font-medium text-[#F4F2EF]">Arraste seu arquivo aqui</p>
+            <p className="text-xs text-[#8C8A88] mt-1">
+              ou <span className="text-[#2F8BFF] font-medium">clique para selecionar</span>
             </p>
-            <p className="text-[10px] text-[#3a3a3a] mt-3">.hn</p>
+            <p className="text-[10px] text-[#34343A] mt-3">.hn</p>
           </>
         )}
       </div>
@@ -243,21 +243,21 @@ export function HabitNowConverterPage() {
         <div className="mt-6 space-y-4">
           {/* Summary + bulk actions */}
           <div className="flex items-center justify-between">
-            <p className="text-xs text-[#86868b]">
-              <span className="text-[#f5f5f7] font-medium">{habits.length}</span> hábitos encontrados
+            <p className="text-xs text-[#8C8A88]">
+              <span className="text-[#F4F2EF] font-medium">{habits.length}</span> hábitos encontrados
               {' '}({activeCount} ativos, {inactiveCount} inativos)
             </p>
             <div className="flex gap-2">
               <button
                 onClick={selectAllActive}
-                className="text-[10px] text-[#0071e3] hover:underline"
+                className="text-[10px] text-[#2F8BFF] hover:underline"
               >
                 Selecionar ativos
               </button>
-              <span className="text-[10px] text-[#3a3a3a]">·</span>
+              <span className="text-[10px] text-[#34343A]">·</span>
               <button
                 onClick={deselectAll}
-                className="text-[10px] text-[#86868b] hover:underline"
+                className="text-[10px] text-[#8C8A88] hover:underline"
               >
                 Desmarcar todos
               </button>
@@ -265,7 +265,7 @@ export function HabitNowConverterPage() {
           </div>
 
           {/* Habit list */}
-          <div className="rounded-xl bg-[#141414] border border-[#1f1f1f] p-1 divide-y divide-[#1f1f1f]">
+          <div className="rounded-xl bg-[#141416] border border-[#26262A] p-1 divide-y divide-[#26262A]">
             {habits.map((habit) => (
               <HabitRow
                 key={habit.id}
@@ -278,7 +278,7 @@ export function HabitNowConverterPage() {
 
           {/* Routine name input */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-[#86868b] uppercase tracking-wider">
+            <label className="text-xs font-medium text-[#8C8A88] uppercase tracking-wider">
               Nome da rotina
             </label>
             <input
@@ -286,9 +286,9 @@ export function HabitNowConverterPage() {
               value={routineName}
               onChange={(e) => setRoutineName(e.target.value)}
               placeholder="Minha Rotina HabitNow"
-              className="w-full rounded-xl bg-[#141414] border border-[#1f1f1f] px-4 py-2.5
-                         text-sm text-[#f5f5f7] placeholder-[#3a3a3a]
-                         focus:outline-none focus:border-[#0071e3] transition-colors"
+              className="w-full rounded-xl bg-[#141416] border border-[#26262A] px-4 py-2.5
+                         text-sm text-[#F4F2EF] placeholder-[#34343A]
+                         focus:outline-none focus:border-[#2F8BFF] transition-colors"
             />
           </div>
 
@@ -297,7 +297,7 @@ export function HabitNowConverterPage() {
             <Button
               onClick={handleGenerate}
               disabled={isGenerating || selected.size === 0}
-              className="flex-1 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium h-11 rounded-xl
+              className="flex-1 bg-[#2F8BFF] hover:bg-[#4F9DFF] text-white font-medium h-11 rounded-xl
                          transition-colors disabled:opacity-60"
             >
               {isGenerating ? (
@@ -312,8 +312,8 @@ export function HabitNowConverterPage() {
             <Button
               onClick={() => navigate('/import')}
               variant="outline"
-              className="h-11 rounded-xl border-[#1f1f1f] bg-transparent text-[#86868b]
-                         hover:text-[#f5f5f7] hover:bg-[#1f1f1f] hover:border-[#1f1f1f]
+              className="h-11 rounded-xl border-[#26262A] bg-transparent text-[#8C8A88]
+                         hover:text-[#F4F2EF] hover:bg-[#26262A] hover:border-[#26262A]
                          transition-colors"
             >
               Ir para Importar
@@ -322,18 +322,18 @@ export function HabitNowConverterPage() {
           </div>
 
           {/* Info note */}
-          <p className="text-[11px] text-[#3a3a3a] leading-relaxed">
+          <p className="text-[11px] text-[#34343A] leading-relaxed">
             Após baixar o arquivo .yaml, importe-o na tela de Importar.
             O histórico de check-ins do HabitNow não é importado —
             apenas a estrutura de hábitos e agendamentos.
           </p>
 
           {/* Merge tip */}
-          <div className="rounded-xl border border-[#1f1f1f] bg-[#141414] p-3">
-            <p className="text-[11px] text-[#86868b] leading-relaxed">
-              <span className="text-[#0071e3] font-medium">Dica:</span> Se você já tem uma rotina
+          <div className="rounded-xl border border-[#26262A] bg-[#141416] p-3">
+            <p className="text-[11px] text-[#8C8A88] leading-relaxed">
+              <span className="text-[#2F8BFF] font-medium">Dica:</span> Se você já tem uma rotina
               ativa e quer adicionar apenas os hábitos novos, use o modo{' '}
-              <span className="text-[#f5f5f7]">Mesclar</span> ao importar. Duplicatas são
+              <span className="text-[#F4F2EF]">Mesclar</span> ao importar. Duplicatas são
               ignoradas automaticamente.
             </p>
           </div>

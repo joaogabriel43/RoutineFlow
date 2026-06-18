@@ -23,7 +23,7 @@ function DayCell({ row, day }: { row: WeekAreaRow; day: DayKey }) {
   if (!cell.scheduled) {
     return (
       <div className="flex items-center justify-center h-9">
-        <span className="text-[#3a3a3a] text-lg">·</span>
+        <span className="text-[#34343A] text-lg">·</span>
       </div>
     )
   }
@@ -54,13 +54,13 @@ function AreaRow({
   isLast: boolean
 }) {
   return (
-    <div className={`flex items-stretch ${!isLast ? 'border-b border-[#1f1f1f]' : ''}`}>
+    <div className={`flex items-stretch ${!isLast ? 'border-b border-[#26262A]' : ''}`}>
       {/* Area label — sticky left */}
-      <div className="w-40 shrink-0 flex items-center gap-2 px-4 py-1 sticky left-0 bg-[#141414] z-10">
+      <div className="w-40 shrink-0 flex items-center gap-2 px-4 py-1 sticky left-0 bg-[#141416] z-10">
         <span className="text-base shrink-0">{row.icon}</span>
         <div className="min-w-0">
-          <p className="text-xs font-medium text-[#f5f5f7] truncate">{row.areaName}</p>
-          <p className="text-[10px] text-[#86868b]">
+          <p className="text-xs font-medium text-[#F4F2EF] truncate">{row.areaName}</p>
+          <p className="num text-[10px] text-[#8C8A88]">
             {row.completedTasks}/{row.totalTasks} · {formatPercent(row.weeklyRate)}
           </p>
         </div>
@@ -71,7 +71,7 @@ function AreaRow({
         <div
           key={day}
           className="w-12 shrink-0 flex items-center justify-center"
-          style={idx === todayIndex ? { backgroundColor: 'rgba(0,113,227,0.06)' } : undefined}
+          style={idx === todayIndex ? { backgroundColor: 'rgba(47,139,255,0.06)' } : undefined}
         >
           <DayCell row={row} day={day} />
         </div>
@@ -87,35 +87,35 @@ function WeekSkeleton() {
     <div className="space-y-4">
       {/* Header skeleton */}
       <div className="space-y-2 mb-6">
-        <Skeleton className="h-8 w-48 bg-[#1f1f1f]" />
-        <Skeleton className="h-4 w-32 bg-[#1f1f1f]" />
-        <Skeleton className="h-[3px] w-full bg-[#1f1f1f] mt-3" />
+        <Skeleton className="h-8 w-48 bg-[#26262A]" />
+        <Skeleton className="h-4 w-32 bg-[#26262A]" />
+        <Skeleton className="h-[3px] w-full bg-[#26262A] mt-3" />
       </div>
 
       {/* Grid skeleton */}
-      <div className="rounded-xl bg-[#141414] overflow-hidden">
+      <div className="rounded-xl bg-[#141416] overflow-hidden">
         {/* Header row */}
-        <div className="flex border-b border-[#1f1f1f]">
+        <div className="flex border-b border-[#26262A]">
           <div className="w-40 shrink-0 px-4 py-3">
-            <Skeleton className="h-3 w-16 bg-[#1f1f1f]" />
+            <Skeleton className="h-3 w-16 bg-[#26262A]" />
           </div>
           {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="w-12 shrink-0 flex items-center justify-center py-3">
-              <Skeleton className="h-3 w-6 bg-[#1f1f1f]" />
+              <Skeleton className="h-3 w-6 bg-[#26262A]" />
             </div>
           ))}
         </div>
         {/* Area rows */}
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center border-b border-[#1f1f1f] last:border-b-0">
+          <div key={i} className="flex items-center border-b border-[#26262A] last:border-b-0">
             <div className="w-40 shrink-0 flex items-center gap-2 px-4 py-3">
-              <Skeleton className="h-5 w-5 rounded bg-[#1f1f1f]" />
-              <Skeleton className="h-3 flex-1 bg-[#1f1f1f]" />
+              <Skeleton className="h-5 w-5 rounded bg-[#26262A]" />
+              <Skeleton className="h-3 flex-1 bg-[#26262A]" />
             </div>
             {Array.from({ length: 7 }).map((_, j) => (
               <div key={j} className="w-12 shrink-0 flex items-center justify-center py-3">
                 {j !== 5 && j !== 6 && (
-                  <Skeleton className="h-4 w-4 rounded-full bg-[#1f1f1f]" />
+                  <Skeleton className="h-4 w-4 rounded-full bg-[#26262A]" />
                 )}
               </div>
             ))}
@@ -132,8 +132,8 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <p className="text-4xl mb-4">📅</p>
-      <p className="text-[#f5f5f7] font-medium">Nenhuma rotina ativa</p>
-      <p className="text-[#86868b] text-sm mt-1">Importe sua rotina para ver a semana.</p>
+      <p className="text-[#F4F2EF] font-medium">Nenhuma rotina ativa</p>
+      <p className="text-[#8C8A88] text-sm mt-1">Importe sua rotina para ver a semana.</p>
     </div>
   )
 }
@@ -155,13 +155,13 @@ export function WeekPage() {
     <div>
       {/* Header */}
       <header className="mb-6">
-        <h1 className="text-3xl font-light text-[#f5f5f7] tracking-tight">Semana</h1>
-        <p className="text-sm text-[#86868b] mt-1">
-          {formatWeekRange(weekStart, weekEnd)} &bull; {formatPercent(overallRate)} geral
+        <h1 className="text-3xl font-light text-[#F4F2EF] tracking-tight">Semana</h1>
+        <p className="text-sm text-[#8C8A88] mt-1">
+          <span className="num">{formatWeekRange(weekStart, weekEnd)}</span> &bull; <span className="num">{formatPercent(overallRate)}</span> geral
         </p>
-        <div className="mt-3 h-[3px] rounded-full bg-[#1f1f1f] overflow-hidden">
+        <div className="mt-3 h-[3px] rounded-full bg-[#26262A] overflow-hidden">
           <div
-            className="h-full rounded-full bg-[#0071e3] transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-[#2F8BFF] transition-all duration-700 ease-out"
             style={{ width: `${Math.round(overallRate * 100)}%` }}
           />
         </div>
@@ -169,21 +169,21 @@ export function WeekPage() {
 
       {/* Grid — horizontally scrollable on mobile */}
       <div className="overflow-x-auto -mx-4 px-4">
-        <div className="rounded-xl bg-[#141414] overflow-hidden min-w-[448px]">
+        <div className="rounded-xl bg-[#141416] overflow-hidden min-w-[448px]">
           {/* Day header row */}
-          <div className="flex border-b border-[#1f1f1f]">
+          <div className="flex border-b border-[#26262A]">
             <div className="w-40 shrink-0 px-4 py-3">
-              <span className="text-xs text-[#86868b] font-medium">Área</span>
+              <span className="text-xs text-[#8C8A88] font-medium">Área</span>
             </div>
             {DAYS_OF_WEEK.map((day, idx) => (
               <div
                 key={day}
                 className="w-12 shrink-0 flex items-center justify-center py-3"
-                style={idx === todayIndex ? { backgroundColor: 'rgba(0,113,227,0.06)' } : undefined}
+                style={idx === todayIndex ? { backgroundColor: 'rgba(47,139,255,0.06)' } : undefined}
               >
                 <span
                   className="text-xs font-medium"
-                  style={{ color: idx === todayIndex ? '#0071e3' : '#86868b' }}
+                  style={{ color: idx === todayIndex ? '#2F8BFF' : '#8C8A88' }}
                 >
                   {DAY_LABELS_PT[day]}
                 </span>
@@ -204,7 +204,7 @@ export function WeekPage() {
       </div>
 
       {/* Legend */}
-      <p className="text-[10px] text-[#86868b] mt-3 text-right">
+      <p className="text-[10px] text-[#8C8A88] mt-3 text-right">
         Opacidade dos círculos reflete a taxa de conclusão semanal da área
       </p>
     </div>

@@ -23,31 +23,31 @@ export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTask
 
   return (
     <div
-      className="rounded-xl bg-[#141414] border-l-4 overflow-hidden"
+      className="rounded-lg bg-surface-2 border border-line border-l-[3px] overflow-hidden"
       style={{ borderLeftColor: area.color }}
     >
       {/* Card header — always visible */}
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-[#1a1a1a] transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-surface-3 transition-colors duration-200"
         aria-expanded={expanded}
       >
         {/* Icon + name */}
         <span className="text-lg shrink-0" aria-hidden>
           {area.icon}
         </span>
-        <span className="flex-1 text-sm font-medium text-[#f5f5f7]">{area.name}</span>
+        <span className="flex-1 text-[15px] font-medium text-fg tracking-[-0.006em]">{area.name}</span>
 
         {/* Count badge */}
-        <span className="text-xs text-[#86868b] shrink-0">
+        <span className="num text-xs text-fg-lo shrink-0">
           {completedTasks}/{totalTasks}
         </span>
 
         {/* Mini progress bar */}
-        <div className="w-16 h-1.5 rounded-full bg-[#1f1f1f] shrink-0 overflow-hidden">
+        <div className="w-16 h-1.5 rounded-full bg-surface-1 shrink-0 overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-500"
+            className="h-full rounded-full transition-all duration-700 ease-out"
             style={{
               width: `${completionRate * 100}%`,
               backgroundColor: area.color,
@@ -59,7 +59,7 @@ export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTask
         <ChevronDown
           size={15}
           className={cn(
-            'text-[#86868b] shrink-0 transition-transform duration-200',
+            'text-fg-lo shrink-0 transition-transform duration-200',
             expanded && 'rotate-180',
           )}
         />
@@ -94,7 +94,7 @@ export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTask
           className="overflow-hidden transition-all duration-300 ease-in-out"
           style={{ maxHeight: expanded ? '0px' : '60px' }}
         >
-          <p className="px-4 pb-3 text-xs text-[#86868b]">
+          <p className="px-4 pb-3 text-xs text-fg-lo">
             ✓ Área concluída
           </p>
         </div>

@@ -83,7 +83,7 @@ interface AreaModalProps {
 
 function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps) {
   const [name, setName] = useState(initial?.name ?? '')
-  const [color, setColor] = useState(initial?.color ?? '#3B82F6')
+  const [color, setColor] = useState(initial?.color ?? '#2F8BFF')
   const [icon, setIcon] = useState(initial?.icon ?? '📚')
   const [resetFrequency, setResetFrequency] = useState<ResetFrequency>(
     initial?.resetFrequency ?? 'DAILY',
@@ -92,7 +92,7 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
   const handleOpenChange = (o: boolean) => {
     if (o) {
       setName(initial?.name ?? '')
-      setColor(initial?.color ?? '#3B82F6')
+      setColor(initial?.color ?? '#2F8BFF')
       setIcon(initial?.icon ?? '📚')
       setResetFrequency(initial?.resetFrequency ?? 'DAILY')
     } else {
@@ -108,53 +108,53 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-[#141414] border-[#1f1f1f] text-[#f5f5f7] max-w-sm">
+      <DialogContent className="bg-[#141416] border-[#26262A] text-[#F4F2EF] max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-[#f5f5f7]">
+          <DialogTitle className="text-[#F4F2EF]">
             {initial ? 'Editar Área' : 'Nova Área'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">Nome</label>
+            <label className="text-xs text-[#8C8A88] font-medium">Nome</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ex: Inglês/PTE"
-              className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3]"
+              className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
               autoFocus
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">Ícone (emoji)</label>
+            <label className="text-xs text-[#8C8A88] font-medium">Ícone (emoji)</label>
             <Input
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
               placeholder="📚"
-              className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3]"
+              className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">Cor</label>
+            <label className="text-xs text-[#8C8A88] font-medium">Cor</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-10 h-10 rounded-lg border border-[#2a2a2a] bg-[#1f1f1f] cursor-pointer p-1"
+                className="w-10 h-10 rounded-lg border border-[#26262A] bg-[#26262A] cursor-pointer p-1"
               />
-              <span className="text-sm text-[#86868b] font-mono">{color.toUpperCase()}</span>
+              <span className="text-sm text-[#8C8A88] font-mono">{color.toUpperCase()}</span>
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">Frequência do streak</label>
+            <label className="text-xs text-[#8C8A88] font-medium">Frequência do streak</label>
             <select
               value={resetFrequency}
               onChange={(e) => setResetFrequency(e.target.value as ResetFrequency)}
-              className="w-full h-9 rounded-md border border-[#2a2a2a] bg-[#1f1f1f] text-[#f5f5f7] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+              className="w-full h-9 rounded-md border border-[#26262A] bg-[#26262A] text-[#F4F2EF] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#2F8BFF]"
             >
               {RESET_FREQUENCIES.map((f) => (
-                <option key={f.value} value={f.value} className="bg-[#1f1f1f]">
+                <option key={f.value} value={f.value} className="bg-[#26262A]">
                   {f.label}
                 </option>
               ))}
@@ -165,14 +165,14 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="text-[#86868b] hover:text-[#f5f5f7]"
+              className="text-[#8C8A88] hover:text-[#F4F2EF]"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isPending || !name.trim() || !icon.trim()}
-              className="bg-[#0071e3] hover:bg-[#0077ed] text-white"
+              className="bg-[#2F8BFF] hover:bg-[#4F9DFF] text-white"
             >
               {isPending ? 'Salvando…' : 'Salvar'}
             </Button>
@@ -253,35 +253,35 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-[#141414] border-[#1f1f1f] text-[#f5f5f7] max-w-sm">
+      <DialogContent className="bg-[#141416] border-[#26262A] text-[#F4F2EF] max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-[#f5f5f7]">
+          <DialogTitle className="text-[#F4F2EF]">
             {initial ? 'Editar Tarefa' : 'Nova Tarefa'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">Título</label>
+            <label className="text-xs text-[#8C8A88] font-medium">Título</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="ex: Re-tell Lecture"
-              className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3]"
+              className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
               autoFocus
             />
           </div>
 
           {/* Schedule type toggle */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">Tipo de recorrência</label>
-            <div className="flex rounded-lg border border-[#2a2a2a] overflow-hidden">
+            <label className="text-xs text-[#8C8A88] font-medium">Tipo de recorrência</label>
+            <div className="flex rounded-lg border border-[#26262A] overflow-hidden">
               <button
                 type="button"
                 onClick={() => setScheduleType('DAY_OF_WEEK')}
                 className={`flex-1 py-2 text-xs font-medium transition-colors ${
                   scheduleType === 'DAY_OF_WEEK'
-                    ? 'bg-[#0071e3] text-white'
-                    : 'bg-[#1f1f1f] text-[#86868b] hover:text-[#f5f5f7]'
+                    ? 'bg-[#2F8BFF] text-white'
+                    : 'bg-[#26262A] text-[#8C8A88] hover:text-[#F4F2EF]'
                 }`}
               >
                 Dia da semana
@@ -291,8 +291,8 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
                 onClick={() => setScheduleType('DAY_OF_MONTH')}
                 className={`flex-1 py-2 text-xs font-medium transition-colors ${
                   scheduleType === 'DAY_OF_MONTH'
-                    ? 'bg-[#0071e3] text-white'
-                    : 'bg-[#1f1f1f] text-[#86868b] hover:text-[#f5f5f7]'
+                    ? 'bg-[#2F8BFF] text-white'
+                    : 'bg-[#26262A] text-[#8C8A88] hover:text-[#F4F2EF]'
                 }`}
               >
                 Dia do mês
@@ -302,14 +302,14 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
 
           {scheduleType === 'DAY_OF_WEEK' && (
             <div className="space-y-1.5">
-              <label className="text-xs text-[#86868b] font-medium">Dia da semana</label>
+              <label className="text-xs text-[#8C8A88] font-medium">Dia da semana</label>
               <select
                 value={dayOfWeek}
                 onChange={(e) => setDayOfWeek(e.target.value)}
-                className="w-full h-9 rounded-md border border-[#2a2a2a] bg-[#1f1f1f] text-[#f5f5f7] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+                className="w-full h-9 rounded-md border border-[#26262A] bg-[#26262A] text-[#F4F2EF] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#2F8BFF]"
               >
                 {DAYS_OF_WEEK.map((d) => (
-                  <option key={d.value} value={d.value} className="bg-[#1f1f1f]">
+                  <option key={d.value} value={d.value} className="bg-[#26262A]">
                     {d.label}
                   </option>
                 ))}
@@ -319,8 +319,8 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
 
           {scheduleType === 'DAY_OF_MONTH' && (
             <div className="space-y-1.5">
-              <label className="text-xs text-[#86868b] font-medium">
-                Dia do mês <span className="text-[#3a3a3a]">(1–31)</span>
+              <label className="text-xs text-[#8C8A88] font-medium">
+                Dia do mês <span className="text-[#34343A]">(1–31)</span>
               </label>
               <Input
                 type="number"
@@ -329,9 +329,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
                 value={dayOfMonth}
                 onChange={(e) => setDayOfMonth(e.target.value)}
                 placeholder="ex: 25"
-                className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3]"
+                className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
               />
-              <p className="text-[10px] text-[#86868b]">
+              <p className="text-[10px] text-[#8C8A88]">
                 A tarefa aparecerá todo dia {dayOfMonth || 'N'} do mês.
                 Em meses com menos dias, não aparecerá.
               </p>
@@ -339,8 +339,8 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">
-              Duração estimada (min) <span className="text-[#3a3a3a]">— opcional</span>
+            <label className="text-xs text-[#8C8A88] font-medium">
+              Duração estimada (min) <span className="text-[#34343A]">— opcional</span>
             </label>
             <Input
               type="number"
@@ -348,32 +348,32 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
               value={estimatedMinutes}
               onChange={(e) => setEstimatedMinutes(e.target.value)}
               placeholder="30"
-              className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3]"
+              className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">
-              Horário do lembrete <span className="text-[#3a3a3a]">— opcional</span>
+            <label className="text-xs text-[#8C8A88] font-medium">
+              Horário do lembrete <span className="text-[#34343A]">— opcional</span>
             </label>
             <Input
               type="time"
               value={reminderTime}
               onChange={(e) => setReminderTime(e.target.value)}
-              className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] focus-visible:ring-[#0071e3]"
+              className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] focus-visible:ring-[#2F8BFF]"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs text-[#86868b] font-medium">
-              Descrição <span className="text-[#3a3a3a]">— opcional</span>
+            <label className="text-xs text-[#8C8A88] font-medium">
+              Descrição <span className="text-[#34343A]">— opcional</span>
             </label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalhes da tarefa…"
               rows={2}
-              className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3] resize-none"
+              className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF] resize-none"
             />
           </div>
           <DialogFooter className="gap-2 pt-2">
@@ -381,14 +381,14 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="text-[#86868b] hover:text-[#f5f5f7]"
+              className="text-[#8C8A88] hover:text-[#F4F2EF]"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isPending || !isValid}
-              className="bg-[#0071e3] hover:bg-[#0077ed] text-white"
+              className="bg-[#2F8BFF] hover:bg-[#4F9DFF] text-white"
             >
               {isPending ? 'Salvando…' : 'Salvar'}
             </Button>
@@ -412,18 +412,18 @@ interface DeleteConfirmProps {
 function DeleteConfirm({ open, label, onClose, onConfirm, isPending }: DeleteConfirmProps) {
   return (
     <AlertDialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <AlertDialogContent className="bg-[#141414] border-[#1f1f1f] text-[#f5f5f7]">
+      <AlertDialogContent className="bg-[#141416] border-[#26262A] text-[#F4F2EF]">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-[#f5f5f7]">Confirmar exclusão</AlertDialogTitle>
-          <AlertDialogDescription className="text-[#86868b]">
+          <AlertDialogTitle className="text-[#F4F2EF]">Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogDescription className="text-[#8C8A88]">
             Tem certeza que deseja excluir{' '}
-            <span className="text-[#f5f5f7] font-medium">"{label}"</span>? Esta ação não pode ser desfeita.
+            <span className="text-[#F4F2EF] font-medium">"{label}"</span>? Esta ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel
             onClick={onClose}
-            className="bg-transparent border-[#2a2a2a] text-[#86868b] hover:text-[#f5f5f7] hover:bg-[#1f1f1f]"
+            className="bg-transparent border-[#26262A] text-[#8C8A88] hover:text-[#F4F2EF] hover:bg-[#26262A]"
           >
             Cancelar
           </AlertDialogCancel>
@@ -564,7 +564,7 @@ export function ManagePage() {
     return (
       <div className="space-y-3 pt-2">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-12 rounded-xl bg-[#141414] animate-pulse" />
+          <div key={i} className="h-12 rounded-xl bg-[#141416] animate-pulse" />
         ))}
       </div>
     )
@@ -660,8 +660,8 @@ export function ManagePage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-[#f5f5f7]">Gerenciar Rotina</h1>
-        <p className="text-sm text-[#86868b] mt-0.5">
+        <h1 className="text-xl font-semibold text-[#F4F2EF]">Gerenciar Rotina</h1>
+        <p className="text-sm text-[#8C8A88] mt-0.5">
           Adicione, edite ou remova áreas e tarefas da sua rotina.
         </p>
       </div>
@@ -671,12 +671,12 @@ export function ManagePage() {
         {/* ── Left panel: Areas list ── */}
         <div className={selectedArea ? 'hidden md:block' : 'block'}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-[#86868b] uppercase tracking-widest">
+            <span className="text-xs font-semibold text-[#8C8A88] uppercase tracking-widest">
               Áreas
             </span>
             <button
               onClick={() => setAreaModal({ open: true })}
-              className="flex items-center gap-1 text-xs text-[#0071e3] hover:text-[#0077ed] font-medium transition-colors"
+              className="flex items-center gap-1 text-xs text-[#2F8BFF] hover:text-[#4F9DFF] font-medium transition-colors"
             >
               <Plus size={13} />
               Nova Área
@@ -701,11 +701,11 @@ export function ManagePage() {
           )}
 
           {areas.length === 0 ? (
-            <div className="py-8 text-center text-sm text-[#86868b]">
+            <div className="py-8 text-center text-sm text-[#8C8A88]">
               Nenhuma área encontrada.{' '}
               <button
                 onClick={() => setAreaModal({ open: true })}
-                className="text-[#0071e3] hover:underline"
+                className="text-[#2F8BFF] hover:underline"
               >
                 Criar primeira área
               </button>
@@ -713,15 +713,15 @@ export function ManagePage() {
           ) : filteredAreas.length === 0 ? (
             /* Empty state after filter */
             <div className="py-8 flex flex-col items-center gap-3 text-center">
-              <SearchX size={32} className="text-[#3a3a3a]" />
-              <p className="text-sm text-[#86868b]">Nenhuma área encontrada</p>
+              <SearchX size={32} className="text-[#34343A]" />
+              <p className="text-sm text-[#8C8A88]">Nenhuma área encontrada</p>
               {hasAreaFilter && (
                 <button
                   onClick={() => {
                     setAreaSearch('')
                     setAreaFreqFilter(null)
                   }}
-                  className="text-xs text-[#0071e3] hover:underline"
+                  className="text-xs text-[#2F8BFF] hover:underline"
                 >
                   Limpar filtros
                 </button>
@@ -746,7 +746,7 @@ export function ManagePage() {
         {/* ── Right panel: Tasks ── */}
         <div className={!selectedArea ? 'hidden md:flex md:items-center md:justify-center' : 'block'}>
           {!selectedArea ? (
-            <p className="text-sm text-[#3a3a3a] text-center">
+            <p className="text-sm text-[#34343A] text-center">
               Selecione uma área para gerenciar suas tarefas.
             </p>
           ) : (
@@ -754,7 +754,7 @@ export function ManagePage() {
               {/* Mobile back button */}
               <button
                 onClick={() => setSelectedAreaId(null)}
-                className="md:hidden flex items-center gap-1.5 text-sm text-[#86868b] hover:text-[#f5f5f7] mb-4 transition-colors"
+                className="md:hidden flex items-center gap-1.5 text-sm text-[#8C8A88] hover:text-[#F4F2EF] mb-4 transition-colors"
               >
                 <ArrowLeft size={15} />
                 Voltar para áreas
@@ -772,13 +772,13 @@ export function ManagePage() {
                   >
                     {selectedArea.icon}
                   </div>
-                  <span className="text-sm font-semibold text-[#f5f5f7]">
+                  <span className="text-sm font-semibold text-[#F4F2EF]">
                     {selectedArea.name}
                   </span>
                 </div>
                 <button
                   onClick={() => setTaskModal({ open: true })}
-                  className="flex items-center gap-1 text-xs text-[#0071e3] hover:text-[#0077ed] font-medium transition-colors"
+                  className="flex items-center gap-1 text-xs text-[#2F8BFF] hover:text-[#4F9DFF] font-medium transition-colors"
                 >
                   <Plus size={13} />
                   Nova Tarefa
@@ -815,11 +815,11 @@ export function ManagePage() {
 
               {/* Tasks list */}
               {!hasAnyTasks ? (
-                <div className="py-8 text-center text-sm text-[#86868b]">
+                <div className="py-8 text-center text-sm text-[#8C8A88]">
                   Nenhuma tarefa nesta área.{' '}
                   <button
                     onClick={() => setTaskModal({ open: true })}
-                    className="text-[#0071e3] hover:underline"
+                    className="text-[#2F8BFF] hover:underline"
                   >
                     Adicionar tarefa
                   </button>
@@ -827,8 +827,8 @@ export function ManagePage() {
               ) : !hasFilteredTasks ? (
                 /* Empty state after filter */
                 <div className="py-8 flex flex-col items-center gap-3 text-center">
-                  <SearchX size={32} className="text-[#3a3a3a]" />
-                  <p className="text-sm text-[#86868b]">Nenhuma tarefa encontrada</p>
+                  <SearchX size={32} className="text-[#34343A]" />
+                  <p className="text-sm text-[#8C8A88]">Nenhuma tarefa encontrada</p>
                   {hasTaskFilter && (
                     <button
                       onClick={() => {
@@ -836,7 +836,7 @@ export function ManagePage() {
                         setTaskScheduleFilter(null)
                         setTaskDayFilter(null)
                       }}
-                      className="text-xs text-[#0071e3] hover:underline"
+                      className="text-xs text-[#2F8BFF] hover:underline"
                     >
                       Limpar filtros
                     </button>
@@ -854,7 +854,7 @@ export function ManagePage() {
                     return (
                       <div key={day.value} className="mb-3">
                         <div className="px-3 mb-1">
-                          <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-widest">
+                          <span className="text-[10px] font-semibold text-[#8C8A88] uppercase tracking-widest">
                             {DAY_FULL[day.value]}
                           </span>
                         </div>
@@ -874,7 +874,7 @@ export function ManagePage() {
                   {filteredDayOfMonthTasks.length > 0 && (
                     <div className="mb-3">
                       <div className="px-3 mb-1">
-                        <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-widest">
+                        <span className="text-[10px] font-semibold text-[#8C8A88] uppercase tracking-widest">
                           Mensal
                         </span>
                       </div>

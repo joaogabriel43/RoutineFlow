@@ -35,25 +35,25 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
       tabIndex={0}
       onClick={() => navigate(`/analytics/area/${streak.areaId}`)}
       onKeyDown={(e) => e.key === 'Enter' && navigate(`/analytics/area/${streak.areaId}`)}
-      className="rounded-xl bg-[#141414] border-l-4 px-4 py-4 flex items-center gap-4
-                 cursor-pointer transition-opacity hover:opacity-80 focus-visible:outline-none
-                 focus-visible:ring-2 focus-visible:ring-[#0071e3]"
+      className="rounded-lg bg-[#141416] border border-line border-l-[3px] px-4 py-4 flex items-center gap-4
+                 cursor-pointer transition-all duration-200 hover:bg-surface-3 focus-visible:outline-none
+                 focus-visible:ring-2 focus-visible:ring-[#2F8BFF]"
       style={{ borderLeftColor: streak.color }}
     >
       <span className="text-2xl shrink-0">{streak.icon}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-[#86868b] truncate">{streak.areaName}</p>
-        <p className="text-[10px] text-[#3a3a3a] mt-0.5">
+        <p className="text-xs text-[#8C8A88] truncate">{streak.areaName}</p>
+        <p className="text-[10px] text-[#34343A] mt-0.5">
           {lastActive ? `Ativo em ${lastActive}` : 'Sem atividade'}
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-2xl font-semibold leading-none" style={{ color: streak.color }}>
+        <p className="num text-2xl font-semibold leading-none" style={{ color: streak.color }}>
           {streak.currentStreak}
         </p>
-        <p className="text-[10px] text-[#86868b] mt-0.5">dias</p>
+        <p className="text-[10px] text-[#8C8A88] mt-0.5">dias</p>
       </div>
-      <ChevronRight size={14} className="text-[#3a3a3a] shrink-0" />
+      <ChevronRight size={14} className="text-[#34343A] shrink-0" />
     </div>
   )
 }
@@ -61,12 +61,12 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
 // ── Heatmap ───────────────────────────────────────────────────────────────────
 
 function heatmapColor(day: FilledHeatmapDay): string {
-  if (day.isFuture) return '#111111'
-  if (day.totalTasks === 0) return '#1c1c1e'
-  if (day.completionRate === 0) return '#1f2f1f'
-  if (day.completionRate < 0.34) return 'rgba(0,113,227,0.25)'
-  if (day.completionRate < 0.67) return 'rgba(0,113,227,0.55)'
-  return '#0071e3'
+  if (day.isFuture) return '#0F0F11'
+  if (day.totalTasks === 0) return '#1C1C1F'
+  if (day.completionRate === 0) return '#1C1C1F'
+  if (day.completionRate < 0.34) return 'rgba(47,139,255,0.25)'
+  if (day.completionRate < 0.67) return 'rgba(47,139,255,0.55)'
+  return '#2F8BFF'
 }
 
 // GitHub-style layout: weeks run left→right (columns), days run top→bottom (rows).
@@ -124,7 +124,7 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
               style={{ height: CELL_PX }}
             >
               {config && (
-                <span className="text-[9px] text-[#86868b] leading-none pr-1">
+                <span className="text-[9px] text-[#8C8A88] leading-none pr-1">
                   {config.label}
                 </span>
               )}
@@ -169,9 +169,9 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg bg-[#1c1c1e] border border-[#2a2a2a] px-3 py-2 text-xs">
-      <p className="text-[#86868b]">{label}</p>
-      <p className="text-[#f5f5f7] font-medium mt-0.5">{payload[0].value}%</p>
+    <div className="rounded-lg bg-[#1C1C1F] border border-[#26262A] px-3 py-2 text-xs">
+      <p className="text-[#8C8A88]">{label}</p>
+      <p className="num text-[#F4F2EF] font-medium mt-0.5">{payload[0].value}%</p>
     </div>
   )
 }
@@ -179,7 +179,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 function WeeklyLineChart({ data }: { data: WeekHistoryPoint[] }) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-[#86868b]">
+      <div className="flex items-center justify-center h-40 text-sm text-[#8C8A88]">
         Dados insuficientes para exibir o gráfico.
       </div>
     )
@@ -188,29 +188,29 @@ function WeeklyLineChart({ data }: { data: WeekHistoryPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#26262A" vertical={false} />
         <XAxis
           dataKey="weekLabel"
-          tick={{ fill: '#86868b', fontSize: 11 }}
+          tick={{ fill: '#8C8A88', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           domain={[0, 100]}
           tickFormatter={(v) => `${v}%`}
-          tick={{ fill: '#86868b', fontSize: 11 }}
+          tick={{ fill: '#8C8A88', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
           ticks={[0, 25, 50, 75, 100]}
         />
-        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#2a2a2a', strokeWidth: 1 }} />
+        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#26262A', strokeWidth: 1 }} />
         <Line
           type="monotone"
           dataKey="rate"
-          stroke="#0071e3"
+          stroke="#2F8BFF"
           strokeWidth={2}
-          dot={{ fill: '#0071e3', r: 3, strokeWidth: 0 }}
-          activeDot={{ fill: '#0071e3', r: 5, strokeWidth: 0 }}
+          dot={{ fill: '#2F8BFF', r: 3, strokeWidth: 0 }}
+          activeDot={{ fill: '#2F8BFF', r: 5, strokeWidth: 0 }}
         />
       </LineChart>
     </ResponsiveContainer>
@@ -224,21 +224,21 @@ function AnalyticsSkeleton() {
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-2">
-        <Skeleton className="h-8 w-40 bg-[#1f1f1f]" />
+        <Skeleton className="h-8 w-40 bg-[#26262A]" />
       </div>
 
       {/* Streak cards */}
       <section>
-        <Skeleton className="h-4 w-24 bg-[#1f1f1f] mb-3" />
+        <Skeleton className="h-4 w-24 bg-[#26262A] mb-3" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-xl bg-[#141414] border-l-4 border-[#1f1f1f] px-4 py-4 flex items-center gap-4">
-              <Skeleton className="h-8 w-8 rounded bg-[#1f1f1f]" />
+            <div key={i} className="rounded-xl bg-[#141416] border-l-4 border-[#26262A] px-4 py-4 flex items-center gap-4">
+              <Skeleton className="h-8 w-8 rounded bg-[#26262A]" />
               <div className="flex-1 space-y-1">
-                <Skeleton className="h-3 w-24 bg-[#1f1f1f]" />
-                <Skeleton className="h-2 w-16 bg-[#1f1f1f]" />
+                <Skeleton className="h-3 w-24 bg-[#26262A]" />
+                <Skeleton className="h-2 w-16 bg-[#26262A]" />
               </div>
-              <Skeleton className="h-8 w-8 bg-[#1f1f1f]" />
+              <Skeleton className="h-8 w-8 bg-[#26262A]" />
             </div>
           ))}
         </div>
@@ -246,17 +246,17 @@ function AnalyticsSkeleton() {
 
       {/* Heatmap */}
       <section>
-        <Skeleton className="h-4 w-36 bg-[#1f1f1f] mb-3" />
-        <div className="rounded-xl bg-[#141414] p-4">
-          <Skeleton className="h-28 w-full bg-[#1f1f1f] rounded-lg" />
+        <Skeleton className="h-4 w-36 bg-[#26262A] mb-3" />
+        <div className="rounded-xl bg-[#141416] p-4">
+          <Skeleton className="h-28 w-full bg-[#26262A] rounded-lg" />
         </div>
       </section>
 
       {/* Chart */}
       <section>
-        <Skeleton className="h-4 w-32 bg-[#1f1f1f] mb-3" />
-        <div className="rounded-xl bg-[#141414] p-4">
-          <Skeleton className="h-44 w-full bg-[#1f1f1f] rounded-lg" />
+        <Skeleton className="h-4 w-32 bg-[#26262A] mb-3" />
+        <div className="rounded-xl bg-[#141416] p-4">
+          <Skeleton className="h-44 w-full bg-[#26262A] rounded-lg" />
         </div>
       </section>
     </div>
@@ -268,7 +268,7 @@ function AnalyticsSkeleton() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="text-xs font-semibold text-[#86868b] uppercase tracking-widest mb-3">
+      <h2 className="text-xs font-semibold text-[#8C8A88] uppercase tracking-widest mb-3">
         {title}
       </h2>
       {children}
@@ -303,12 +303,12 @@ export function AnalyticsPage() {
   return (
     <div className="space-y-8">
       <header className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-light text-[#f5f5f7] tracking-tight">Analytics</h1>
+        <h1 className="text-3xl font-light text-[#F4F2EF] tracking-tight">Analytics</h1>
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1f1f1f] hover:bg-[#2a2a2a]
-                     text-[#86868b] hover:text-[#f5f5f7] text-sm transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#26262A] hover:bg-[#26262A]
+                     text-[#8C8A88] hover:text-[#F4F2EF] text-sm transition-colors disabled:opacity-50"
         >
           {isExporting ? (
             <Loader2 size={14} className="animate-spin" />
@@ -322,7 +322,7 @@ export function AnalyticsPage() {
       {/* ── Streaks ─────────────────────────────────────────────────────── */}
       <Section title="Sequências">
         {streaks.length === 0 ? (
-          <p className="text-sm text-[#86868b]">Nenhum streak registrado ainda.</p>
+          <p className="text-sm text-[#8C8A88]">Nenhum streak registrado ainda.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {streaks.map((s) => (
@@ -334,9 +334,9 @@ export function AnalyticsPage() {
 
       {/* ── Heatmap ─────────────────────────────────────────────────────── */}
       <Section title="Histórico de atividade">
-        <div className="rounded-xl bg-[#141414] p-4 overflow-x-auto">
+        <div className="rounded-xl bg-[#141416] p-4 overflow-x-auto">
           {heatmapDays.length === 0 ? (
-            <p className="text-sm text-[#86868b]">Sem dados de atividade.</p>
+            <p className="text-sm text-[#8C8A88]">Sem dados de atividade.</p>
           ) : (
             <HeatmapGrid days={heatmapDays} />
           )}
@@ -344,21 +344,21 @@ export function AnalyticsPage() {
 
         {/* Legend */}
         <div className="flex items-center gap-2 mt-2 justify-end">
-          <span className="text-[10px] text-[#86868b]">Menos</span>
-          {['#1c1c1e', 'rgba(0,113,227,0.25)', 'rgba(0,113,227,0.55)', '#0071e3'].map((c, i) => (
+          <span className="text-[10px] text-[#8C8A88]">Menos</span>
+          {['#1C1C1F', 'rgba(47,139,255,0.25)', 'rgba(47,139,255,0.55)', '#2F8BFF'].map((c, i) => (
             <div
               key={i}
               className="rounded-[2px]"
               style={{ width: 10, height: 10, backgroundColor: c }}
             />
           ))}
-          <span className="text-[10px] text-[#86868b]">Mais</span>
+          <span className="text-[10px] text-[#8C8A88]">Mais</span>
         </div>
       </Section>
 
       {/* ── Weekly history chart ─────────────────────────────────────────── */}
       <Section title="Progresso semanal">
-        <div className="rounded-xl bg-[#141414] px-4 pt-4 pb-2">
+        <div className="rounded-xl bg-[#141416] px-4 pt-4 pb-2">
           <WeeklyLineChart data={weekHistoryData} />
         </div>
       </Section>
