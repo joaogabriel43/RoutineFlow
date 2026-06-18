@@ -272,7 +272,7 @@ export function TodayPage() {
     setActiveTimerTaskId((prev) => (prev === taskId ? null : taskId))
   }
 
-  const { enrichedAreas, overallRate, isLoading, isFuture, handleTaskToggle, error } =
+  const { enrichedAreas, overallRate, isLoading, isFuture, handleTaskToggle, updateNotes, error } =
     useDay(selectedDate)
 
   if (isLoading) return <TodaySkeleton />
@@ -312,6 +312,7 @@ export function TodayPage() {
               disabled={isFuture}
               activeTimerTaskId={activeTimerTaskId}
               onToggleTimer={handleToggleTimer}
+              onUpdateNotes={updateNotes}
             />
           ))}
         </div>

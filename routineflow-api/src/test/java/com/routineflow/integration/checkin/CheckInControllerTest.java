@@ -220,6 +220,55 @@ class CheckInControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("completeTask_withNotes_returnsNotes")
+    void completeTask_withNotes_returnsNotes() throws Exception {
+        if (firstTaskId == null) return;
+
+        mockMvc.perform(post("/checkins/" + firstTaskId + "/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"notes\": \"foi ótimo\"}")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").value(true))
+                .andExpect(jsonPath("$.notes").value("foi ótimo"));
+    }
+
+    @Test
+    @DisplayName("patchNotes_existingLog_updatesNotes")
+    void patchNotes_existingLog_updatesNotes() throws Exception {
+        if (firstTaskId == null) return;
+
+        // First complete it
+        mockMvc.perform(post("/checkins/" + firstTaskId + "/complete")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk());
+
+        // Then patch it
+        mockMvc.perform(patch("/checkins/" + firstTaskId + "/notes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"notes\": \"novo texto\"}")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notes").value("novo texto"));
+    }
+
+    @Test
+    @DisplayName("patchNotes_nonExistingLog_returns404")
+    void patchNotes_nonExistingLog_returns404() throws Exception {
+        if (firstTaskId == null) return;
+
+        // Use a date that definitely has no log
+        String pastDate = LocalDate.now().minusDays(10).toString();
+
+        mockMvc.perform(patch("/checkins/" + firstTaskId + "/notes")
+                        .param("date", pastDate)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"notes\": \"novo texto\"}")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isNotFound());
+    }
+
     private String registerAndGetToken(String email, String password) throws Exception {
         var register = new RegisterRequest("Test User", email, password);
         var result = mockMvc.perform(post("/auth/register")

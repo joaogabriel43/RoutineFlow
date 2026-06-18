@@ -7,5 +7,6 @@ public record DailyLogResponse(
         Long taskId,
         boolean completed,
         Instant completedAt,
-        LocalDate logDate
+        LocalDate logDate,
+        String notes
 ) {}

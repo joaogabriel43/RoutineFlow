@@ -10,9 +10,10 @@ interface AreaCardProps {
   disabled?: boolean
   activeTimerTaskId?: number | null
   onToggleTimer?: (taskId: number) => void
+  onUpdateNotes?: (taskId: number, notes: string) => void
 }
 
-export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTaskId = null, onToggleTimer }: AreaCardProps) {
+export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTaskId = null, onToggleTimer, onUpdateNotes }: AreaCardProps) {
   const completedTasks = area.tasks.filter((t) => t.completed).length
   const totalTasks = area.tasks.length
   const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0
@@ -81,6 +82,7 @@ export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTask
               disabled={disabled}
               isActiveTimer={activeTimerTaskId === task.id}
               onToggleTimer={onToggleTimer}
+              onUpdateNotes={onUpdateNotes}
             />
           ))}
         </div>

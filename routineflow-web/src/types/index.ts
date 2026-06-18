@@ -126,6 +126,7 @@ export interface DailyLogResponse {
   logDate: string
   completed: boolean
   completedAt: string | null
+  notes: string | null
 }
 
 export interface AreaProgressResponse {
@@ -137,6 +138,7 @@ export interface AreaProgressResponse {
   completedTasks: number
   completionRate: number
   completedTaskIds: number[]
+  taskNotes?: Record<number, string>
 }
 
 export interface DailyProgressResponse {

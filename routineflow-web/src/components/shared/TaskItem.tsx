@@ -5,14 +5,15 @@ import type { EnrichedTask } from '@/hooks/useDay'
 interface TaskItemProps {
   task: EnrichedTask
   areaColor: string
-  onToggle: (taskId: number, completed: boolean) => void
+  onToggle: (taskId: number, completed: boolean, notes?: string) => void
   isLast?: boolean
   disabled?: boolean
   isActiveTimer?: boolean
-  onToggleTimer?: (taskId: number) => void
+  onUpdateNotes?: (taskId: number, notes: string) => void
 }
 
 import { TaskTimer } from '@/components/shared/TaskTimer'
+import { NoteInput } from '@/components/shared/NoteInput'
 
 export function TaskItem({
   task,
@@ -22,6 +23,7 @@ export function TaskItem({
   disabled = false,
   isActiveTimer = false,
   onToggleTimer,
+  onUpdateNotes,
 }: TaskItemProps) {
   function handleClick() {
     if (disabled) return
@@ -95,12 +97,29 @@ export function TaskItem({
               taskId={task.id}
               taskTitle={task.title}
               estimatedMinutes={task.estimatedMinutes ?? 0}
-              onComplete={() => {
-                onToggle(task.id, true)
+              onComplete={(noteString) => {
+                onToggle(task.id, true, noteString)
                 if (onToggleTimer) onToggleTimer(task.id)
               }}
             />
           </div>
+        )}
+
+        {/* Notes (Past or Completed) */}
+        {task.completed && (
+          disabled ? (
+            task.notes && (
+              <p className="text-xs text-[#86868b] italic mt-2 leading-relaxed whitespace-pre-wrap">
+                {task.notes}
+              </p>
+            )
+          ) : (
+            <NoteInput 
+              initialNote={task.notes} 
+              onSave={(notes) => onUpdateNotes?.(task.id, notes)} 
+              disabled={disabled}
+            />
+          )
         )}
       </div>
     </div>

@@ -28,7 +28,7 @@ public class CheckInUseCase {
     }
 
     @Transactional
-    public DailyLogResponse completeTask(Long userId, Long taskId, LocalDate date) {
+    public DailyLogResponse completeTask(Long userId, Long taskId, LocalDate date, String notes) {
         if (date.isAfter(LocalDate.now(AppTimeZone.ZONE))) {
             throw new IllegalArgumentException("Cannot check in or out for future dates");
         }
@@ -49,6 +49,9 @@ public class CheckInUseCase {
 
         log.setCompleted(true);
         log.setCompletedAt(Instant.now());
+        if (notes != null) {
+            log.setNotes(notes);
+        }
         log = dailyLogJpaRepository.save(log);
 
         return toResponse(log);
@@ -77,6 +80,31 @@ public class CheckInUseCase {
         return toResponse(log);
     }
 
+    @Transactional
+    public DailyLogResponse updateNotes(Long userId, Long taskId, LocalDate date, String notes) {
+        var log = dailyLogJpaRepository
+                .findByTaskIdAndUserIdAndLogDate(taskId, userId, date)
+                .orElseThrow(() -> new ResourceNotFoundException("Check-in not found for task: " + taskId));
+
+        validateOwnership(userId, log.getTask().getArea().getUser().getId(), taskId);
+
+        log.setNotes(notes);
+        log = dailyLogJpaRepository.save(log);
+
+        return toResponse(log);
+    }
+
+    @Transactional(readOnly = true)
+    public DailyLogResponse getNotes(Long userId, Long taskId, LocalDate date) {
+        var log = dailyLogJpaRepository
+                .findByTaskIdAndUserIdAndLogDate(taskId, userId, date)
+                .orElseThrow(() -> new ResourceNotFoundException("Check-in not found for task: " + taskId));
+
+        validateOwnership(userId, log.getTask().getArea().getUser().getId(), taskId);
+
+        return toResponse(log);
+    }
+
     private void validateOwnership(Long requestingUserId, Long taskOwnerId, Long taskId) {
         if (!requestingUserId.equals(taskOwnerId)) {
             throw new UnauthorizedException(
@@ -89,7 +117,8 @@ public class CheckInUseCase {
                 log.getTask().getId(),
                 log.isCompleted(),
                 log.getCompletedAt(),
-                log.getLogDate()
+                log.getLogDate(),
+                log.getNotes()
         );
     }
 }

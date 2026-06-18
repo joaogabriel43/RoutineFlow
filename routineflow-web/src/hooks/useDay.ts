@@ -9,6 +9,7 @@ import type { AreaWithTasksResponse, TaskResponse } from '@/types'
 export interface EnrichedTask extends TaskResponse {
   completed: boolean
   completedAt: string | null
+  notes: string | null
 }
 
 export interface EnrichedArea extends Omit<AreaWithTasksResponse, 'tasks'> {
@@ -48,11 +49,13 @@ export function useDay(selectedDate: string) {
 
   // Local checkbox state — reinitialize whenever the selected date changes.
   const [localChecked, setLocalChecked] = useState<Map<number, boolean>>(new Map())
+  const [localNotes, setLocalNotes] = useState<Map<number, string>>(new Map())
   const [initialized, setInitialized] = useState(false)
 
   // Reset local state on date change so we re-initialize from fresh server data.
   useEffect(() => {
     setLocalChecked(new Map())
+    setLocalNotes(new Map())
     setInitialized(false)
   }, [selectedDate])
 
@@ -83,8 +86,14 @@ export function useDay(selectedDate: string) {
     if (progressQuery.isLoading) return
 
     const completedIdsByArea = new Map<number, Set<number>>()
+    const initialNotes = new Map<number, string>()
     for (const area of progressQuery.data?.areas ?? []) {
       completedIdsByArea.set(area.areaId, new Set(area.completedTaskIds))
+      if (area.taskNotes) {
+        Object.entries(area.taskNotes).forEach(([idStr, note]) => {
+          initialNotes.set(Number(idStr), note)
+        })
+      }
     }
 
     const initial = new Map<number, boolean>()
@@ -96,6 +105,7 @@ export function useDay(selectedDate: string) {
     }
 
     setLocalChecked(initial)
+    setLocalNotes(initialNotes)
     setInitialized(true)
   }, [scheduleQuery.data, progressQuery.data, progressQuery.isLoading, initialized])
 
@@ -107,15 +117,17 @@ export function useDay(selectedDate: string) {
         ...area,
         tasks: sorted.map((task) => {
           const done = localChecked.get(task.id) ?? false
+          const note = localNotes.get(task.id) ?? null
           return {
             ...task,
             completed: done,
             completedAt: done ? new Date().toISOString() : null,
+            notes: note,
           }
         }),
       }
     })
-  }, [scheduleQuery.data, localChecked])
+  }, [scheduleQuery.data, localChecked, localNotes])
 
   const overallRate = computeOverallRate(enrichedAreas)
   const isLoading = scheduleQuery.isLoading || progressQuery.isLoading
@@ -123,14 +135,24 @@ export function useDay(selectedDate: string) {
 
   // ── Mutations ─────────────────────────────────────────────────────────────────
 
-  async function completeTask(taskId: number) {
+  async function completeTask(taskId: number, notes?: string) {
     if (isFuture) return // future dates: read-only
 
     setLocalChecked((prev) => new Map(prev).set(taskId, true))
+    if (notes) {
+      setLocalNotes((prev) => new Map(prev).set(taskId, notes))
+    }
     try {
-      await checkInApi.complete(taskId, selectedDate)
+      await checkInApi.complete(taskId, selectedDate, notes)
     } catch {
       setLocalChecked((prev) => new Map(prev).set(taskId, false))
+      if (notes) {
+        setLocalNotes((prev) => {
+          const m = new Map(prev)
+          m.delete(taskId)
+          return m
+        })
+      }
       toast.error('Erro ao marcar tarefa. Tente novamente.')
     }
   }
@@ -147,12 +169,23 @@ export function useDay(selectedDate: string) {
     }
   }
 
-  function handleTaskToggle(taskId: number, completed: boolean) {
+  function handleTaskToggle(taskId: number, completed: boolean, notes?: string) {
     if (isFuture) return
     if (completed) {
-      void completeTask(taskId)
+      void completeTask(taskId, notes)
     } else {
       void uncompleteTask(taskId)
+    }
+  }
+
+  async function updateNotes(taskId: number, notes: string) {
+    if (isFuture) return
+    setLocalNotes((prev) => new Map(prev).set(taskId, notes))
+    try {
+      await checkInApi.updateNotes(taskId, selectedDate, notes)
+    } catch {
+      // Revert if needed
+      toast.error('Erro ao salvar nota.')
     }
   }
 
@@ -163,5 +196,6 @@ export function useDay(selectedDate: string) {
     error,
     isFuture,
     handleTaskToggle,
+    updateNotes,
   }
 }

@@ -91,9 +91,9 @@ export const routineApi = {
 // ── Check-in ──────────────────────────────────────────────────────────────────
 
 export const checkInApi = {
-  complete: (taskId: number, date?: string) =>
+  complete: (taskId: number, date?: string, notes?: string | null) =>
     api
-      .post<DailyLogResponse>(`/checkins/${taskId}/complete`, undefined, {
+      .post<DailyLogResponse>(`/checkins/${taskId}/complete`, notes ? { notes } : {}, {
         params: date ? { date } : undefined,
       })
       .then((r) => r.data),
@@ -102,6 +102,13 @@ export const checkInApi = {
     api
       .post<DailyLogResponse>(`/checkins/${taskId}/uncomplete`, undefined, {
         params: date ? { date } : undefined,
+      })
+      .then((r) => r.data),
+
+  updateNotes: (taskId: number, date: string, notes: string | null) =>
+    api
+      .patch<DailyLogResponse>(`/checkins/${taskId}/notes`, { notes }, {
+        params: { date },
       })
       .then((r) => r.data),
 
