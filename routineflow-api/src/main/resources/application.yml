@@ -70,3 +70,10 @@ logging:
     com.routineflow: DEBUG
     org.springframework.security: INFO
     org.flywaydb: INFO
+
+# VAPID keys for Web Push notifications
+app:
+  vapid:
+    public-key: ${VAPID_PUBLIC_KEY:}
+    private-key: ${VAPID_PRIVATE_KEY:}
+    subject: mailto:contato@routineflow.app

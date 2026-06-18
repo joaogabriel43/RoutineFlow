@@ -124,12 +124,17 @@ class CheckInControllerTest {
     void getTodayProgress_afterCompleteTask_responseContainsCompletedTaskId() throws Exception {
         if (firstTaskId == null) return;
 
+        // Usa data de uma segunda-feira para garantir que a task (de MONDAY) se aplique
+        String monday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).toString();
+
         // Complete the task first
         mockMvc.perform(post("/checkins/" + firstTaskId + "/complete")
+                .param("date", monday)
                 .header("Authorization", "Bearer " + jwtToken));
 
         // Now check the progress endpoint
-        mockMvc.perform(get("/checkins/today/progress")
+        mockMvc.perform(get("/checkins/progress")
+                        .param("date", monday)
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.areas[0].completedTaskIds").isArray())

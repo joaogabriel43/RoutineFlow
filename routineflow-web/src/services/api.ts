@@ -23,6 +23,7 @@ import type {
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskResponse,
+  PushSubscriptionData,
 } from '@/types'
 
 // ── Axios instance ────────────────────────────────────────────────────────────
@@ -219,6 +220,19 @@ export const singleTaskApi = {
 
   remove: (id: number) =>
     api.delete<void>(`/single-tasks/${id}`),
+}
+
+// ── Push Notifications ──────────────────────────────────────────────────────────
+
+export const pushApi = {
+  getVapidPublicKey: () =>
+    api.get<string>('/push/vapid-public-key').then((r) => r.data),
+
+  subscribe: (subscription: PushSubscriptionData) =>
+    api.post('/push/subscribe', subscription),
+
+  unsubscribe: (endpoint: string) =>
+    api.delete('/push/unsubscribe', { data: { endpoint } }),
 }
 
 export default api

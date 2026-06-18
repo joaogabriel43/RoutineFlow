@@ -54,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         // Swagger UI and OpenAPI spec — publicly accessible
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
+                        // VAPID public key must be accessible before auth
+                        .requestMatchers("/push/vapid-public-key").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

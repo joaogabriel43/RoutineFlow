@@ -56,7 +56,7 @@ class TaskUseCaseTest {
     void createTask_dayOfWeek_validRequest_savesAndReturnsResponse() {
         var request = new CreateTaskRequest(
                 "Re-tell Lecture", "3 re-tells", 30,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null);
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null, null);
         var area = buildArea(AREA_ID, USER_ID);
         var savedTask = buildTask(TASK_ID, area, "Re-tell Lecture", "3 re-tells", 30,
                 ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null, 0);
@@ -81,7 +81,7 @@ class TaskUseCaseTest {
     void createTask_dayOfWeek_withoutDayOfWeek_throwsIllegalArgumentException() {
         var request = new CreateTaskRequest(
                 "Study", null, null,
-                ScheduleType.DAY_OF_WEEK, null, null); // dayOfWeek missing
+                ScheduleType.DAY_OF_WEEK, null, null, null); // dayOfWeek missing
         var area = buildArea(AREA_ID, USER_ID);
 
         when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
@@ -98,7 +98,7 @@ class TaskUseCaseTest {
     void createTask_areaNotFound_throwsResourceNotFoundException() {
         var request = new CreateTaskRequest(
                 "Study", null, null,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.TUESDAY, null);
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.TUESDAY, null, null);
         when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.createTask(USER_ID, AREA_ID, request))
@@ -115,7 +115,7 @@ class TaskUseCaseTest {
     void createTask_dayOfMonth_validRequest_savesAndReturnsResponse() {
         var request = new CreateTaskRequest(
                 "Monthly Bill", "Pay rent", null,
-                ScheduleType.DAY_OF_MONTH, null, 25);
+                ScheduleType.DAY_OF_MONTH, null, 25, null);
         var area = buildArea(AREA_ID, USER_ID);
         var savedTask = buildTask(TASK_ID, area, "Monthly Bill", "Pay rent", null,
                 ScheduleType.DAY_OF_MONTH, null, 25, 0);
@@ -137,7 +137,7 @@ class TaskUseCaseTest {
     void createTask_dayOfMonth_withoutDayOfMonth_throwsIllegalArgumentException() {
         var request = new CreateTaskRequest(
                 "Bill", null, null,
-                ScheduleType.DAY_OF_MONTH, null, null); // dayOfMonth missing
+                ScheduleType.DAY_OF_MONTH, null, null, null); // dayOfMonth missing
         var area = buildArea(AREA_ID, USER_ID);
 
         when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
@@ -156,7 +156,7 @@ class TaskUseCaseTest {
         // We test UseCase directly here — simulate a bypass of bean validation.
         var request = new CreateTaskRequest(
                 "Bill", null, null,
-                ScheduleType.DAY_OF_MONTH, null, 0);
+                ScheduleType.DAY_OF_MONTH, null, 0, null);
         var area = buildArea(AREA_ID, USER_ID);
 
         when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
@@ -173,7 +173,7 @@ class TaskUseCaseTest {
     void createTask_dayOfMonth_dayOfMonth32_throwsIllegalArgumentException() {
         var request = new CreateTaskRequest(
                 "Bill", null, null,
-                ScheduleType.DAY_OF_MONTH, null, 32);
+                ScheduleType.DAY_OF_MONTH, null, 32, null);
         var area = buildArea(AREA_ID, USER_ID);
 
         when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
@@ -192,7 +192,7 @@ class TaskUseCaseTest {
     void updateTask_dayOfWeek_validRequest_updatesAndReturnsResponse() {
         var request = new UpdateTaskRequest(
                 "Listening", "Podcast 30min", 30,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.WEDNESDAY, null);
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.WEDNESDAY, null, null);
         var area = buildArea(AREA_ID, USER_ID);
         var task = buildTask(TASK_ID, area, "Old Title", "old desc", 20,
                 ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null, 0);
@@ -214,7 +214,7 @@ class TaskUseCaseTest {
     void updateTask_changingScheduleType_fromDayOfWeekToDayOfMonth_updatesCorrectly() {
         var request = new UpdateTaskRequest(
                 "Monthly Review", null, null,
-                ScheduleType.DAY_OF_MONTH, null, 25); // changing to DAY_OF_MONTH day=25
+                ScheduleType.DAY_OF_MONTH, null, 25, null); // changing to DAY_OF_MONTH day=25
         var area = buildArea(AREA_ID, USER_ID);
         var task = buildTask(TASK_ID, area, "Weekly Review", null, null,
                 ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null, 0);
@@ -235,7 +235,7 @@ class TaskUseCaseTest {
     void updateTask_taskNotFound_throwsResourceNotFoundException() {
         var request = new UpdateTaskRequest(
                 "X", null, null,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.FRIDAY, null);
+                ScheduleType.DAY_OF_WEEK, DayOfWeek.FRIDAY, null, null);
         when(taskJpaRepository.findByIdAndArea_User_Id(TASK_ID, USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.updateTask(USER_ID, TASK_ID, request))

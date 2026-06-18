@@ -48,6 +48,7 @@ export interface TaskResponse {
   scheduleType: ScheduleType
   dayOfWeek: string | null
   dayOfMonth: number | null
+  reminderTime: string | null // HH:mm
 }
 
 // ── Manage ───────────────────────────────────────────────────────────────────
@@ -85,6 +86,7 @@ export interface CreateTaskRequest {
   scheduleType: ScheduleType
   dayOfWeek: string | null
   dayOfMonth: number | null
+  reminderTime: string | null
 }
 
 export interface UpdateTaskRequest {
@@ -94,6 +96,7 @@ export interface UpdateTaskRequest {
   scheduleType: ScheduleType
   dayOfWeek: string | null
   dayOfMonth: number | null
+  reminderTime: string | null
 }
 
 export interface AreaWithTasksResponse {
@@ -262,4 +265,12 @@ export interface CreateSingleTaskRequest {
   title: string
   description: string | null
   dueDate: string | null
+}
+
+// ── Push Notifications ───────────────────────────────────────────────────────
+
+export interface PushSubscriptionData {
+  endpoint: string
+  p256dh: string
+  auth: string
 }

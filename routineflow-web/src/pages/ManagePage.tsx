@@ -196,6 +196,7 @@ interface TaskModalProps {
     scheduleType: ScheduleType,
     dayOfWeek: string | null,
     dayOfMonth: number | null,
+    reminderTime: string | null,
   ) => void
   isPending: boolean
 }
@@ -213,6 +214,7 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
   const [dayOfMonth, setDayOfMonth] = useState<string>(
     initial?.dayOfMonth?.toString() ?? '',
   )
+  const [reminderTime, setReminderTime] = useState<string>(initial?.reminderTime ?? '')
 
   const handleOpenChange = (o: boolean) => {
     if (o) {
@@ -222,6 +224,7 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
       setScheduleType(initial?.scheduleType ?? 'DAY_OF_WEEK')
       setDayOfWeek(initial?.dayOfWeek ?? 'MONDAY')
       setDayOfMonth(initial?.dayOfMonth?.toString() ?? '')
+      setReminderTime(initial?.reminderTime ?? '')
     } else {
       onClose()
     }
@@ -244,6 +247,7 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
       scheduleType,
       scheduleType === 'DAY_OF_WEEK' ? dayOfWeek : null,
       scheduleType === 'DAY_OF_MONTH' ? parseInt(dayOfMonth, 10) : null,
+      reminderTime.trim() || null,
     )
   }
 
@@ -347,6 +351,19 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
               className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] placeholder:text-[#3a3a3a] focus-visible:ring-[#0071e3]"
             />
           </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#86868b] font-medium">
+              Horário do lembrete <span className="text-[#3a3a3a]">— opcional</span>
+            </label>
+            <Input
+              type="time"
+              value={reminderTime}
+              onChange={(e) => setReminderTime(e.target.value)}
+              className="bg-[#1f1f1f] border-[#2a2a2a] text-[#f5f5f7] focus-visible:ring-[#0071e3]"
+            />
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-xs text-[#86868b] font-medium">
               Descrição <span className="text-[#3a3a3a]">— opcional</span>
@@ -589,9 +606,10 @@ export function ManagePage() {
     scheduleType: ScheduleType,
     dayOfWeek: string | null,
     dayOfMonth: number | null,
+    reminderTime: string | null,
   ) => {
     if (!selectedArea) return
-    const data = { title, description, estimatedMinutes, scheduleType, dayOfWeek, dayOfMonth }
+    const data = { title, description, estimatedMinutes, scheduleType, dayOfWeek, dayOfMonth, reminderTime }
     if (taskModal.task) {
       updateTask.mutate(
         { areaId: selectedArea.id, taskId: taskModal.task.id, data },

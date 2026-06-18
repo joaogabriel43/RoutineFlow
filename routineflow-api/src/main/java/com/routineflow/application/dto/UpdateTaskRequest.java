@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 
 public record UpdateTaskRequest(
 
@@ -28,5 +29,8 @@ public record UpdateTaskRequest(
 
         @Min(value = 1, message = "dayOfMonth must be between 1 and 31")
         @Max(value = 31, message = "dayOfMonth must be between 1 and 31")
-        Integer dayOfMonth
+        Integer dayOfMonth,
+
+        /** Optional — time of day for push notification reminder (HH:mm). */
+        LocalTime reminderTime
 ) {}
