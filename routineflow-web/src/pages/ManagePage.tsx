@@ -430,7 +430,7 @@ function DeleteConfirm({ open, label, onClose, onConfirm, isPending }: DeleteCon
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}
-            className="bg-red-600 hover:bg-red-700 text-white border-0"
+            className="bg-danger hover:bg-danger-hover text-white border-0"
           >
             {isPending ? 'Excluindo…' : 'Excluir'}
           </AlertDialogAction>

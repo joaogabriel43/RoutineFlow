@@ -82,14 +82,14 @@ export function SingleTaskItem({
           </span>
 
           {task.isOverdue && !archived && (
-            <span className="shrink-0 text-[10px] font-medium text-red-400 uppercase tracking-wide">
+            <span className="shrink-0 text-[10px] font-medium text-danger uppercase tracking-wide">
               Atrasada
             </span>
           )}
 
           {task.dueDate && !task.isOverdue && !archived && (
             <span className="shrink-0 text-xs text-[#8C8A88]">
-              até {formatDueDate(task.dueDate)}
+              até <span className="num">{formatDueDate(task.dueDate)}</span>
             </span>
           )}
         </div>
@@ -100,7 +100,7 @@ export function SingleTaskItem({
 
         {archived && task.completedAt && (
           <p className="text-xs text-[#8C8A88] mt-0.5">
-            Concluída em {formatCompletedAt(task.completedAt)}
+            Concluída em <span className="num">{formatCompletedAt(task.completedAt)}</span>
           </p>
         )}
       </div>
@@ -122,7 +122,7 @@ export function SingleTaskItem({
             type="button"
             onClick={() => onDelete(task.id)}
             aria-label="Excluir tarefa"
-            className="p-1 rounded text-[#3a3a3c] hover:text-red-400 hover:bg-[#26262A] transition-colors cursor-pointer"
+            className="p-1 rounded text-[#3a3a3c] hover:text-danger hover:bg-[#26262A] transition-colors cursor-pointer"
           >
             <X size={14} />
           </button>

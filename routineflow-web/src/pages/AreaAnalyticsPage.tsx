@@ -39,7 +39,7 @@ function SummaryCard({ label, value, icon, color }: SummaryCardProps) {
         <span className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">{label}</span>
         <span className="text-[#8C8A88]">{icon}</span>
       </div>
-      <p className="text-3xl font-bold leading-none" style={{ color }}>
+      <p className="num text-3xl font-bold leading-none" style={{ color }}>
         {value}
       </p>
     </div>
@@ -59,7 +59,7 @@ function DarkTooltip({ active, payload, label }: TooltipProps) {
   return (
     <div className="rounded-lg bg-[#1C1C1F] border border-[#26262A] px-3 py-2 text-xs">
       <p className="text-[#8C8A88]">{label}</p>
-      <p className="text-[#F4F2EF] font-medium mt-0.5">{payload[0].value.toFixed(1)}%</p>
+      <p className="num text-[#F4F2EF] font-medium mt-0.5">{payload[0].value.toFixed(1)}%</p>
     </div>
   )
 }
@@ -125,7 +125,7 @@ function BarTooltipContent({ active, payload }: BarTooltipProps) {
   return (
     <div className="rounded-lg bg-[#1C1C1F] border border-[#26262A] px-3 py-2 text-xs">
       <p className="text-[#8C8A88]">{stat.dayLabel}</p>
-      <p className="text-[#F4F2EF] font-medium mt-0.5">
+      <p className="num text-[#F4F2EF] font-medium mt-0.5">
         {stat.completedCount} feitos · {stat.completionRate.toFixed(1)}%
       </p>
     </div>

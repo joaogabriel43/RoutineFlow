@@ -159,10 +159,10 @@ function Field({ label, type, value, onChange, placeholder, error, autoFocus }: 
           bg-[#141416] border outline-none transition-colors
           placeholder:text-[#34343A]
           focus:border-[#2F8BFF] focus:ring-1 focus:ring-[#2F8BFF]
-          ${error ? 'border-red-500/60' : 'border-[#26262A]'}
+          ${error ? 'border-danger/60' : 'border-[#26262A]'}
         `}
       />
-      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+      {error && <p className="text-xs text-danger mt-1">{error}</p>}
     </div>
   )
 }

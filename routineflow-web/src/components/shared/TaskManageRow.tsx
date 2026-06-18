@@ -57,7 +57,7 @@ export function TaskManageRow({ task, onEdit, onDelete }: Props) {
         </button>
         <button
           onClick={onDelete}
-          className="p-1.5 rounded-lg text-[#8C8A88] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="p-1.5 rounded-lg text-[#8C8A88] hover:text-danger hover:bg-danger/10 transition-colors"
           title="Excluir tarefa"
         >
           <Trash2 size={13} />

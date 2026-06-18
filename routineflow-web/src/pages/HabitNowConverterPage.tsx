@@ -44,7 +44,7 @@ function HabitRow({ habit, checked, onChange }: HabitRowProps) {
         className={cn(
           'text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0',
           habit.isActive
-            ? 'bg-green-900/30 text-green-400'
+            ? 'bg-success/15 text-success'
             : 'bg-[#26262A] text-[#8C8A88]',
         )}
       >

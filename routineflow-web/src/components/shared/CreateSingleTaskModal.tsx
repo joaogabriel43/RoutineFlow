@@ -78,7 +78,7 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
               className="w-full bg-[#26262A] border border-[#26262A] rounded-lg px-3 py-2 text-sm text-[#F4F2EF] placeholder:text-[#3a3a3c] focus:outline-none focus:ring-1 focus:ring-[#2F8BFF] focus:border-[#2F8BFF] transition-colors"
             />
             {titleError && (
-              <p className="text-xs text-red-400">{titleError}</p>
+              <p className="text-xs text-danger">{titleError}</p>
             )}
           </div>
 
