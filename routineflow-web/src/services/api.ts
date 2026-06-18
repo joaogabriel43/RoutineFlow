@@ -112,6 +112,20 @@ export const checkInApi = {
       })
       .then((r) => r.data),
 
+  incrementProgress: (taskId: number, increment: number, date?: string) =>
+    api
+      .post<DailyLogResponse>(`/checkins/${taskId}/progress`, { increment }, {
+        params: date ? { date } : undefined,
+      })
+      .then((r) => r.data),
+
+  resetProgress: (taskId: number, date?: string) =>
+    api
+      .post<DailyLogResponse>(`/checkins/${taskId}/progress/reset`, undefined, {
+        params: date ? { date } : undefined,
+      })
+      .then((r) => r.data),
+
   // Primary: optional date param (defaults to today on server)
   getDayProgress: (date?: string) =>
     api

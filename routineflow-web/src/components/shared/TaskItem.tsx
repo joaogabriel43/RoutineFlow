@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import type { EnrichedTask } from '@/hooks/useDay'
 import { TaskTimer } from '@/components/shared/TaskTimer'
 import { NoteInput } from '@/components/shared/NoteInput'
+import { NumericGoalProgress } from '@/components/shared/NumericGoalProgress'
 
 interface TaskItemProps {
   task: EnrichedTask
@@ -13,6 +14,8 @@ interface TaskItemProps {
   isActiveTimer?: boolean
   onToggleTimer?: (taskId: number) => void
   onUpdateNotes?: (taskId: number, notes: string) => void
+  onIncrementProgress?: (taskId: number, increment: number, target: number) => void
+  onResetProgress?: (taskId: number) => void
 }
 
 export function TaskItem({
@@ -24,6 +27,8 @@ export function TaskItem({
   isActiveTimer = false,
   onToggleTimer,
   onUpdateNotes,
+  onIncrementProgress,
+  onResetProgress,
 }: TaskItemProps) {
   function handleClick() {
     if (disabled) return
@@ -37,27 +42,45 @@ export function TaskItem({
         !isLast && 'border-b border-line-subtle',
       )}
     >
-      {/* Custom checkbox */}
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={disabled}
-        aria-label={
-          disabled
-            ? 'Check-in indisponível'
-            : task.completed
-              ? 'Desmarcar tarefa'
-              : 'Marcar como concluída'
-        }
-        className="mt-0.5 shrink-0 w-5 h-5 rounded-xs flex items-center justify-center transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
-        style={{
-          border: task.completed ? 'none' : `1.5px solid ${disabled ? 'var(--text-disabled)' : areaColor}`,
-          backgroundColor: task.completed ? (disabled ? 'var(--text-disabled)' : areaColor) : 'transparent',
-          '--tw-ring-color': areaColor,
-        } as React.CSSProperties}
-      >
-        {task.completed && <Check size={12} strokeWidth={2.5} className="text-white" />}
-      </button>
+      {/* Checkbox or Numeric Progress */}
+      {task.goalType === 'NUMERIC' ? (
+        <NumericGoalProgress
+          taskId={task.id}
+          goalProgress={task.goalProgress ?? 0}
+          goalTarget={task.goalTarget ?? 1}
+          goalUnit={task.goalUnit ?? ''}
+          completed={task.completed}
+          disabled={disabled}
+          areaColor={areaColor}
+          onIncrement={(inc) => {
+            if (onIncrementProgress) onIncrementProgress(task.id, inc, task.goalTarget ?? 1)
+          }}
+          onReset={() => {
+            if (onResetProgress) onResetProgress(task.id)
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={disabled}
+          aria-label={
+            disabled
+              ? 'Check-in indisponível'
+              : task.completed
+                ? 'Desmarcar tarefa'
+                : 'Marcar como concluída'
+          }
+          className="mt-0.5 shrink-0 w-5 h-5 rounded-xs flex items-center justify-center transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
+          style={{
+            border: task.completed ? 'none' : `1.5px solid ${disabled ? 'var(--text-disabled)' : areaColor}`,
+            backgroundColor: task.completed ? (disabled ? 'var(--text-disabled)' : areaColor) : 'transparent',
+            '--tw-ring-color': areaColor,
+          } as React.CSSProperties}
+        >
+          {task.completed && <Check size={12} strokeWidth={2.5} className="text-white" />}
+        </button>
+      )}
 
       {/* Content */}
       <div className="flex-1 min-w-0">

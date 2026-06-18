@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(
@@ -48,4 +49,7 @@ public class DailyLogJpaEntity {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "goal_progress", precision = 10, scale = 2)
+    private BigDecimal goalProgress;
 }

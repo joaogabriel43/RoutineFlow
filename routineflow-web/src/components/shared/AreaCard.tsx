@@ -11,9 +11,20 @@ interface AreaCardProps {
   activeTimerTaskId?: number | null
   onToggleTimer?: (taskId: number) => void
   onUpdateNotes?: (taskId: number, notes: string) => void
+  onIncrementProgress?: (taskId: number, increment: number, target: number) => void
+  onResetProgress?: (taskId: number) => void
 }
 
-export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTaskId = null, onToggleTimer, onUpdateNotes }: AreaCardProps) {
+export function AreaCard({
+  area,
+  onTaskToggle,
+  disabled = false,
+  activeTimerTaskId = null,
+  onToggleTimer,
+  onUpdateNotes,
+  onIncrementProgress,
+  onResetProgress,
+}: AreaCardProps) {
   const completedTasks = area.tasks.filter((t) => t.completed).length
   const totalTasks = area.tasks.length
   const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0
@@ -83,6 +94,8 @@ export function AreaCard({ area, onTaskToggle, disabled = false, activeTimerTask
               isActiveTimer={activeTimerTaskId === task.id}
               onToggleTimer={onToggleTimer}
               onUpdateNotes={onUpdateNotes}
+              onIncrementProgress={onIncrementProgress}
+              onResetProgress={onResetProgress}
             />
           ))}
         </div>

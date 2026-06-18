@@ -1,6 +1,7 @@
 package com.routineflow.application.dto;
 
 import com.routineflow.domain.model.ScheduleType;
+import com.routineflow.domain.model.GoalType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.math.BigDecimal;
 
 public record UpdateTaskRequest(
 
@@ -32,5 +34,13 @@ public record UpdateTaskRequest(
         Integer dayOfMonth,
 
         /** Optional — time of day for push notification reminder (HH:mm). */
-        LocalTime reminderTime
+        LocalTime reminderTime,
+
+        GoalType goalType,
+
+        @Positive(message = "Goal target must be positive")
+        BigDecimal goalTarget,
+
+        @Size(max = 30, message = "Goal unit must be at most 30 characters")
+        String goalUnit
 ) {}

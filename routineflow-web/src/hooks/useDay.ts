@@ -50,12 +50,14 @@ export function useDay(selectedDate: string) {
   // Local checkbox state — reinitialize whenever the selected date changes.
   const [localChecked, setLocalChecked] = useState<Map<number, boolean>>(new Map())
   const [localNotes, setLocalNotes] = useState<Map<number, string>>(new Map())
+  const [localProgress, setLocalProgress] = useState<Map<number, number>>(new Map())
   const [initialized, setInitialized] = useState(false)
 
   // Reset local state on date change so we re-initialize from fresh server data.
   useEffect(() => {
     setLocalChecked(new Map())
     setLocalNotes(new Map())
+    setLocalProgress(new Map())
     setInitialized(false)
   }, [selectedDate])
 
@@ -87,11 +89,17 @@ export function useDay(selectedDate: string) {
 
     const completedIdsByArea = new Map<number, Set<number>>()
     const initialNotes = new Map<number, string>()
+    const initialProgress = new Map<number, number>()
     for (const area of progressQuery.data?.areas ?? []) {
       completedIdsByArea.set(area.areaId, new Set(area.completedTaskIds))
       if (area.taskNotes) {
         Object.entries(area.taskNotes).forEach(([idStr, note]) => {
           initialNotes.set(Number(idStr), note)
+        })
+      }
+      if (area.taskProgress) {
+        Object.entries(area.taskProgress).forEach(([idStr, prog]) => {
+          initialProgress.set(Number(idStr), prog)
         })
       }
     }
@@ -106,6 +114,7 @@ export function useDay(selectedDate: string) {
 
     setLocalChecked(initial)
     setLocalNotes(initialNotes)
+    setLocalProgress(initialProgress)
     setInitialized(true)
   }, [scheduleQuery.data, progressQuery.data, progressQuery.isLoading, initialized])
 
@@ -118,11 +127,13 @@ export function useDay(selectedDate: string) {
         tasks: sorted.map((task) => {
           const done = localChecked.get(task.id) ?? false
           const note = localNotes.get(task.id) ?? null
+          const prog = localProgress.get(task.id) ?? null
           return {
             ...task,
             completed: done,
             completedAt: done ? new Date().toISOString() : null,
             notes: note,
+            goalProgress: prog,
           }
         }),
       }
@@ -189,6 +200,48 @@ export function useDay(selectedDate: string) {
     }
   }
 
+  async function incrementTaskProgress(taskId: number, increment: number, target: number) {
+    if (isFuture) return
+    
+    // Optimistic update
+    const currentProg = localProgress.get(taskId) ?? 0
+    const newProg = currentProg + increment
+    setLocalProgress((prev) => new Map(prev).set(taskId, newProg))
+    
+    if (newProg >= target) {
+      setLocalChecked((prev) => new Map(prev).set(taskId, true))
+    }
+
+    try {
+      await checkInApi.incrementProgress(taskId, increment, selectedDate)
+    } catch {
+      // Revert
+      setLocalProgress((prev) => new Map(prev).set(taskId, currentProg))
+      if (newProg >= target) {
+        setLocalChecked((prev) => new Map(prev).set(taskId, false))
+      }
+      toast.error('Erro ao progredir tarefa.')
+    }
+  }
+
+  async function resetTaskProgress(taskId: number) {
+    if (isFuture) return
+
+    setLocalProgress((prev) => {
+      const m = new Map(prev)
+      m.delete(taskId)
+      return m
+    })
+    setLocalChecked((prev) => new Map(prev).set(taskId, false))
+
+    try {
+      await checkInApi.resetProgress(taskId, selectedDate)
+    } catch {
+      toast.error('Erro ao resetar progresso.')
+      // Refetch could be done here if needed
+    }
+  }
+
   return {
     enrichedAreas,
     overallRate,
@@ -197,5 +250,7 @@ export function useDay(selectedDate: string) {
     isFuture,
     handleTaskToggle,
     updateNotes,
+    incrementTaskProgress,
+    resetTaskProgress,
   }
 }

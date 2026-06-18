@@ -71,8 +71,8 @@ class TaskControllerTest {
     @DisplayName("createTask_dayOfWeek_validPayload_returns201WithTaskResponse")
     void createTask_dayOfWeek_validPayload_returns201WithTaskResponse() throws Exception {
         var request = new CreateTaskRequest(
-                "Shadowing", "10min audio shadowing", 10,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.FRIDAY, null, null);
+                "Shadowing",  "10min audio shadowing",  10, 
+                ScheduleType.DAY_OF_WEEK,  DayOfWeek.FRIDAY,  null,  null, null, null, null);
 
         mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -91,7 +91,7 @@ class TaskControllerTest {
     @DisplayName("createTask_dayOfWeek_missingScheduleType_returns400")
     void createTask_dayOfWeek_missingScheduleType_returns400() throws Exception {
         // scheduleType is @NotNull — must fail bean validation
-        var invalidRequest = new CreateTaskRequest("", null, -5, null, null, null, null);
+        var invalidRequest = new CreateTaskRequest("",  null,  -5,  null,  null,  null,  null, null, null, null);
 
         mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -105,8 +105,8 @@ class TaskControllerTest {
     @DisplayName("createTask_areaNotFound_returns404")
     void createTask_areaNotFound_returns404() throws Exception {
         var request = new CreateTaskRequest(
-                "Test", null, null,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null, null);
+                "Test",  null,  null, 
+                ScheduleType.DAY_OF_WEEK,  DayOfWeek.MONDAY,  null,  null, null, null, null);
 
         mockMvc.perform(post("/areas/{areaId}/tasks", 999999L)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -130,8 +130,8 @@ class TaskControllerTest {
     @DisplayName("createTask_dayOfMonth_validPayload_returns201")
     void createTask_dayOfMonth_validPayload_returns201() throws Exception {
         var request = new CreateTaskRequest(
-                "Monthly Bill", "Pay invoice", null,
-                ScheduleType.DAY_OF_MONTH, null, 25, null);
+                "Monthly Bill",  "Pay invoice",  null, 
+                ScheduleType.DAY_OF_MONTH,  null,  25,  null, null, null, null);
 
         mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -148,8 +148,8 @@ class TaskControllerTest {
     @DisplayName("createTask_dayOfMonth_withoutDayOfMonth_returns400")
     void createTask_dayOfMonth_withoutDayOfMonth_returns400() throws Exception {
         var request = new CreateTaskRequest(
-                "Missing Day", null, null,
-                ScheduleType.DAY_OF_MONTH, null, null, null); // dayOfMonth missing
+                "Missing Day",  null,  null, 
+                ScheduleType.DAY_OF_MONTH,  null,  null,  null, null, null, null); // dayOfMonth missing
 
         mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -164,8 +164,8 @@ class TaskControllerTest {
     @DisplayName("updateTask_validPayload_returns200WithUpdatedTask")
     void updateTask_validPayload_returns200WithUpdatedTask() throws Exception {
         var createRequest = new CreateTaskRequest(
-                "Original Title", "original desc", 15,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.THURSDAY, null, null);
+                "Original Title",  "original desc",  15, 
+                ScheduleType.DAY_OF_WEEK,  DayOfWeek.THURSDAY,  null,  null, null, null, null);
         var createResult = mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -175,8 +175,8 @@ class TaskControllerTest {
                 .get("id").asLong();
 
         var updateRequest = new UpdateTaskRequest(
-                "Updated Title", "updated desc", 25,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.SATURDAY, null, null);
+                "Updated Title",  "updated desc",  25, 
+                ScheduleType.DAY_OF_WEEK,  DayOfWeek.SATURDAY,  null,  null, null, null, null);
 
         mockMvc.perform(put("/areas/{areaId}/tasks/{id}", areaId, taskId)
                         .header("Authorization", "Bearer " + jwtToken)
@@ -195,8 +195,8 @@ class TaskControllerTest {
     @DisplayName("deleteTask_validId_returns204")
     void deleteTask_validId_returns204() throws Exception {
         var createRequest = new CreateTaskRequest(
-                "To Delete", null, null,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.SUNDAY, null, null);
+                "To Delete",  null,  null, 
+                ScheduleType.DAY_OF_WEEK,  DayOfWeek.SUNDAY,  null,  null, null, null, null);
         var createResult = mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -216,11 +216,11 @@ class TaskControllerTest {
     @DisplayName("reorderTasks_validPayload_returns200WithReorderedList")
     void reorderTasks_validPayload_returns200WithReorderedList() throws Exception {
         var req1 = new CreateTaskRequest(
-                "Task Alpha", null, null,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null, null);
+                "Task Alpha",  null,  null, 
+                ScheduleType.DAY_OF_WEEK,  DayOfWeek.MONDAY,  null,  null, null, null, null);
         var req2 = new CreateTaskRequest(
-                "Task Beta", null, null,
-                ScheduleType.DAY_OF_WEEK, DayOfWeek.MONDAY, null, null);
+                "Task Beta",  null,  null, 
+                ScheduleType.DAY_OF_WEEK,  DayOfWeek.MONDAY,  null,  null, null, null, null);
 
         var r1 = mockMvc.perform(post("/areas/{areaId}/tasks", areaId)
                         .header("Authorization", "Bearer " + jwtToken)

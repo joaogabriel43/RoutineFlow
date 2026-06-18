@@ -2,6 +2,7 @@ package com.routineflow.application.dto;
 
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 
 public record AreaProgressResponse(
         Long areaId,
@@ -12,5 +13,6 @@ public record AreaProgressResponse(
         int completedTasks,
         double completionRate,
         List<Long> completedTaskIds,
-        Map<Long, String> taskNotes
+        Map<Long, String> taskNotes,
+        Map<Long, BigDecimal> taskProgress
 ) {}

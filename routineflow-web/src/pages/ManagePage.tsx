@@ -26,7 +26,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import type { AreaResponse, ResetFrequency, ScheduleType, TaskResponse } from '@/types'
+import type { AreaResponse, GoalType, ResetFrequency, ScheduleType, TaskResponse } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -197,6 +197,9 @@ interface TaskModalProps {
     dayOfWeek: string | null,
     dayOfMonth: number | null,
     reminderTime: string | null,
+    goalType: GoalType,
+    goalTarget: number | null,
+    goalUnit: string | null,
   ) => void
   isPending: boolean
 }
@@ -215,6 +218,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
     initial?.dayOfMonth?.toString() ?? '',
   )
   const [reminderTime, setReminderTime] = useState<string>(initial?.reminderTime ?? '')
+  const [goalType, setGoalType] = useState<GoalType>(initial?.goalType ?? 'BOOLEAN')
+  const [goalTarget, setGoalTarget] = useState<string>(initial?.goalTarget?.toString() ?? '')
+  const [goalUnit, setGoalUnit] = useState<string>(initial?.goalUnit ?? '')
 
   const handleOpenChange = (o: boolean) => {
     if (o) {
@@ -225,6 +231,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
       setDayOfWeek(initial?.dayOfWeek ?? 'MONDAY')
       setDayOfMonth(initial?.dayOfMonth?.toString() ?? '')
       setReminderTime(initial?.reminderTime ?? '')
+      setGoalType(initial?.goalType ?? 'BOOLEAN')
+      setGoalTarget(initial?.goalTarget?.toString() ?? '')
+      setGoalUnit(initial?.goalUnit ?? '')
     } else {
       onClose()
     }
@@ -234,7 +243,8 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
     title.trim().length > 0 &&
     (scheduleType === 'DAY_OF_WEEK'
       ? !!dayOfWeek
-      : !!dayOfMonth && parseInt(dayOfMonth, 10) >= 1 && parseInt(dayOfMonth, 10) <= 31)
+      : !!dayOfMonth && parseInt(dayOfMonth, 10) >= 1 && parseInt(dayOfMonth, 10) <= 31) &&
+    (goalType === 'BOOLEAN' || (!!goalTarget && parseFloat(goalTarget) > 0))
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -248,6 +258,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
       scheduleType === 'DAY_OF_WEEK' ? dayOfWeek : null,
       scheduleType === 'DAY_OF_MONTH' ? parseInt(dayOfMonth, 10) : null,
       reminderTime.trim() || null,
+      goalType,
+      goalType === 'NUMERIC' && goalTarget ? parseFloat(goalTarget) : null,
+      goalType === 'NUMERIC' && goalUnit.trim() ? goalUnit.trim() : null,
     )
   }
 
@@ -270,6 +283,62 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
               autoFocus
             />
           </div>
+
+          {/* Goal Type toggle */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#8C8A88] font-medium">Tipo de Meta</label>
+            <div className="flex rounded-lg border border-[#26262A] overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setGoalType('BOOLEAN')}
+                className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                  goalType === 'BOOLEAN'
+                    ? 'bg-[#2F8BFF] text-white'
+                    : 'bg-[#26262A] text-[#8C8A88] hover:text-[#F4F2EF]'
+                }`}
+              >
+                Concluída / Não Concluída
+              </button>
+              <button
+                type="button"
+                onClick={() => setGoalType('NUMERIC')}
+                className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                  goalType === 'NUMERIC'
+                    ? 'bg-[#2F8BFF] text-white'
+                    : 'bg-[#26262A] text-[#8C8A88] hover:text-[#F4F2EF]'
+                }`}
+              >
+                Alvo Numérico
+              </button>
+            </div>
+          </div>
+
+          {goalType === 'NUMERIC' && (
+            <div className="flex gap-3">
+              <div className="space-y-1.5 flex-1">
+                <label className="text-xs text-[#8C8A88] font-medium">Alvo (ex: 3, 5.5)</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  value={goalTarget}
+                  onChange={(e) => setGoalTarget(e.target.value)}
+                  placeholder="Ex: 3"
+                  className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
+                />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <label className="text-xs text-[#8C8A88] font-medium">Unidade <span className="text-[#34343A]">— opcional</span></label>
+                <Input
+                  type="text"
+                  value={goalUnit}
+                  onChange={(e) => setGoalUnit(e.target.value)}
+                  placeholder="Ex: copos, km, pag"
+                  className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Schedule type toggle */}
           <div className="space-y-1.5">
@@ -607,9 +676,12 @@ export function ManagePage() {
     dayOfWeek: string | null,
     dayOfMonth: number | null,
     reminderTime: string | null,
+    goalType: GoalType,
+    goalTarget: number | null,
+    goalUnit: string | null,
   ) => {
     if (!selectedArea) return
-    const data = { title, description, estimatedMinutes, scheduleType, dayOfWeek, dayOfMonth, reminderTime }
+    const data = { title, description, estimatedMinutes, scheduleType, dayOfWeek, dayOfMonth, reminderTime, goalType, goalTarget, goalUnit }
     if (taskModal.task) {
       updateTask.mutate(
         { areaId: selectedArea.id, taskId: taskModal.task.id, data },

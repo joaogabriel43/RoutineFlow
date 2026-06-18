@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +57,10 @@ public class GetDailyProgressUseCase {
                 .filter(l -> l.getNotes() != null)
                 .collect(Collectors.toMap(l -> l.getTask().getId(), DailyLogJpaEntity::getNotes));
 
+        Map<Long, BigDecimal> taskProgress = logs.stream()
+                .filter(l -> l.getGoalProgress() != null)
+                .collect(Collectors.toMap(l -> l.getTask().getId(), DailyLogJpaEntity::getGoalProgress));
+
         List<AreaProgressResponse> areaResponses = areas.stream()
                 .map(area -> {
                     List<TaskJpaEntity> dayTasks = area.getTasks().stream()
@@ -73,9 +78,14 @@ public class GetDailyProgressUseCase {
                             .filter(taskNotes::containsKey)
                             .collect(Collectors.toMap(id -> id, taskNotes::get));
 
+                    Map<Long, BigDecimal> areaTaskProgress = dayTasks.stream()
+                            .map(TaskJpaEntity::getId)
+                            .filter(taskProgress::containsKey)
+                            .collect(Collectors.toMap(id -> id, taskProgress::get));
+
                     return new AreaProgressResponse(
                             area.getId(), area.getName(), area.getColor(), area.getIcon(),
-                            total, completed, rate, completedIds, areaTaskNotes
+                            total, completed, rate, completedIds, areaTaskNotes, areaTaskProgress
                     );
                 })
                 .filter(a -> a.totalTasks() > 0) // exclude areas with no applicable tasks
