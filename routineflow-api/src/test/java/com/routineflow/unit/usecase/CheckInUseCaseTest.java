@@ -52,7 +52,7 @@ class CheckInUseCaseTest {
                 .thenReturn(Optional.empty());
         when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var result = useCase.completeTask(USER_ID, TASK_ID, TODAY);
+        var result = useCase.completeTask(USER_ID, TASK_ID, TODAY, null);
 
         assertThat(result.completed()).isTrue();
         assertThat(result.completedAt()).isNotNull();
@@ -73,7 +73,7 @@ class CheckInUseCaseTest {
                 .thenReturn(Optional.of(existingLog));
         when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var result = useCase.completeTask(USER_ID, TASK_ID, TODAY);
+        var result = useCase.completeTask(USER_ID, TASK_ID, TODAY, null);
 
         assertThat(result.completed()).isTrue();
         assertThat(result.completedAt()).isNotNull();
@@ -107,7 +107,7 @@ class CheckInUseCaseTest {
         var task = buildTask(TASK_ID, OTHER_USER_ID);
         when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
 
-        assertThatThrownBy(() -> useCase.completeTask(USER_ID, TASK_ID, TODAY))
+        assertThatThrownBy(() -> useCase.completeTask(USER_ID, TASK_ID, TODAY, null))
                 .isInstanceOf(UnauthorizedException.class);
 
         verify(dailyLogJpaRepository, never()).save(any());
@@ -118,7 +118,7 @@ class CheckInUseCaseTest {
     void completeTask_taskNotFound_throwsResourceNotFoundException() {
         when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.completeTask(USER_ID, TASK_ID, TODAY))
+        assertThatThrownBy(() -> useCase.completeTask(USER_ID, TASK_ID, TODAY, null))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -132,7 +132,7 @@ class CheckInUseCaseTest {
                 .thenReturn(Optional.empty());
         when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var result = useCase.completeTask(USER_ID, TASK_ID, yesterday);
+        var result = useCase.completeTask(USER_ID, TASK_ID, yesterday, null);
 
         assertThat(result.logDate()).isEqualTo(yesterday);
         assertThat(result.completed()).isTrue();
@@ -145,7 +145,7 @@ class CheckInUseCaseTest {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
 
         // validation fires before any repository call — no stubbing needed
-        assertThatThrownBy(() -> useCase.completeTask(USER_ID, TASK_ID, tomorrow))
+        assertThatThrownBy(() -> useCase.completeTask(USER_ID, TASK_ID, tomorrow, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("future");
 
@@ -172,6 +172,50 @@ class CheckInUseCaseTest {
         assertThat(result.logDate()).isEqualTo(yesterday);
         assertThat(result.completed()).isFalse();
         assertThat(result.completedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("completeTask_withNotes_savesNotesCorrectly")
+    void completeTask_withNotes_savesNotesCorrectly() {
+        var task = buildTask(TASK_ID, USER_ID);
+        when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, TODAY))
+                .thenReturn(Optional.empty());
+        when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.completeTask(USER_ID, TASK_ID, TODAY, "foi ótimo");
+
+        assertThat(result.completed()).isTrue();
+        assertThat(result.notes()).isEqualTo("foi ótimo");
+        verify(dailyLogJpaRepository).save(any());
+    }
+
+    @Test
+    @DisplayName("updateNotes_existingLog_updatesNotes")
+    void updateNotes_existingLog_updatesNotes() {
+        var task = buildTask(TASK_ID, USER_ID);
+        var existingLog = DailyLogJpaEntity.builder()
+                .task(task).user(task.getArea().getUser())
+                .logDate(TODAY).completed(true).notes("old note").build();
+
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, TODAY))
+                .thenReturn(Optional.of(existingLog));
+        when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.updateNotes(USER_ID, TASK_ID, TODAY, "new note");
+
+        assertThat(result.notes()).isEqualTo("new note");
+        verify(dailyLogJpaRepository).save(any());
+    }
+
+    @Test
+    @DisplayName("updateNotes_logNotFound_throwsResourceNotFoundException")
+    void updateNotes_logNotFound_throwsResourceNotFoundException() {
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, TODAY))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.updateNotes(USER_ID, TASK_ID, TODAY, "new note"))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     private TaskJpaEntity buildTask(Long taskId, Long ownerId) {

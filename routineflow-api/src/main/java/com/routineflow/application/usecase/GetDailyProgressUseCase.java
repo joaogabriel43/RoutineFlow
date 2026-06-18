@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,6 +51,11 @@ public class GetDailyProgressUseCase {
                 .map(l -> l.getTask().getId())
                 .collect(Collectors.toSet());
 
+        Map<Long, String> taskNotes = logs.stream()
+                .filter(DailyLogJpaEntity::isCompleted)
+                .filter(l -> l.getNotes() != null)
+                .collect(Collectors.toMap(l -> l.getTask().getId(), DailyLogJpaEntity::getNotes));
+
         List<AreaProgressResponse> areaResponses = areas.stream()
                 .map(area -> {
                     List<TaskJpaEntity> dayTasks = area.getTasks().stream()
@@ -62,9 +68,14 @@ public class GetDailyProgressUseCase {
                             .toList();
                     int completed = completedIds.size();
                     double rate = total == 0 ? 0.0 : (double) completed / total;
+                    Map<Long, String> areaTaskNotes = dayTasks.stream()
+                            .map(TaskJpaEntity::getId)
+                            .filter(taskNotes::containsKey)
+                            .collect(Collectors.toMap(id -> id, taskNotes::get));
+
                     return new AreaProgressResponse(
                             area.getId(), area.getName(), area.getColor(), area.getIcon(),
-                            total, completed, rate, completedIds
+                            total, completed, rate, completedIds, areaTaskNotes
                     );
                 })
                 .filter(a -> a.totalTasks() > 0) // exclude areas with no applicable tasks

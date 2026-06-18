@@ -1,7 +1,9 @@
 package com.routineflow.presentation.controller;
 
+import com.routineflow.application.dto.CheckInRequest;
 import com.routineflow.application.dto.DailyLogResponse;
 import com.routineflow.application.dto.DailyProgressResponse;
+import com.routineflow.application.dto.UpdateNotesRequest;
 import com.routineflow.application.usecase.CheckInUseCase;
 import com.routineflow.application.usecase.GetDailyProgressUseCase;
 import com.routineflow.infrastructure.config.AppTimeZone;
@@ -36,11 +38,13 @@ public class CheckInController {
     @PostMapping("/{taskId}/complete")
     public ResponseEntity<DailyLogResponse> complete(
             @PathVariable Long taskId,
-            @RequestParam(required = false) LocalDate date
+            @RequestParam(required = false) LocalDate date,
+            @RequestBody(required = false) CheckInRequest request
     ) {
         Long userId = userResolver.currentUserId();
         LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
-        return ResponseEntity.ok(checkInUseCase.completeTask(userId, taskId, targetDate));
+        String notes = request != null ? request.notes() : null;
+        return ResponseEntity.ok(checkInUseCase.completeTask(userId, taskId, targetDate, notes));
     }
 
     @Operation(summary = "Unmark a task (undo completion) for the given date (defaults to today BRT)")
@@ -52,6 +56,29 @@ public class CheckInController {
         Long userId = userResolver.currentUserId();
         LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
         return ResponseEntity.ok(checkInUseCase.uncompleteTask(userId, taskId, targetDate));
+    }
+
+    @Operation(summary = "Update notes for an existing check-in")
+    @PatchMapping("/{taskId}/notes")
+    public ResponseEntity<DailyLogResponse> updateNotes(
+            @PathVariable Long taskId,
+            @RequestParam(required = false) LocalDate date,
+            @RequestBody UpdateNotesRequest request
+    ) {
+        Long userId = userResolver.currentUserId();
+        LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
+        return ResponseEntity.ok(checkInUseCase.updateNotes(userId, taskId, targetDate, request.notes()));
+    }
+
+    @Operation(summary = "Get notes for a specific check-in")
+    @GetMapping("/{taskId}/notes")
+    public ResponseEntity<DailyLogResponse> getNotes(
+            @PathVariable Long taskId,
+            @RequestParam(required = false) LocalDate date
+    ) {
+        Long userId = userResolver.currentUserId();
+        LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
+        return ResponseEntity.ok(checkInUseCase.getNotes(userId, taskId, targetDate));
     }
 
     // Primary progress endpoint — optional date param, defaults to today

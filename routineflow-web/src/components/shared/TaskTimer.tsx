@@ -5,7 +5,7 @@ interface TaskTimerProps {
   taskId: number
   taskTitle: string
   estimatedMinutes: number
-  onComplete: () => void
+  onComplete: (note?: string) => void
 }
 
 function todayStr(): string {
@@ -121,7 +121,7 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
         {isFinished ? (
           <button
             type="button"
-            onClick={onComplete}
+            onClick={() => onComplete(`Concluído em ${Math.ceil(elapsedSeconds / 60)}min (estimado: ${estimatedMinutes}min)`)}
             className="flex items-center gap-2 bg-[#30d158] hover:bg-[#32d74b] text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
           >
             <Check size={16} />
@@ -151,7 +151,7 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
             
             <button
               type="button"
-              onClick={onComplete}
+              onClick={() => onComplete(elapsedSeconds > 0 ? `Concluído em ${Math.ceil(elapsedSeconds / 60)}min (estimado: ${estimatedMinutes > 0 ? estimatedMinutes + 'min' : 'N/A'})` : undefined)}
               className="flex items-center justify-center w-9 h-9 rounded-full border border-[#3a3a3c] text-[#86868b] hover:text-[#30d158] hover:border-[#30d158] hover:bg-[#30d158]/10 transition-colors"
               title="Concluir tarefa"
             >

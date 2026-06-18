@@ -45,4 +45,7 @@ public class DailyLogJpaEntity {
 
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 }
