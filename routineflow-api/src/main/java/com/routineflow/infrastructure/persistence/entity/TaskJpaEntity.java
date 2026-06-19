@@ -1,6 +1,7 @@
 package com.routineflow.infrastructure.persistence.entity;
 
 import com.routineflow.domain.model.ScheduleType;
+import com.routineflow.domain.model.GoalType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "tasks")
@@ -63,4 +65,15 @@ public class TaskJpaEntity {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "goal_type", nullable = false, length = 15)
+    @Builder.Default
+    private GoalType goalType = GoalType.BOOLEAN;
+
+    @Column(name = "goal_target", precision = 10, scale = 2)
+    private BigDecimal goalTarget;
+
+    @Column(name = "goal_unit", length = 30)
+    private String goalUnit;
 }

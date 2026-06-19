@@ -21,8 +21,8 @@ export function FilterPills<T extends string>({
         className={cn(
           'rounded-full px-3 py-1 text-xs transition-colors cursor-pointer',
           selected === null
-            ? 'bg-[#0071e3] text-white'
-            : 'bg-[#1f1f1f] text-[#86868b] hover:bg-[#2a2a2a]',
+            ? 'bg-[#2F8BFF] text-white'
+            : 'bg-[#26262A] text-[#8C8A88] hover:bg-[#26262A]',
         )}
       >
         Todos
@@ -37,8 +37,8 @@ export function FilterPills<T extends string>({
           className={cn(
             'rounded-full px-3 py-1 text-xs transition-colors cursor-pointer',
             selected === opt.value
-              ? 'bg-[#0071e3] text-white'
-              : 'bg-[#1f1f1f] text-[#86868b] hover:bg-[#2a2a2a]',
+              ? 'bg-[#2F8BFF] text-white'
+              : 'bg-[#26262A] text-[#8C8A88] hover:bg-[#26262A]',
           )}
         >
           {opt.label}

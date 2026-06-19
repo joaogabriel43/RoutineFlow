@@ -143,8 +143,11 @@ public class AreaUseCase {
                                 t.getScheduleType(),
                                 t.getDayOfWeek(),
                                 t.getDayOfMonth(),
-                                t.getReminderTime()))
-                        .sorted(java.util.Comparator.comparingInt(TaskResponse::orderIndex))
+                                t.getReminderTime(),
+                                t.getGoalType(),
+                                t.getGoalTarget(),
+                                t.getGoalUnit()
+                        )).sorted(java.util.Comparator.comparingInt(TaskResponse::orderIndex))
                         .toList();
 
         return new AreaResponse(

@@ -39,6 +39,8 @@ export interface RegisterRequest {
 
 export type ScheduleType = 'DAY_OF_WEEK' | 'DAY_OF_MONTH'
 
+export type GoalType = 'BOOLEAN' | 'NUMERIC'
+
 export interface TaskResponse {
   id: number
   title: string
@@ -48,7 +50,10 @@ export interface TaskResponse {
   scheduleType: ScheduleType
   dayOfWeek: string | null
   dayOfMonth: number | null
-  reminderTime: string | null // HH:mm
+  reminderTime: string | null
+  goalType: GoalType
+  goalTarget: number | null
+  goalUnit: string | null
 }
 
 // ── Manage ───────────────────────────────────────────────────────────────────
@@ -87,6 +92,9 @@ export interface CreateTaskRequest {
   dayOfWeek: string | null
   dayOfMonth: number | null
   reminderTime: string | null
+  goalType?: GoalType
+  goalTarget?: number | null
+  goalUnit?: string | null
 }
 
 export interface UpdateTaskRequest {
@@ -97,6 +105,9 @@ export interface UpdateTaskRequest {
   dayOfWeek: string | null
   dayOfMonth: number | null
   reminderTime: string | null
+  goalType?: GoalType
+  goalTarget?: number | null
+  goalUnit?: string | null
 }
 
 export interface AreaWithTasksResponse {
@@ -118,6 +129,21 @@ export interface ActiveRoutineResponse {
   areas: AreaWithTasksResponse[]
 }
 
+// ── Skip Days ──────────────────────────────────────────────────────────────────
+
+export interface SkipDayRequest {
+  date: string
+  reason?: string
+}
+
+export interface SkipDayResponse {
+  id: number
+  areaId: number
+  skipDate: string
+  reason: string | null
+  createdAt: string
+}
+
 // ── Check-in / Progress ──────────────────────────────────────────────────────
 
 export interface DailyLogResponse {
@@ -127,6 +153,9 @@ export interface DailyLogResponse {
   completed: boolean
   completedAt: string | null
   notes: string | null
+  goalProgress?: number | null
+  goalTarget?: number | null
+  goalUnit?: string | null
 }
 
 export interface AreaProgressResponse {
@@ -139,6 +168,8 @@ export interface AreaProgressResponse {
   completionRate: number
   completedTaskIds: number[]
   taskNotes?: Record<number, string>
+  taskProgress?: Record<number, number>
+  isSkippedToday?: boolean
 }
 
 export interface DailyProgressResponse {
@@ -203,6 +234,7 @@ export interface HeatmapDayResponse {
   completedTasks: number
   totalTasks: number
   completionRate: number
+  hasSkipDay?: boolean
 }
 
 export interface HeatmapResponse {

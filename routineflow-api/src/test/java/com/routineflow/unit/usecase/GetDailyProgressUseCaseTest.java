@@ -10,6 +10,7 @@ import com.routineflow.infrastructure.persistence.entity.UserJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.DailyLogJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepository;
+import com.routineflow.infrastructure.persistence.repository.SkipDayJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ class GetDailyProgressUseCaseTest {
     @Mock private RoutineJpaRepository routineJpaRepository;
     @Mock private AreaJpaRepository areaJpaRepository;
     @Mock private DailyLogJpaRepository dailyLogJpaRepository;
+    @Mock private SkipDayJpaRepository skipDayJpaRepository;
 
     private GetDailyProgressUseCase useCase;
 
@@ -45,7 +47,9 @@ class GetDailyProgressUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new GetDailyProgressUseCase(routineJpaRepository, areaJpaRepository, dailyLogJpaRepository);
+        useCase = new GetDailyProgressUseCase(
+                routineJpaRepository, areaJpaRepository, dailyLogJpaRepository, skipDayJpaRepository
+        );
     }
 
     @Test

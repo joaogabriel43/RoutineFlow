@@ -60,10 +60,10 @@ export function SingleTaskItem({
         aria-label={archived ? 'Concluída' : 'Marcar como concluída'}
         className={cn(
           'mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer',
-          'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3]',
+          'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8BFF]',
           archived
-            ? 'bg-[#30d158] border-none cursor-default'
-            : 'border-[1.5px] border-[#3a3a3c] hover:border-[#30d158]',
+            ? 'bg-[#34D399] border-none cursor-default'
+            : 'border-[1.5px] border-[#3a3a3c] hover:border-[#34D399]',
         )}
       >
         {archived && <Check size={11} strokeWidth={3} className="text-white" />}
@@ -75,32 +75,32 @@ export function SingleTaskItem({
           <span
             className={cn(
               'text-sm font-medium leading-snug',
-              archived ? 'line-through text-[#86868b]' : 'text-[#f5f5f7]',
+              archived ? 'line-through text-[#8C8A88]' : 'text-[#F4F2EF]',
             )}
           >
             {task.title}
           </span>
 
           {task.isOverdue && !archived && (
-            <span className="shrink-0 text-[10px] font-medium text-red-400 uppercase tracking-wide">
+            <span className="shrink-0 text-[10px] font-medium text-danger uppercase tracking-wide">
               Atrasada
             </span>
           )}
 
           {task.dueDate && !task.isOverdue && !archived && (
-            <span className="shrink-0 text-xs text-[#86868b]">
-              até {formatDueDate(task.dueDate)}
+            <span className="shrink-0 text-xs text-[#8C8A88]">
+              até <span className="num">{formatDueDate(task.dueDate)}</span>
             </span>
           )}
         </div>
 
         {task.description && (
-          <p className="text-xs text-[#86868b] mt-0.5 leading-relaxed">{task.description}</p>
+          <p className="text-xs text-[#8C8A88] mt-0.5 leading-relaxed">{task.description}</p>
         )}
 
         {archived && task.completedAt && (
-          <p className="text-xs text-[#86868b] mt-0.5">
-            Concluída em {formatCompletedAt(task.completedAt)}
+          <p className="text-xs text-[#8C8A88] mt-0.5">
+            Concluída em <span className="num">{formatCompletedAt(task.completedAt)}</span>
           </p>
         )}
       </div>
@@ -111,7 +111,7 @@ export function SingleTaskItem({
           <button
             type="button"
             onClick={handleUncomplete}
-            className="text-xs text-[#86868b] hover:text-[#f5f5f7] px-2 py-1 rounded hover:bg-[#1f1f1f] transition-colors cursor-pointer"
+            className="text-xs text-[#8C8A88] hover:text-[#F4F2EF] px-2 py-1 rounded hover:bg-[#26262A] transition-colors cursor-pointer"
           >
             Desfazer
           </button>
@@ -122,7 +122,7 @@ export function SingleTaskItem({
             type="button"
             onClick={() => onDelete(task.id)}
             aria-label="Excluir tarefa"
-            className="p-1 rounded text-[#3a3a3c] hover:text-red-400 hover:bg-[#1f1f1f] transition-colors cursor-pointer"
+            className="p-1 rounded text-[#3a3a3c] hover:text-danger hover:bg-[#26262A] transition-colors cursor-pointer"
           >
             <X size={14} />
           </button>

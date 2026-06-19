@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.math.BigDecimal;
+import com.routineflow.domain.model.GoalType;
 import com.routineflow.infrastructure.config.AppTimeZone;
 
 @Service
@@ -75,6 +77,9 @@ public class CheckInUseCase {
 
         log.setCompleted(false);
         log.setCompletedAt(null);
+        if (task.getGoalType() == GoalType.NUMERIC) {
+            log.setGoalProgress(null);
+        }
         log = dailyLogJpaRepository.save(log);
 
         return toResponse(log);
@@ -105,6 +110,53 @@ public class CheckInUseCase {
         return toResponse(log);
     }
 
+    @Transactional
+    public DailyLogResponse incrementProgress(Long userId, Long taskId, LocalDate date, BigDecimal increment) {
+        if (date.isAfter(LocalDate.now(AppTimeZone.ZONE))) {
+            throw new IllegalArgumentException("Cannot check in or out for future dates");
+        }
+
+        if (increment.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Increment must be greater than zero");
+        }
+
+        var task = taskJpaRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
+
+        validateOwnership(userId, task.getArea().getUser().getId(), taskId);
+
+        if (task.getGoalType() != GoalType.NUMERIC) {
+            throw new IllegalStateException("Cannot increment progress for a BOOLEAN task");
+        }
+
+        var log = dailyLogJpaRepository
+                .findByTaskIdAndUserIdAndLogDate(taskId, userId, date)
+                .orElseGet(() -> DailyLogJpaEntity.builder()
+                        .task(task)
+                        .user(task.getArea().getUser())
+                        .logDate(date)
+                        .completed(false)
+                        .build());
+
+        BigDecimal current = log.getGoalProgress() != null ? log.getGoalProgress() : BigDecimal.ZERO;
+        BigDecimal newProgress = current.add(increment);
+        log.setGoalProgress(newProgress);
+
+        if (task.getGoalTarget() != null && newProgress.compareTo(task.getGoalTarget()) >= 0) {
+            log.setCompleted(true);
+            log.setCompletedAt(Instant.now());
+        }
+
+        log = dailyLogJpaRepository.save(log);
+
+        return toResponse(log);
+    }
+
+    @Transactional
+    public DailyLogResponse resetProgress(Long userId, Long taskId, LocalDate date) {
+        return uncompleteTask(userId, taskId, date);
+    }
+
     private void validateOwnership(Long requestingUserId, Long taskOwnerId, Long taskId) {
         if (!requestingUserId.equals(taskOwnerId)) {
             throw new UnauthorizedException(
@@ -118,7 +170,10 @@ public class CheckInUseCase {
                 log.isCompleted(),
                 log.getCompletedAt(),
                 log.getLogDate(),
-                log.getNotes()
+                log.getNotes(),
+                log.getGoalProgress(),
+                log.getTask().getGoalTarget(),
+                log.getTask().getGoalUnit()
         );
     }
 }

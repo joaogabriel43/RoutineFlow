@@ -7,6 +7,7 @@ import com.routineflow.application.dto.UpdateTaskRequest;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
 import com.routineflow.domain.model.ScheduleType;
+import com.routineflow.domain.model.GoalType;
 import com.routineflow.infrastructure.persistence.entity.TaskJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.TaskJpaRepository;
@@ -46,6 +47,9 @@ public class TaskUseCase {
                 .dayOfWeek(request.scheduleType() == ScheduleType.DAY_OF_WEEK ? request.dayOfWeek() : null)
                 .dayOfMonth(request.scheduleType() == ScheduleType.DAY_OF_MONTH ? request.dayOfMonth() : null)
                 .reminderTime(request.reminderTime())
+                .goalType(request.goalType() != null ? request.goalType() : GoalType.BOOLEAN)
+                .goalTarget(request.goalType() == GoalType.NUMERIC ? request.goalTarget() : null)
+                .goalUnit(request.goalType() == GoalType.NUMERIC ? request.goalUnit() : null)
                 .orderIndex(nextOrder)
                 .build();
 
@@ -66,6 +70,9 @@ public class TaskUseCase {
         task.setDayOfWeek(request.scheduleType() == ScheduleType.DAY_OF_WEEK ? request.dayOfWeek() : null);
         task.setDayOfMonth(request.scheduleType() == ScheduleType.DAY_OF_MONTH ? request.dayOfMonth() : null);
         task.setReminderTime(request.reminderTime());
+        task.setGoalType(request.goalType() != null ? request.goalType() : GoalType.BOOLEAN);
+        task.setGoalTarget(request.goalType() == GoalType.NUMERIC ? request.goalTarget() : null);
+        task.setGoalUnit(request.goalType() == GoalType.NUMERIC ? request.goalUnit() : null);
 
         return toResponse(taskJpaRepository.save(task));
     }
@@ -146,7 +153,10 @@ public class TaskUseCase {
                 task.getScheduleType(),
                 task.getDayOfWeek(),
                 task.getDayOfMonth(),
-                task.getReminderTime()
+                task.getReminderTime(),
+                task.getGoalType(),
+                task.getGoalTarget(),
+                task.getGoalUnit()
         );
     }
 }

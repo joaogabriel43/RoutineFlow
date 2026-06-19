@@ -1,6 +1,7 @@
 package com.routineflow.domain.service;
 
 import com.routineflow.application.usecase.GetDayScheduleUseCase;
+import com.routineflow.application.usecase.SkipDayUseCase;
 import com.routineflow.domain.model.ResetFrequency;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.StreakJpaEntity;
@@ -40,17 +41,20 @@ public class StreakCalculationService {
     private final AreaJpaRepository areaJpaRepository;
     private final DailyLogJpaRepository dailyLogJpaRepository;
     private final StreakJpaRepository streakJpaRepository;
+    private final SkipDayUseCase skipDayUseCase;
 
     public StreakCalculationService(
             RoutineJpaRepository routineJpaRepository,
             AreaJpaRepository areaJpaRepository,
             DailyLogJpaRepository dailyLogJpaRepository,
-            StreakJpaRepository streakJpaRepository
+            StreakJpaRepository streakJpaRepository,
+            SkipDayUseCase skipDayUseCase
     ) {
         this.routineJpaRepository = routineJpaRepository;
         this.areaJpaRepository = areaJpaRepository;
         this.dailyLogJpaRepository = dailyLogJpaRepository;
         this.streakJpaRepository = streakJpaRepository;
+        this.skipDayUseCase = skipDayUseCase;
     }
 
     @Transactional
@@ -75,6 +79,10 @@ public class StreakCalculationService {
                     : ResetFrequency.DAILY;
 
             if (!shouldEvaluateStreak(frequency, date)) continue;
+
+            if (skipDayUseCase.isSkipDay(userId, area.getId(), date)) {
+                continue; // Skip day is neutral, streak is preserved but not incremented
+            }
 
             boolean hasCompletion = !dailyLogJpaRepository
                     .findCompletedByUserIdAndAreaIdAndLogDate(userId, area.getId(), date)

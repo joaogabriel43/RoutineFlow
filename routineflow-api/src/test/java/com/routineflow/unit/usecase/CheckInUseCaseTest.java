@@ -3,6 +3,7 @@ package com.routineflow.unit.usecase;
 import com.routineflow.application.usecase.CheckInUseCase;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
+import com.routineflow.domain.model.GoalType;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.TaskJpaEntity;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -216,6 +218,80 @@ class CheckInUseCaseTest {
 
         assertThatThrownBy(() -> useCase.updateNotes(USER_ID, TASK_ID, TODAY, "new note"))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("incrementProgress_1cup_savesProgressAndNotCompleted")
+    void incrementProgress_1cup_savesProgressAndNotCompleted() {
+        var task = buildTask(TASK_ID, USER_ID);
+        task.setGoalType(GoalType.NUMERIC);
+        task.setGoalTarget(new BigDecimal("3.0"));
+        
+        when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, TODAY))
+                .thenReturn(Optional.empty());
+        when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.incrementProgress(USER_ID, TASK_ID, TODAY, new BigDecimal("1.0"));
+
+        assertThat(result.goalProgress()).isEqualByComparingTo(new BigDecimal("1.0"));
+        assertThat(result.completed()).isFalse();
+    }
+
+    @Test
+    @DisplayName("incrementProgress_reachesTarget_marksCompleted")
+    void incrementProgress_reachesTarget_marksCompleted() {
+        var task = buildTask(TASK_ID, USER_ID);
+        task.setGoalType(GoalType.NUMERIC);
+        task.setGoalTarget(new BigDecimal("3.0"));
+        
+        var existingLog = DailyLogJpaEntity.builder()
+                .task(task).user(task.getArea().getUser())
+                .logDate(TODAY).completed(false).goalProgress(new BigDecimal("2.0")).build();
+        
+        when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, TODAY))
+                .thenReturn(Optional.of(existingLog));
+        when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.incrementProgress(USER_ID, TASK_ID, TODAY, new BigDecimal("1.0"));
+
+        assertThat(result.goalProgress()).isEqualByComparingTo(new BigDecimal("3.0"));
+        assertThat(result.completed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("incrementProgress_booleanTask_throwsIllegalStateException")
+    void incrementProgress_booleanTask_throwsIllegalStateException() {
+        var task = buildTask(TASK_ID, USER_ID);
+        task.setGoalType(GoalType.BOOLEAN);
+        
+        when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
+
+        assertThatThrownBy(() -> useCase.incrementProgress(USER_ID, TASK_ID, TODAY, new BigDecimal("1.0")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("BOOLEAN");
+    }
+
+    @Test
+    @DisplayName("resetProgress_resetsProgressAndUncompletes")
+    void resetProgress_resetsProgressAndUncompletes() {
+        var task = buildTask(TASK_ID, USER_ID);
+        task.setGoalType(GoalType.NUMERIC);
+        
+        var existingLog = DailyLogJpaEntity.builder()
+                .task(task).user(task.getArea().getUser())
+                .logDate(TODAY).completed(true).goalProgress(new BigDecimal("3.0")).build();
+        
+        when(taskJpaRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
+        when(dailyLogJpaRepository.findByTaskIdAndUserIdAndLogDate(TASK_ID, USER_ID, TODAY))
+                .thenReturn(Optional.of(existingLog));
+        when(dailyLogJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.resetProgress(USER_ID, TASK_ID, TODAY);
+
+        assertThat(result.completed()).isFalse();
+        assertThat(result.goalProgress()).isNull();
     }
 
     private TaskJpaEntity buildTask(Long taskId, Long ownerId) {

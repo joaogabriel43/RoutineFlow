@@ -74,8 +74,8 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
   const isDanger = isCountdown && remainingSeconds < initialSeconds * 0.2
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] mt-2 mb-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-      <h3 className="text-[#f5f5f7] font-medium mb-4 text-sm tracking-wide text-center">
+    <div className="flex flex-col items-center justify-center p-6 bg-[#1C1C1F] rounded-xl border border-[#26262A] mt-2 mb-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+      <h3 className="text-[#F4F2EF] font-medium mb-4 text-sm tracking-wide text-center">
         {taskTitle}
       </h3>
       
@@ -91,7 +91,7 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
               stroke="currentColor"
               strokeWidth="4"
               fill="transparent"
-              className="text-[#2a2a2a]"
+              className="text-[#26262A]"
             />
             {/* Progress ring */}
             <circle
@@ -103,14 +103,14 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
               fill="transparent"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
-              className={`transition-all duration-1000 ease-linear ${isDanger ? 'text-[#ff9f0a]' : 'text-[#0071e3]'}`}
+              className={`transition-all duration-1000 ease-linear ${isDanger ? 'text-[#FFB340]' : 'text-[#2F8BFF]'}`}
             />
           </svg>
         )}
         
         {/* Time display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-light text-[#f5f5f7] tabular-nums tracking-wider">
+          <span className="text-2xl font-light text-[#F4F2EF] tabular-nums tracking-wider">
             {isCountdown ? formatTime(remainingSeconds) : `⏱\u00A0${formatTime(elapsedSeconds)}`}
           </span>
         </div>
@@ -122,7 +122,7 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
           <button
             type="button"
             onClick={() => onComplete(`Concluído em ${Math.ceil(elapsedSeconds / 60)}min (estimado: ${estimatedMinutes}min)`)}
-            className="flex items-center gap-2 bg-[#30d158] hover:bg-[#32d74b] text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+            className="flex items-center gap-2 bg-[#34D399] hover:bg-[#34D399] text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
           >
             <Check size={16} />
             Marcar como feita
@@ -133,7 +133,7 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
               <button
                 type="button"
                 onClick={start}
-                className="flex items-center gap-2 bg-[#0071e3] hover:bg-[#0077ed] text-white px-5 py-2 rounded-full text-sm font-medium transition-colors"
+                className="flex items-center gap-2 bg-[#2F8BFF] hover:bg-[#4F9DFF] text-white px-5 py-2 rounded-full text-sm font-medium transition-colors"
               >
                 <Play size={16} fill="currentColor" />
                 {elapsedSeconds > 0 ? 'Retomar' : 'Iniciar'}
@@ -142,7 +142,7 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
               <button
                 type="button"
                 onClick={pause}
-                className="flex items-center gap-2 bg-[#3a3a3c] hover:bg-[#4a4a4c] text-white px-5 py-2 rounded-full text-sm font-medium transition-colors"
+                className="flex items-center gap-2 bg-[#3a3a3c] hover:bg-[#34343A] text-white px-5 py-2 rounded-full text-sm font-medium transition-colors"
               >
                 <Pause size={16} fill="currentColor" />
                 Pausar
@@ -152,7 +152,7 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
             <button
               type="button"
               onClick={() => onComplete(elapsedSeconds > 0 ? `Concluído em ${Math.ceil(elapsedSeconds / 60)}min (estimado: ${estimatedMinutes > 0 ? estimatedMinutes + 'min' : 'N/A'})` : undefined)}
-              className="flex items-center justify-center w-9 h-9 rounded-full border border-[#3a3a3c] text-[#86868b] hover:text-[#30d158] hover:border-[#30d158] hover:bg-[#30d158]/10 transition-colors"
+              className="flex items-center justify-center w-9 h-9 rounded-full border border-[#3a3a3c] text-[#8C8A88] hover:text-[#34D399] hover:border-[#34D399] hover:bg-[#34D399]/10 transition-colors"
               title="Concluir tarefa"
             >
               <Check size={16} />

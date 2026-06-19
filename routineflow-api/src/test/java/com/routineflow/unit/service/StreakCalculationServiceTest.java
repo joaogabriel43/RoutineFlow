@@ -3,6 +3,7 @@ package com.routineflow.unit.service;
 import com.routineflow.domain.model.ResetFrequency;
 import com.routineflow.domain.model.ScheduleType;
 import com.routineflow.domain.service.StreakCalculationService;
+import com.routineflow.application.usecase.SkipDayUseCase;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity;
@@ -39,6 +40,7 @@ class StreakCalculationServiceTest {
     @Mock private AreaJpaRepository areaJpaRepository;
     @Mock private DailyLogJpaRepository dailyLogJpaRepository;
     @Mock private StreakJpaRepository streakJpaRepository;
+    @Mock private SkipDayUseCase skipDayUseCase;
 
     private StreakCalculationService service;
 
@@ -49,7 +51,7 @@ class StreakCalculationServiceTest {
     @BeforeEach
     void setUp() {
         service = new StreakCalculationService(
-                routineJpaRepository, areaJpaRepository, dailyLogJpaRepository, streakJpaRepository
+                routineJpaRepository, areaJpaRepository, dailyLogJpaRepository, streakJpaRepository, skipDayUseCase
         );
     }
 
@@ -109,6 +111,23 @@ class StreakCalculationServiceTest {
         service.calculate(USER_ID, MONDAY);
 
         verify(streakJpaRepository).save(argThat(s -> s.getCurrentCount() == 0));
+    }
+
+    @Test
+    @DisplayName("calculate_areaSkipped_preservesStreak")
+    void calculate_areaSkipped_preservesStreak() {
+        var area = buildAreaWithTask(1L, DayOfWeek.MONDAY);
+        var streak = StreakJpaEntity.builder()
+                .area(area).user(area.getUser())
+                .currentCount(5).lastActiveDate(MONDAY.minusDays(1)).build();
+
+        setupMocks(List.of(area));
+        when(skipDayUseCase.isSkipDay(USER_ID, 1L, MONDAY)).thenReturn(true);
+
+        service.calculate(USER_ID, MONDAY);
+
+        // Nenhum save deve ocorrer porque foi pulado, o que preserva o streak.
+        verify(streakJpaRepository, never()).save(any());
     }
 
     @Test

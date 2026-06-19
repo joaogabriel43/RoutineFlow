@@ -3,6 +3,7 @@ package com.routineflow.presentation.controller;
 import com.routineflow.application.dto.CheckInRequest;
 import com.routineflow.application.dto.DailyLogResponse;
 import com.routineflow.application.dto.DailyProgressResponse;
+import com.routineflow.application.dto.IncrementRequest;
 import com.routineflow.application.dto.UpdateNotesRequest;
 import com.routineflow.application.usecase.CheckInUseCase;
 import com.routineflow.application.usecase.GetDailyProgressUseCase;
@@ -56,6 +57,29 @@ public class CheckInController {
         Long userId = userResolver.currentUserId();
         LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
         return ResponseEntity.ok(checkInUseCase.uncompleteTask(userId, taskId, targetDate));
+    }
+
+    @Operation(summary = "Increment progress for a numeric task")
+    @PostMapping("/{taskId}/progress")
+    public ResponseEntity<DailyLogResponse> incrementProgress(
+            @PathVariable Long taskId,
+            @RequestParam(required = false) LocalDate date,
+            @RequestBody IncrementRequest request
+    ) {
+        Long userId = userResolver.currentUserId();
+        LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
+        return ResponseEntity.ok(checkInUseCase.incrementProgress(userId, taskId, targetDate, request.increment()));
+    }
+
+    @Operation(summary = "Reset progress for a numeric task")
+    @PostMapping("/{taskId}/progress/reset")
+    public ResponseEntity<DailyLogResponse> resetProgress(
+            @PathVariable Long taskId,
+            @RequestParam(required = false) LocalDate date
+    ) {
+        Long userId = userResolver.currentUserId();
+        LocalDate targetDate = date != null ? date : LocalDate.now(AppTimeZone.ZONE);
+        return ResponseEntity.ok(checkInUseCase.resetProgress(userId, taskId, targetDate));
     }
 
     @Operation(summary = "Update notes for an existing check-in")

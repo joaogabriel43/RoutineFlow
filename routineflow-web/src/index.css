@@ -1,42 +1,180 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════════════════════════════════
+   RoutineFlow — Design tokens ("Graphite" + warm text)
+   Linear / Vercel / Things / Apple-inspired dark language.
+   Source of truth: RoutineFlow Design System (claude.ai/design).
+   ════════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Surfaces (elevation by layered near-blacks) ─────────────────────────── */
+  --bg:          #08080A; /* app background — deepest */
+  --surface-1:   #0F0F11; /* sidebar, sunken wells, inputs */
+  --surface-2:   #141416; /* cards — default raised surface */
+  --surface-3:   #1C1C1F; /* hover / popover / nested raised */
+  --surface-4:   #232327; /* pressed / tooltip */
+
+  /* ── Borders (hairlines) ─────────────────────────────────────────────────── */
+  --border-subtle: #1B1B1E;
+  --border:        #26262A;
+  --border-strong: #34343A;
+
+  /* ── Text (warm off-white ramp, never pure #fff) ─────────────────────────── */
+  --text-hi:       #F4F2EF;
+  --text-mid:      #B8B6B3;
+  --text-lo:       #8C8A88;
+  --text-dim:      #5C5B59;
+  --text-disabled: #3A3A3C;
+
+  /* ── Accent — vivid blue (used sparingly) ────────────────────────────────── */
+  --accent:        #2F8BFF;
+  --accent-hover:  #4F9DFF;
+  --accent-press:  #1E7AF0;
+  --accent-fg:     #FFFFFF;
+  --accent-bg:     rgba(47, 139, 255, 0.10);
+  --accent-border: rgba(47, 139, 255, 0.24);
+  --accent-ring:   rgba(47, 139, 255, 0.45);
+
+  /* ── Semantic status ─────────────────────────────────────────────────────── */
+  --success:      #34D399;  --success-bg: rgba(52, 211, 153, 0.10);
+  --warning:      #FFB340;  --warning-bg: rgba(255, 179, 64, 0.10);
+  --danger:       #FF453A;  --danger-hover: #FF6961;  --danger-bg: rgba(255, 69, 58, 0.10);
+
+  /* ── Area / category palette (per-area accents) ──────────────────────────── */
+  --area-blue:   #2F8BFF;
+  --area-indigo: #7C7CF6;
+  --area-violet: #C07CF6;
+  --area-pink:   #F472B6;
+  --area-red:    #FF6B6B;
+  --area-amber:  #FFB340;
+  --area-green:  #34D399;
+  --area-teal:   #2DD4BF;
+  --area-cyan:   #38BDF8;
+
+  /* ── Type scale (size / line-height / tracking) ──────────────────────────── */
+  --fs-display: 34px; --lh-display: 1.06; --tr-display: -0.022em;
+  --fs-title:   26px; --lh-title:   1.12; --tr-title:   -0.018em;
+  --fs-h2:      19px; --lh-h2:      1.25; --tr-h2:      -0.012em;
+  --fs-h3:      16px; --lh-h3:      1.35; --tr-h3:      -0.006em;
+  --fs-body:    15px; --lh-body:    1.5;
+  --fs-sm:      13px; --lh-sm:      1.45;
+  --fs-xs:      12px; --lh-xs:      1.4;
+  --fs-label:   11px; --lh-label:   1.3;  --tr-label:   0.08em;
+  --fs-stat:    30px; --lh-stat:    1.0;  --tr-stat:    -0.02em;
+  --num-feature: "tnum" 1, "ss01" 1;
+
+  /* ── Radii (centered on 12px card language) ──────────────────────────────── */
+  --radius-xs:   6px;
+  --radius-sm:   8px;
+  --radius-md:   11px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 999px;
+
+  /* ── Shadows (floating layers only — cards are flat) ─────────────────────── */
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg:  0 12px 40px rgba(0, 0, 0, 0.55);
+  --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border);
+
+  /* ── Layout ──────────────────────────────────────────────────────────────── */
+  --content-max: 768px;
+  --sidebar-w:   220px;
+  --bottomnav-h: 64px;
+
+  /* ── Motion (quiet & quick — no bounces) ─────────────────────────────────── */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-bar:  700ms;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Map tokens to Tailwind v4 utilities.
+   App components use the token utilities (bg-surface-2, text-fg-lo, text-brand…).
+   The shadcn aliases keep the ui/* primitives themed.
+   ════════════════════════════════════════════════════════════════════════════ */
+@theme inline {
+  /* Token utilities */
+  --color-base:        var(--bg);
+  --color-surface-1:   var(--surface-1);
+  --color-surface-2:   var(--surface-2);
+  --color-surface-3:   var(--surface-3);
+  --color-surface-4:   var(--surface-4);
+
+  --color-line:        var(--border);
+  --color-line-subtle: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+
+  --color-fg:     var(--text-hi);
+  --color-fg-mid: var(--text-mid);
+  --color-fg-lo:  var(--text-lo);
+  --color-fg-dim: var(--text-dim);
+
+  --color-brand:       var(--accent);
+  --color-brand-hover: var(--accent-hover);
+  --color-brand-press: var(--accent-press);
+  --color-brand-fg:    var(--accent-fg);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger:  var(--danger);
+  --color-danger-hover: var(--danger-hover);
+
+  --color-area-blue:   var(--area-blue);
+  --color-area-indigo: var(--area-indigo);
+  --color-area-violet: var(--area-violet);
+  --color-area-pink:   var(--area-pink);
+  --color-area-red:    var(--area-red);
+  --color-area-amber:  var(--area-amber);
+  --color-area-green:  var(--area-green);
+  --color-area-teal:   var(--area-teal);
+  --color-area-cyan:   var(--area-cyan);
+
+  /* shadcn/ui aliases — keep ui/* primitives themed to the new palette */
+  --color-background:             var(--bg);
+  --color-foreground:             var(--text-hi);
+  --color-card:                   var(--surface-2);
+  --color-card-foreground:        var(--text-hi);
+  --color-popover:                var(--surface-3);
+  --color-popover-foreground:     var(--text-hi);
+  --color-primary:                var(--accent);
+  --color-primary-foreground:     var(--accent-fg);
+  --color-secondary:              var(--surface-3);
+  --color-secondary-foreground:   var(--text-hi);
+  --color-muted:                  var(--surface-3);
+  --color-muted-foreground:       var(--text-lo);
+  --color-accent:                 var(--surface-3);
+  --color-accent-foreground:      var(--text-hi);
+  --color-destructive:            var(--danger);
+  --color-destructive-foreground: #FFFFFF;
+  --color-border:                 var(--border);
+  --color-input:                  var(--border);
+  --color-ring:                   var(--accent);
+
+  /* Fonts */
+  --font-sans: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* Radii → rounded-* */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Shadows → shadow-* */
+  --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Base
+   ════════════════════════════════════════════════════════════════════════════ */
 @layer base {
-  :root {
-    /* Dark theme as default — inspired by Apple's design language */
-    --background: 0 0% 4%;           /* #0a0a0a — preto suave */
-    --foreground: 0 0% 96%;          /* #f5f5f7 — branco Apple */
-
-    --card: 0 0% 8%;                 /* #141414 — surface cards */
-    --card-foreground: 0 0% 96%;
-
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 96%;
-
-    --primary: 211 100% 44%;         /* #0071e3 — azul Apple */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 96%;
-
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 53%;    /* #86868b — cinza Apple */
-
-    --accent: 211 100% 44%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 12%;              /* #1f1f1f — borda sutil */
-    --input: 0 0% 12%;
-    --ring: 211 100% 44%;
-
-    --radius: 0.75rem;
-  }
-
   * {
-    border-color: hsl(var(--border));
+    border-color: var(--border);
     box-sizing: border-box;
   }
 
@@ -49,42 +187,62 @@
   }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
+    background-color: var(--bg);
+    color: var(--text-hi);
+    font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv01" 1, "cv03" 1;
   }
 
-  /* Scrollbar sutil */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  /* Tabular figures everywhere numbers matter */
+  :where(input, button) {
+    font-feature-settings: var(--num-feature);
+  }
+
+  /* Subtle scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 2px;
+    background: var(--border-strong);
+    border-radius: var(--radius-full);
   }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  ::selection {
+    background: var(--accent-bg);
+    color: var(--text-hi);
+  }
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+   Utilities
+   ════════════════════════════════════════════════════════════════════════════ */
 @layer utilities {
   .text-balance { text-wrap: balance; }
+
+  /* Mono tabular numerals — streaks, %, times, durations, counts */
+  .num {
+    font-family: var(--font-mono);
+    font-feature-settings: var(--num-feature);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Token-driven helpers for things Tailwind utilities don't cover cleanly */
+  .accent-fill   { background: var(--accent-bg); }
+  .accent-hairline { border-color: var(--accent-border); }
 }
 
-/* ── Page transition ──────────────────────────────────────────────────────── */
-
+/* ════════════════════════════════════════════════════════════════════════════
+   Motion
+   ════════════════════════════════════════════════════════════════════════════ */
 @keyframes page-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .page-fade {
-  animation: page-fade-in 200ms ease forwards;
+  animation: page-fade-in var(--dur-base) var(--ease-out) forwards;
 }

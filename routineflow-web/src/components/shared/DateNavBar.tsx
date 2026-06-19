@@ -80,15 +80,15 @@ export function DateNavBar({ selectedDate, onSelect }: DateNavBarProps) {
             type="button"
             onClick={() => onSelect(dateStr)}
             className={cn(
-              'flex flex-col items-center shrink-0 w-11 py-2 rounded-xl transition-all duration-150',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3]',
+              'flex flex-col items-center shrink-0 w-11 py-2 rounded-lg transition-all duration-150',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8BFF]',
               isSelected
                 ? isToday
-                  ? 'bg-[#0071e3] text-white'
-                  : 'bg-[#1f1f1f] text-[#f5f5f7] ring-1 ring-[#3a3a3c]'
+                  ? 'bg-[#2F8BFF] text-white'
+                  : 'bg-[#26262A] text-[#F4F2EF] ring-1 ring-[#3a3a3c]'
                 : isFuture
-                  ? 'text-[#3a3a3c] hover:bg-[#141414]'
-                  : 'text-[#86868b] hover:bg-[#141414] hover:text-[#f5f5f7]',
+                  ? 'text-[#3a3a3c] hover:bg-[#141416]'
+                  : 'text-[#8C8A88] hover:bg-[#141416] hover:text-[#F4F2EF]',
             )}
           >
             {/* Abbreviated day name */}
@@ -97,7 +97,7 @@ export function DateNavBar({ selectedDate, onSelect }: DateNavBarProps) {
             </span>
 
             {/* Day number */}
-            <span className={cn('text-sm font-semibold leading-none', isToday && isSelected && 'text-white')}>
+            <span className={cn('num text-sm font-semibold leading-none', isToday && isSelected && 'text-white')}>
               {dayNum}
             </span>
 
@@ -105,7 +105,7 @@ export function DateNavBar({ selectedDate, onSelect }: DateNavBarProps) {
             <span
               className={cn(
                 'mt-1.5 h-1 w-1 rounded-full transition-opacity',
-                hasDot ? 'opacity-100 bg-[#30d158]' : 'opacity-0 bg-transparent',
+                hasDot ? 'opacity-100 bg-[#34D399]' : 'opacity-0 bg-transparent',
               )}
             />
           </button>

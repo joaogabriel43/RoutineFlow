@@ -15,7 +15,7 @@ export function AreaManageCard({ area, isSelected, onSelect, onEdit, onDelete }:
     <div
       className={cn(
         'flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-colors group',
-        isSelected ? 'bg-[#1f1f1f]' : 'hover:bg-[#141414]',
+        isSelected ? 'bg-[#26262A]' : 'hover:bg-[#141416]',
       )}
       onClick={onSelect}
     >
@@ -28,17 +28,17 @@ export function AreaManageCard({ area, isSelected, onSelect, onEdit, onDelete }:
       </div>
 
       {/* Name */}
-      <span className="flex-1 text-sm text-[#f5f5f7] font-medium truncate">{area.name}</span>
+      <span className="flex-1 text-sm text-[#F4F2EF] font-medium truncate">{area.name}</span>
 
       {/* Frequency badge — only shown for non-DAILY areas */}
       {area.resetFrequency !== 'DAILY' && (
-        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 bg-[#0071e3]/15 text-[#0071e3]">
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 bg-[#2F8BFF]/15 text-[#2F8BFF]">
           {area.resetFrequency === 'WEEKLY' ? 'semanal' : 'mensal'}
         </span>
       )}
 
       {/* Task count badge */}
-      <span className="text-[11px] text-[#86868b] shrink-0">
+      <span className="text-[11px] text-[#8C8A88] shrink-0">
         {area.tasks.length} {area.tasks.length === 1 ? 'tarefa' : 'tarefas'}
       </span>
 
@@ -52,14 +52,14 @@ export function AreaManageCard({ area, isSelected, onSelect, onEdit, onDelete }:
       >
         <button
           onClick={onEdit}
-          className="p-1.5 rounded-lg text-[#86868b] hover:text-[#f5f5f7] hover:bg-[#2a2a2a] transition-colors"
+          className="p-1.5 rounded-lg text-[#8C8A88] hover:text-[#F4F2EF] hover:bg-[#26262A] transition-colors"
           title="Editar área"
         >
           <Pencil size={13} />
         </button>
         <button
           onClick={onDelete}
-          className="p-1.5 rounded-lg text-[#86868b] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="p-1.5 rounded-lg text-[#8C8A88] hover:text-danger hover:bg-danger/10 transition-colors"
           title="Excluir área"
         >
           <Trash2 size={13} />
@@ -70,7 +70,7 @@ export function AreaManageCard({ area, isSelected, onSelect, onEdit, onDelete }:
         size={14}
         className={cn(
           'shrink-0 transition-colors',
-          isSelected ? 'text-[#0071e3]' : 'text-[#3a3a3a] group-hover:text-[#86868b]',
+          isSelected ? 'text-[#2F8BFF]' : 'text-[#34343A] group-hover:text-[#8C8A88]',
         )}
       />
     </div>

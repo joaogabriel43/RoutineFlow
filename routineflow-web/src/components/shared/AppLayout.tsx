@@ -7,7 +7,7 @@ export function AppLayout() {
   const { pathname } = useLocation()
 
   return (
-    <div className="flex h-full bg-[#0a0a0a]">
+    <div className="flex h-full bg-[#08080A]">
       {/* Sidebar — visível apenas no desktop */}
       <SidebarNav />
 
@@ -31,9 +31,9 @@ export function AppLayout() {
         position="top-right"
         toastOptions={{
           style: {
-            background: '#141414',
-            border: '1px solid #1f1f1f',
-            color: '#f5f5f7',
+            background: '#141416',
+            border: '1px solid #26262A',
+            color: '#F4F2EF',
           },
         }}
       />

@@ -1,8 +1,12 @@
 package com.routineflow.integration.checkin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.routineflow.application.dto.CreateTaskRequest;
+import com.routineflow.application.dto.IncrementRequest;
 import com.routineflow.application.dto.LoginRequest;
 import com.routineflow.application.dto.RegisterRequest;
+import com.routineflow.domain.model.GoalType;
+import com.routineflow.domain.model.ScheduleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +20,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.math.BigDecimal;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -267,6 +273,68 @@ class CheckInControllerTest {
                         .content("{\"notes\": \"novo texto\"}")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("incrementProgress_onBooleanTask_returns400")
+    void incrementProgress_onBooleanTask_returns400() throws Exception {
+        if (firstTaskId == null) return;
+        
+        var req = new IncrementRequest(new BigDecimal("1.0"));
+        
+        mockMvc.perform(post("/checkins/" + firstTaskId + "/progress")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isConflict()); // IllegalStateException mapped to 409
+    }
+
+    @Test
+    @DisplayName("incrementProgress_reachesTarget_marksCompleted")
+    void incrementProgress_reachesTarget_marksCompleted() throws Exception {
+        // Create a numeric task first
+        var routineRes = mockMvc.perform(get("/routines/active/day/MONDAY")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andReturn().getResponse().getContentAsString();
+        Long areaId = objectMapper.readTree(routineRes).path("areas").get(0).path("id").asLong();
+
+        var createTask = new CreateTaskRequest(
+                "Numeric Task", "desc", 10, ScheduleType.DAY_OF_WEEK,
+                DayOfWeek.MONDAY, null, null, GoalType.NUMERIC, new BigDecimal("3.0"), "cups"
+        );
+
+        var taskRes = mockMvc.perform(post("/areas/" + areaId + "/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createTask))
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andReturn().getResponse().getContentAsString();
+        Long numTaskId = objectMapper.readTree(taskRes).path("id").asLong();
+
+        var req = new IncrementRequest(new BigDecimal("1.0"));
+
+        // 1st increment
+        mockMvc.perform(post("/checkins/" + numTaskId + "/progress")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.goalProgress").value(1.0))
+                .andExpect(jsonPath("$.completed").value(false));
+
+        // 2nd increment
+        mockMvc.perform(post("/checkins/" + numTaskId + "/progress")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .header("Authorization", "Bearer " + jwtToken));
+
+        // 3rd increment -> should be completed
+        mockMvc.perform(post("/checkins/" + numTaskId + "/progress")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.goalProgress").value(3.0))
+                .andExpect(jsonPath("$.completed").value(true));
     }
 
     private String registerAndGetToken(String email, String password) throws Exception {
