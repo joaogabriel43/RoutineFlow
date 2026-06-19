@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { cn } from '@/lib/utils'
+import { cn, getLocalISODate } from '@/lib/utils'
 import type { DailyProgressResponse } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ const DAY_ABBR = ['Do', 'Se', 'Te', 'Qu', 'Qu', 'Se', 'Sá']
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0] as string
+  return getLocalISODate()
 }
 
 /** Build an array of YYYY-MM-DD strings: 7 days before today … today … 6 days after */
@@ -20,7 +20,7 @@ function buildDateRange(): string[] {
   for (let offset = -7; offset <= 6; offset++) {
     const d = new Date(today)
     d.setDate(today.getDate() + offset)
-    dates.push(d.toISOString().split('T')[0] as string)
+    dates.push(getLocalISODate(d))
   }
   return dates
 }

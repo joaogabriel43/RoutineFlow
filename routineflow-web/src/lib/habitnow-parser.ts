@@ -20,6 +20,8 @@
 //
 // Date decoding: days are base-36 encoded, epoch = 2012-01-01
 
+import { getLocalISODate } from './utils'
+
 export type DayOfWeek =
   | 'MONDAY'
   | 'TUESDAY'
@@ -44,7 +46,7 @@ const EPOCH = new Date('2012-01-01T00:00:00.000Z')
 function decodeDate(base36Days: string): string {
   const days = parseInt(base36Days, 36)
   const ms = EPOCH.getTime() + days * 24 * 60 * 60 * 1000
-  return new Date(ms).toISOString().split('T')[0]
+  return getLocalISODate(new Date(ms))
 }
 
 // Maps HabitNow day codes (1-7) to DayOfWeek — 1=Sun, 2=Mon ... 7=Sat

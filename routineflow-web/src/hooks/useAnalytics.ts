@@ -1,6 +1,7 @@
 import { useQueries } from '@tanstack/react-query'
 import { analyticsApi } from '@/services/api'
 import type { HeatmapDayResponse } from '@/types'
+import { getLocalISODate } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,8 +28,8 @@ function buildHeatmapRange(): { from: string; to: string } {
   from.setDate(thisMonday.getDate() - 12 * 7)
 
   return {
-    from: from.toISOString().split('T')[0],
-    to: today.toISOString().split('T')[0],
+    from: getLocalISODate(from),
+    to: getLocalISODate(today),
   }
 }
 
@@ -47,10 +48,10 @@ function fillHeatmapDays(
   const result: FilledHeatmapDay[] = []
   const cursor = new Date(from + 'T00:00:00')
   const end = new Date(to + 'T00:00:00')
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = getLocalISODate()
 
   while (cursor <= end) {
-    const dateStr = cursor.toISOString().split('T')[0]
+    const dateStr = getLocalISODate(cursor)
     const existing = dayMap.get(dateStr)
     result.push(
       existing

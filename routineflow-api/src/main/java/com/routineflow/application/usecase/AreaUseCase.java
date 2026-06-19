@@ -7,6 +7,7 @@ import com.routineflow.application.dto.TaskResponse;
 import com.routineflow.application.dto.UpdateAreaRequest;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
+import com.routineflow.application.usecase.validation.AppearanceValidator;
 import com.routineflow.domain.model.ResetFrequency;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
@@ -47,6 +48,8 @@ public class AreaUseCase {
         var routine = routineJpaRepository.findActiveByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("No active routine found for user: " + userId));
 
+        AppearanceValidator.validate(request.icon(), request.color());
+
         // New area gets the next orderIndex
         int nextOrder = areaJpaRepository.findByRoutineId(routine.getId()).size();
 
@@ -69,6 +72,8 @@ public class AreaUseCase {
     public AreaResponse updateArea(Long userId, Long areaId, UpdateAreaRequest request) {
         var area = areaJpaRepository.findByIdAndUserId(areaId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Area not found: " + areaId));
+
+        AppearanceValidator.validate(request.icon(), request.color());
 
         area.setName(request.name());
         area.setColor(request.color());
@@ -146,7 +151,9 @@ public class AreaUseCase {
                                 t.getReminderTime(),
                                 t.getGoalType(),
                                 t.getGoalTarget(),
-                                t.getGoalUnit()
+                                t.getGoalUnit(),
+                                t.getIcon(),
+                                t.getColor()
                         )).sorted(java.util.Comparator.comparingInt(TaskResponse::orderIndex))
                         .toList();
 

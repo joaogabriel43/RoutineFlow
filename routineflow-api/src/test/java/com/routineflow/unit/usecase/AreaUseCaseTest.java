@@ -134,6 +134,55 @@ class AreaUseCaseTest {
         verify(areaJpaRepository, never()).save(any());
     }
 
+    // ── icon & color (Sprint 25) ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("createArea_lucideIconAndColor_persists")
+    void createArea_lucideIconAndColor_persists() {
+        var request = new CreateAreaRequest("Academia", "#2F8BFF", "dumbbell", null);
+        var routine = buildRoutine(ROUTINE_ID, USER_ID);
+
+        when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
+        when(areaJpaRepository.findByRoutineId(ROUTINE_ID)).thenReturn(List.of());
+        when(areaJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.createArea(USER_ID, request);
+
+        assertThat(result.icon()).isEqualTo("dumbbell");
+        assertThat(result.color()).isEqualTo("#2F8BFF");
+    }
+
+    @Test
+    @DisplayName("createArea_invalidColor_throwsIllegalArgumentException")
+    void createArea_invalidColor_throwsIllegalArgumentException() {
+        var request = new CreateAreaRequest("Academia", "azul", "dumbbell", null);
+        var routine = buildRoutine(ROUTINE_ID, USER_ID);
+
+        when(routineJpaRepository.findActiveByUserId(USER_ID)).thenReturn(Optional.of(routine));
+
+        assertThatThrownBy(() -> useCase.createArea(USER_ID, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("color");
+
+        verify(areaJpaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateArea_changesIconAndColorToLucide_updates")
+    void updateArea_changesIconAndColorToLucide_updates() {
+        var request = new UpdateAreaRequest("Academia", "#34C759", "book-open", null);
+        var routine = buildRoutine(ROUTINE_ID, USER_ID);
+        var area = buildArea(AREA_ID, USER_ID, routine, "Academia", "#2F8BFF", "dumbbell", 0);
+
+        when(areaJpaRepository.findByIdAndUserId(AREA_ID, USER_ID)).thenReturn(Optional.of(area));
+        when(areaJpaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = useCase.updateArea(USER_ID, AREA_ID, request);
+
+        assertThat(result.icon()).isEqualTo("book-open");
+        assertThat(result.color()).isEqualTo("#34C759");
+    }
+
     // ── deleteArea ───────────────────────────────────────────────────────────
 
     @Test

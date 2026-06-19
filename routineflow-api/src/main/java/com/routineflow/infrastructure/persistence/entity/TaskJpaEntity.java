@@ -76,4 +76,12 @@ public class TaskJpaEntity {
 
     @Column(name = "goal_unit", length = 30)
     private String goalUnit;
+
+    /** Optional lucide icon name (kebab-case, e.g. "dumbbell"). Null → UI default. */
+    @Column(length = 50)
+    private String icon;
+
+    /** Optional hex color (#RRGGBB). Null → UI default. */
+    @Column(length = 7)
+    private String color;
 }

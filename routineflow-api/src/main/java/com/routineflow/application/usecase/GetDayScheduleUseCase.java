@@ -58,7 +58,8 @@ public class GetDayScheduleUseCase {
                         t.getEstimatedMinutes(), t.getOrderIndex(),
                         t.getScheduleType(), t.getDayOfWeek(), t.getDayOfMonth(),
                         t.getReminderTime(),
-                        t.getGoalType(), t.getGoalTarget(), t.getGoalUnit()))
+                        t.getGoalType(), t.getGoalTarget(), t.getGoalUnit(),
+                        t.getIcon(), t.getColor()))
                 .toList();
 
         return new AreaWithTasksResponse(area.getId(), area.getName(),

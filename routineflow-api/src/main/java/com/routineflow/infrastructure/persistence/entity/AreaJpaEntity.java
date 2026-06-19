@@ -40,7 +40,7 @@ public class AreaJpaEntity {
     @Column(nullable = false, length = 7)
     private String color;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 50)
     private String icon;
 
     @Column(name = "order_index", nullable = false)

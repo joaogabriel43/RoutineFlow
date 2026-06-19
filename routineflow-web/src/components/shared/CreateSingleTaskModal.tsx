@@ -7,6 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useCreateSingleTask } from '@/hooks/useSingleTasks'
+import { getLocalISODate } from '@/lib/utils'
 
 interface CreateSingleTaskModalProps {
   open: boolean
@@ -14,7 +15,7 @@ interface CreateSingleTaskModalProps {
 }
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0] as string
+  return getLocalISODate()
 }
 
 export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalProps) {

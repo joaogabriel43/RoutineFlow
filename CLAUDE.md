@@ -381,6 +381,20 @@ routine:
 
 ## 🐛 Erros Conhecidos e Como Evitá-los
 
+### [2026-06-18] Erro: toISOString() retorna data UTC, não local
+**O que aconteceu**: new Date().toISOString().split('T')[0] foi usado
+em 9 arquivos do frontend para calcular "hoje". Em BRT (UTC-3), próximo
+da meia-noite, isso retorna o dia seguinte — causando 400 (Bad Request)
+em qualquer POST de check-in que dependa dessa data.
+**Por que**: toISOString() SEMPRE converte para UTC antes de formatar.
+Não existe variante "local" nativa do JS para essa chamada.
+**Como prevenir**: usar a função utilitária getLocalISODate() em
+src/lib/utils.ts para qualquer cálculo de "hoje" ou data atual no
+frontend. NUNCA usar new Date().toISOString().split('T')[0] direto.
+Substitui e generaliza o padrão antigo "usar T12:00:00" documentado
+no Sprint 12 — aquele cobria apenas parsing de string de data,
+este cobre a geração da data também.
+
 ### [2026-04-19] Testes de integração requerem Docker ativo
 **O que acontece**: `AuthControllerTest` e outros testes com `@Testcontainers` falham com conexão recusada se o Docker Desktop não estiver rodando.
 **Por que**: Testcontainers sobe um container PostgreSQL real em tempo de execução.
