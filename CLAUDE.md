@@ -135,6 +135,16 @@ services:
 
 ## 📐 Padrões do Projeto
 
+### Commits: nunca usar "git add ." sem antes checar git status
+Em sessões longas com testes locais (Docker, env vars), é comum sobrar
+mudanças não commitadas na working tree (correções de bug encontradas
+durante teste manual, ajustes de ambiente). "git add ." num commit de
+feature arrasta esse resíduo silenciosamente para o mesmo commit.
+Prevenção: antes de "git add .", rodar "git status" e confirmar que
+TODOS os arquivos modificados pertencem ao escopo do commit atual.
+Se houver resíduo de sessão anterior, commitar separado primeiro
+("fix: ..." ou "chore: ...") antes do commit da feature nova.
+
 ### 1. DTOs como Records Java 17
 ```java
 // SEMPRE assim — imutável, sem boilerplate
