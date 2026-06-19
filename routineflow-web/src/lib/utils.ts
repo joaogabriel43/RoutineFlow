@@ -26,6 +26,12 @@ export function formatPercent(rate: number): string {
   return `${Math.round(rate * 100)}%`
 }
 
+export function getLocalISODate(date: Date = new Date()): string {
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000
+  const localDate = new Date(date.getTime() - offsetMs)
+  return localDate.toISOString().split('T')[0]
+}
+
 export const AREA_COLORS: Record<string, string> = {
   '#3B82F6': '#3B82F6',
   '#F59E0B': '#F59E0B',

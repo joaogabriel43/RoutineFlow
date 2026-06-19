@@ -9,12 +9,12 @@ import { CreateSingleTaskModal } from '@/components/shared/CreateSingleTaskModal
 import { useDay } from '@/hooks/useDay'
 import { useSingleTasksToday, useCompleteSingleTask, useDeleteSingleTask } from '@/hooks/useSingleTasks'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { formatPercent } from '@/lib/utils'
+import { formatPercent, getLocalISODate } from '@/lib/utils'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0] as string
+  return getLocalISODate()
 }
 
 function capitalize(str: string): string {
@@ -26,7 +26,7 @@ function dateLabel(dateStr: string): string {
   const today = todayStr()
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().split('T')[0]
+  const yesterdayStr = getLocalISODate(yesterday)
 
   if (dateStr === today) {
     return capitalize(

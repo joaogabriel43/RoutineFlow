@@ -20,5 +20,7 @@ public record TaskResponse(
         LocalTime reminderTime, // null when no reminder configured
         GoalType goalType,
         BigDecimal goalTarget,
-        String goalUnit
+        String goalUnit,
+        String icon,    // lucide kebab-case name; null → UI default
+        String color    // hex #RRGGBB; null → UI default
 ) {}

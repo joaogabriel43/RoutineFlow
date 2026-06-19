@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DynamicIcon } from '@/components/shared/DynamicIcon'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
 import { exportApi } from '@/services/api'
@@ -40,7 +41,7 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
                  focus-visible:ring-2 focus-visible:ring-[#2F8BFF]"
       style={{ borderLeftColor: streak.color }}
     >
-      <span className="text-2xl shrink-0">{streak.icon}</span>
+      <span className="shrink-0"><DynamicIcon name={streak.icon} color={streak.color} size={22} fallback="folder" /></span>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-[#8C8A88] truncate">{streak.areaName}</p>
         <p className="text-[10px] text-[#34343A] mt-0.5">
@@ -232,7 +233,7 @@ function AnalyticsSkeleton() {
       {/* Streak cards */}
       <section>
         <Skeleton className="h-4 w-24 bg-[#26262A] mb-3" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-xl bg-[#141416] border-l-4 border-[#26262A] px-4 py-4 flex items-center gap-4">
               <Skeleton className="h-8 w-8 rounded bg-[#26262A]" />
@@ -326,7 +327,7 @@ export function AnalyticsPage() {
         {streaks.length === 0 ? (
           <p className="text-sm text-[#8C8A88]">Nenhum streak registrado ainda.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {streaks.map((s) => (
               <StreakCard key={s.areaId} streak={s} />
             ))}

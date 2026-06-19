@@ -300,7 +300,8 @@ class CheckInControllerTest {
 
         var createTask = new CreateTaskRequest(
                 "Numeric Task", "desc", 10, ScheduleType.DAY_OF_WEEK,
-                DayOfWeek.MONDAY, null, null, GoalType.NUMERIC, new BigDecimal("3.0"), "cups"
+                DayOfWeek.MONDAY, null, null, GoalType.NUMERIC, new BigDecimal("3.0"), "cups",
+                null, null
         );
 
         var taskRes = mockMvc.perform(post("/areas/" + areaId + "/tasks")

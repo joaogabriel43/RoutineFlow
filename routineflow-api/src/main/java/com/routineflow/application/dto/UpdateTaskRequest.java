@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
@@ -42,5 +43,13 @@ public record UpdateTaskRequest(
         BigDecimal goalTarget,
 
         @Size(max = 30, message = "Goal unit must be at most 30 characters")
-        String goalUnit
+        String goalUnit,
+
+        /** Optional lucide icon name (kebab-case). */
+        @Size(max = 50, message = "Icon must be at most 50 characters")
+        String icon,
+
+        /** Optional hex color (#RRGGBB). @Pattern skips null, so it stays optional. */
+        @Pattern(regexp = "#[0-9A-Fa-f]{6}", message = "Color must be a valid hex code (e.g. #2F8BFF)")
+        String color
 ) {}

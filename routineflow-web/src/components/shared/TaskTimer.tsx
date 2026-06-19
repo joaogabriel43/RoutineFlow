@@ -1,5 +1,6 @@
 import { Play, Pause, Check } from 'lucide-react'
 import { useTimer } from '@/hooks/useTimer'
+import { getLocalISODate } from '@/lib/utils'
 
 interface TaskTimerProps {
   taskId: number
@@ -9,7 +10,7 @@ interface TaskTimerProps {
 }
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0] as string
+  return getLocalISODate()
 }
 
 function formatTime(seconds: number): string {

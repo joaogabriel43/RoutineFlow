@@ -3,6 +3,7 @@ import { useQueries } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { routineApi, checkInApi } from '@/services/api'
 import type { AreaWithTasksResponse, TaskResponse } from '@/types'
+import { getLocalISODate } from '@/lib/utils'
 
 // ── Enriched types ────────────────────────────────────────────────────────────
 
@@ -23,7 +24,7 @@ export interface EnrichedArea extends Omit<AreaWithTasksResponse, 'tasks'> {
 const DOW_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0] as string
+  return getLocalISODate()
 }
 
 /** Convert YYYY-MM-DD to Java DayOfWeek enum name. Uses T12:00:00 to avoid TZ shift. */

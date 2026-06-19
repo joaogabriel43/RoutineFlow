@@ -2,6 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useWeek, DAYS_OF_WEEK, DAY_LABELS_PT, getTodayDayIndex } from '@/hooks/useWeek'
 import type { WeekAreaRow, DayKey } from '@/hooks/useWeek'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
+import { DynamicIcon } from '@/components/shared/DynamicIcon'
 import { formatPercent } from '@/lib/utils'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ function AreaRow({
     <div className={`flex items-stretch ${!isLast ? 'border-b border-[#26262A]' : ''}`}>
       {/* Area label — sticky left */}
       <div className="w-40 shrink-0 flex items-center gap-2 px-4 py-1 sticky left-0 bg-[#141416] z-10">
-        <span className="text-base shrink-0">{row.icon}</span>
+        <span className="shrink-0"><DynamicIcon name={row.icon} color={row.color} size={16} fallback="folder" /></span>
         <div className="min-w-0">
           <p className="text-xs font-medium text-[#F4F2EF] truncate">{row.areaName}</p>
           <p className="num text-[10px] text-[#8C8A88]">

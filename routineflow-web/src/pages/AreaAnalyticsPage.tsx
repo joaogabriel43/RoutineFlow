@@ -20,6 +20,7 @@ import {
   Trophy,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DynamicIcon } from '@/components/shared/DynamicIcon'
 import { useAreaAnalytics } from '@/hooks/useAreaAnalytics'
 import type { AreaAnalyticsResponse, DayOfWeekStat, WeeklyTrendPoint } from '@/types'
 
@@ -338,10 +339,10 @@ export function AreaAnalyticsPage() {
         ) : data ? (
           <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
-              style={{ backgroundColor: data.color + '22', border: `2px solid ${data.color}` }}
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+              style={{ backgroundColor: data.color + '22', border: `2px solid ${data.color}`, color: data.color }}
             >
-              {data.icon}
+              <DynamicIcon name={data.icon} size={18} fallback="folder" />
             </div>
             <h1 className="text-2xl font-semibold text-[#F4F2EF]">{data.areaName}</h1>
           </div>

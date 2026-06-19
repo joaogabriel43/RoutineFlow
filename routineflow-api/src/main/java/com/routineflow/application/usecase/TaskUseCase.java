@@ -6,6 +6,7 @@ import com.routineflow.application.dto.TaskResponse;
 import com.routineflow.application.dto.UpdateTaskRequest;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
+import com.routineflow.application.usecase.validation.AppearanceValidator;
 import com.routineflow.domain.model.ScheduleType;
 import com.routineflow.domain.model.GoalType;
 import com.routineflow.infrastructure.persistence.entity.TaskJpaEntity;
@@ -35,6 +36,7 @@ public class TaskUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Area not found: " + areaId));
 
         validateSchedule(request.scheduleType(), request.dayOfWeek(), request.dayOfMonth());
+        AppearanceValidator.validate(request.icon(), request.color());
 
         int nextOrder = taskJpaRepository.findByAreaIdOrderByOrderIndex(areaId).size();
 
@@ -50,6 +52,8 @@ public class TaskUseCase {
                 .goalType(request.goalType() != null ? request.goalType() : GoalType.BOOLEAN)
                 .goalTarget(request.goalType() == GoalType.NUMERIC ? request.goalTarget() : null)
                 .goalUnit(request.goalType() == GoalType.NUMERIC ? request.goalUnit() : null)
+                .icon(request.icon())
+                .color(request.color())
                 .orderIndex(nextOrder)
                 .build();
 
@@ -62,6 +66,7 @@ public class TaskUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
 
         validateSchedule(request.scheduleType(), request.dayOfWeek(), request.dayOfMonth());
+        AppearanceValidator.validate(request.icon(), request.color());
 
         task.setTitle(request.title());
         task.setDescription(request.description());
@@ -73,6 +78,8 @@ public class TaskUseCase {
         task.setGoalType(request.goalType() != null ? request.goalType() : GoalType.BOOLEAN);
         task.setGoalTarget(request.goalType() == GoalType.NUMERIC ? request.goalTarget() : null);
         task.setGoalUnit(request.goalType() == GoalType.NUMERIC ? request.goalUnit() : null);
+        task.setIcon(request.icon());
+        task.setColor(request.color());
 
         return toResponse(taskJpaRepository.save(task));
     }
@@ -156,7 +163,9 @@ public class TaskUseCase {
                 task.getReminderTime(),
                 task.getGoalType(),
                 task.getGoalTarget(),
-                task.getGoalUnit()
+                task.getGoalUnit(),
+                task.getIcon(),
+                task.getColor()
         );
     }
 }

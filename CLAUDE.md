@@ -135,6 +135,16 @@ services:
 
 ## 📐 Padrões do Projeto
 
+### Commits: nunca usar "git add ." sem antes checar git status
+Em sessões longas com testes locais (Docker, env vars), é comum sobrar
+mudanças não commitadas na working tree (correções de bug encontradas
+durante teste manual, ajustes de ambiente). "git add ." num commit de
+feature arrasta esse resíduo silenciosamente para o mesmo commit.
+Prevenção: antes de "git add .", rodar "git status" e confirmar que
+TODOS os arquivos modificados pertencem ao escopo do commit atual.
+Se houver resíduo de sessão anterior, commitar separado primeiro
+("fix: ..." ou "chore: ...") antes do commit da feature nova.
+
 ### 1. DTOs como Records Java 17
 ```java
 // SEMPRE assim — imutável, sem boilerplate
@@ -380,6 +390,20 @@ routine:
 ---
 
 ## 🐛 Erros Conhecidos e Como Evitá-los
+
+### [2026-06-18] Erro: toISOString() retorna data UTC, não local
+**O que aconteceu**: new Date().toISOString().split('T')[0] foi usado
+em 9 arquivos do frontend para calcular "hoje". Em BRT (UTC-3), próximo
+da meia-noite, isso retorna o dia seguinte — causando 400 (Bad Request)
+em qualquer POST de check-in que dependa dessa data.
+**Por que**: toISOString() SEMPRE converte para UTC antes de formatar.
+Não existe variante "local" nativa do JS para essa chamada.
+**Como prevenir**: usar a função utilitária getLocalISODate() em
+src/lib/utils.ts para qualquer cálculo de "hoje" ou data atual no
+frontend. NUNCA usar new Date().toISOString().split('T')[0] direto.
+Substitui e generaliza o padrão antigo "usar T12:00:00" documentado
+no Sprint 12 — aquele cobria apenas parsing de string de data,
+este cobre a geração da data também.
 
 ### [2026-04-19] Testes de integração requerem Docker ativo
 **O que acontece**: `AuthControllerTest` e outros testes com `@Testcontainers` falham com conexão recusada se o Docker Desktop não estiver rodando.

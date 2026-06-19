@@ -22,6 +22,7 @@ import {
   useDeleteSingleTask,
 } from '@/hooks/useSingleTasks'
 import type { SingleTaskResponse } from '@/types'
+import { getLocalISODate } from '@/lib/utils'
 
 // ── Deadline filter type ──────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ const DEADLINE_FILTER_OPTIONS: { value: DeadlineFilter; label: string }[] = [
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
 function todayIso(): string {
-  return new Date().toISOString().split('T')[0]
+  return getLocalISODate()
 }
 
 function applyDeadlineFilter(

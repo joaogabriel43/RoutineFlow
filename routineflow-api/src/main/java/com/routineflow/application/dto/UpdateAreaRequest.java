@@ -16,7 +16,7 @@ public record UpdateAreaRequest(
         String color,
 
         @NotBlank(message = "Icon is required")
-        @Size(max = 10, message = "Icon must be at most 10 characters")
+        @Size(max = 50, message = "Icon must be at most 50 characters")
         String icon,
 
         ResetFrequency resetFrequency

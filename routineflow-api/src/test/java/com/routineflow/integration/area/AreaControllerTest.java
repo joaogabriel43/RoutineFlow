@@ -142,6 +142,21 @@ class AreaControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    @DisplayName("createArea_lucideIconName_returns201")
+    void createArea_lucideIconName_returns201() throws Exception {
+        // "alert-triangle" = 14 chars — would have failed the old @Size(max=10) / VARCHAR(10)
+        var request = new CreateAreaRequest("Academia", "#2F8BFF", "alert-triangle", null);
+
+        mockMvc.perform(post("/areas")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.icon").value("alert-triangle"))
+                .andExpect(jsonPath("$.color").value("#2F8BFF"));
+    }
+
     // ── PUT /areas/{id} ──────────────────────────────────────────────────────
 
     @Test

@@ -27,6 +27,7 @@ import type {
   SkipDayRequest,
   SkipDayResponse,
 } from '@/types'
+import { getLocalISODate } from '@/lib/utils'
 
 // ── Axios instance ────────────────────────────────────────────────────────────
 
@@ -191,7 +192,7 @@ export const exportApi = {
     const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]))
     const link = document.createElement('a')
     link.href = url
-    const date = new Date().toISOString().split('T')[0]
+    const date = getLocalISODate()
     link.setAttribute('download', `routineflow-export-${date}.csv`)
     document.body.appendChild(link)
     link.click()
