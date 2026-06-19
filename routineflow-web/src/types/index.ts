@@ -54,6 +54,8 @@ export interface TaskResponse {
   goalType: GoalType
   goalTarget: number | null
   goalUnit: string | null
+  icon: string | null   // lucide kebab-case name; null → UI default
+  color: string | null  // hex #RRGGBB; null → UI default
 }
 
 // ── Manage ───────────────────────────────────────────────────────────────────
@@ -95,6 +97,8 @@ export interface CreateTaskRequest {
   goalType?: GoalType
   goalTarget?: number | null
   goalUnit?: string | null
+  icon?: string | null
+  color?: string | null
 }
 
 export interface UpdateTaskRequest {
@@ -108,6 +112,8 @@ export interface UpdateTaskRequest {
   goalType?: GoalType
   goalTarget?: number | null
   goalUnit?: string | null
+  icon?: string | null
+  color?: string | null
 }
 
 export interface AreaWithTasksResponse {

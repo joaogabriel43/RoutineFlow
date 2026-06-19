@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react'
-import { ArrowLeft, Plus, SearchX } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { ArrowLeft, Loader2, Plus, SearchX } from 'lucide-react'
 import { useManage } from '@/hooks/useManage'
 import { AreaManageCard } from '@/components/shared/AreaManageCard'
 import { TaskManageRow } from '@/components/shared/TaskManageRow'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
 import { FilterBar } from '@/components/shared/FilterBar'
 import { FilterPills } from '@/components/shared/FilterPills'
+import { ColorPicker } from '@/components/shared/ColorPicker'
+import { DynamicIcon } from '@/components/shared/DynamicIcon'
+
+// Lazy — keeps the full lucide icon catalog out of the main bundle.
+const IconPicker = lazy(() => import('@/components/shared/IconPicker'))
+
+const ICON_DEFAULT = 'folder'
 import {
   Dialog,
   DialogContent,
@@ -84,7 +91,8 @@ interface AreaModalProps {
 function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps) {
   const [name, setName] = useState(initial?.name ?? '')
   const [color, setColor] = useState(initial?.color ?? '#2F8BFF')
-  const [icon, setIcon] = useState(initial?.icon ?? '📚')
+  const [icon, setIcon] = useState(initial?.icon ?? ICON_DEFAULT)
+  const [showIconPicker, setShowIconPicker] = useState(false)
   const [resetFrequency, setResetFrequency] = useState<ResetFrequency>(
     initial?.resetFrequency ?? 'DAILY',
   )
@@ -93,7 +101,8 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
     if (o) {
       setName(initial?.name ?? '')
       setColor(initial?.color ?? '#2F8BFF')
-      setIcon(initial?.icon ?? '📚')
+      setIcon(initial?.icon ?? ICON_DEFAULT)
+      setShowIconPicker(false)
       setResetFrequency(initial?.resetFrequency ?? 'DAILY')
     } else {
       onClose()
@@ -126,25 +135,44 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">Ícone (emoji)</label>
-            <Input
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-              placeholder="📚"
-              className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] placeholder:text-[#34343A] focus-visible:ring-[#2F8BFF]"
-            />
+            <label className="text-xs text-[#8C8A88] font-medium">Cor</label>
+            <ColorPicker value={color} onChange={setColor} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">Cor</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-10 h-10 rounded-lg border border-[#26262A] bg-[#26262A] cursor-pointer p-1"
-              />
-              <span className="text-sm text-[#8C8A88] font-mono">{color.toUpperCase()}</span>
-            </div>
+            <label className="text-xs text-[#8C8A88] font-medium">Ícone</label>
+            <button
+              type="button"
+              onClick={() => setShowIconPicker((v) => !v)}
+              className="flex items-center gap-3 w-full rounded-md border border-[#26262A] bg-[#26262A] px-3 py-2 text-left hover:border-[#34343A] transition-colors"
+            >
+              <span
+                className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+                style={{ backgroundColor: color + '22', color }}
+              >
+                <DynamicIcon name={icon} size={18} fallback="folder" />
+              </span>
+              <span className="num text-sm text-[#8C8A88] flex-1">{icon}</span>
+              <span className="text-xs text-[#2F8BFF]">{showIconPicker ? 'Fechar' : 'Trocar'}</span>
+            </button>
+            {showIconPicker && (
+              <div className="rounded-md border border-[#26262A] bg-[#0F0F11] p-2 mt-1">
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-8 text-[#8C8A88]">
+                      <Loader2 size={18} className="animate-spin" />
+                    </div>
+                  }
+                >
+                  <IconPicker
+                    value={icon}
+                    onChange={(n) => {
+                      setIcon(n)
+                      setShowIconPicker(false)
+                    }}
+                  />
+                </Suspense>
+              </div>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-[#8C8A88] font-medium">Frequência do streak</label>
@@ -200,6 +228,8 @@ interface TaskModalProps {
     goalType: GoalType,
     goalTarget: number | null,
     goalUnit: string | null,
+    icon: string | null,
+    color: string | null,
   ) => void
   isPending: boolean
 }
@@ -221,6 +251,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
   const [goalType, setGoalType] = useState<GoalType>(initial?.goalType ?? 'BOOLEAN')
   const [goalTarget, setGoalTarget] = useState<string>(initial?.goalTarget?.toString() ?? '')
   const [goalUnit, setGoalUnit] = useState<string>(initial?.goalUnit ?? '')
+  const [icon, setIcon] = useState<string | null>(initial?.icon ?? null)
+  const [color, setColor] = useState<string | null>(initial?.color ?? null)
+  const [showIconPicker, setShowIconPicker] = useState(false)
 
   const handleOpenChange = (o: boolean) => {
     if (o) {
@@ -234,6 +267,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
       setGoalType(initial?.goalType ?? 'BOOLEAN')
       setGoalTarget(initial?.goalTarget?.toString() ?? '')
       setGoalUnit(initial?.goalUnit ?? '')
+      setIcon(initial?.icon ?? null)
+      setColor(initial?.color ?? null)
+      setShowIconPicker(false)
     } else {
       onClose()
     }
@@ -261,6 +297,8 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
       goalType,
       goalType === 'NUMERIC' && goalTarget ? parseFloat(goalTarget) : null,
       goalType === 'NUMERIC' && goalUnit.trim() ? goalUnit.trim() : null,
+      icon,
+      color,
     )
   }
 
@@ -431,6 +469,47 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
               onChange={(e) => setReminderTime(e.target.value)}
               className="bg-[#26262A] border-[#26262A] text-[#F4F2EF] focus-visible:ring-[#2F8BFF]"
             />
+          </div>
+
+          {/* Icon + color (optional) */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#8C8A88] font-medium">
+              Ícone e cor <span className="text-[#34343A]">— opcional</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowIconPicker((v) => !v)}
+              className="flex items-center gap-3 w-full rounded-md border border-[#26262A] bg-[#26262A] px-3 py-2 text-left hover:border-[#34343A] transition-colors"
+            >
+              <span
+                className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+                style={{ backgroundColor: (color ?? '#8E8E93') + '22', color: color ?? '#8E8E93' }}
+              >
+                <DynamicIcon name={icon} size={18} fallback="circle" />
+              </span>
+              <span className="num text-sm text-[#8C8A88] flex-1">{icon ?? 'sem ícone'}</span>
+              <span className="text-xs text-[#2F8BFF]">{showIconPicker ? 'Fechar' : 'Escolher'}</span>
+            </button>
+            {showIconPicker && (
+              <div className="rounded-md border border-[#26262A] bg-[#0F0F11] p-2 mt-1 space-y-2">
+                <ColorPicker value={color} onChange={setColor} />
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-8 text-[#8C8A88]">
+                      <Loader2 size={18} className="animate-spin" />
+                    </div>
+                  }
+                >
+                  <IconPicker
+                    value={icon}
+                    onChange={(n) => {
+                      setIcon(n)
+                      setShowIconPicker(false)
+                    }}
+                  />
+                </Suspense>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -679,9 +758,11 @@ export function ManagePage() {
     goalType: GoalType,
     goalTarget: number | null,
     goalUnit: string | null,
+    icon: string | null,
+    color: string | null,
   ) => {
     if (!selectedArea) return
-    const data = { title, description, estimatedMinutes, scheduleType, dayOfWeek, dayOfMonth, reminderTime, goalType, goalTarget, goalUnit }
+    const data = { title, description, estimatedMinutes, scheduleType, dayOfWeek, dayOfMonth, reminderTime, goalType, goalTarget, goalUnit, icon, color }
     if (taskModal.task) {
       updateTask.mutate(
         { areaId: selectedArea.id, taskId: taskModal.task.id, data },
@@ -836,13 +917,14 @@ export function ManagePage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                     style={{
                       backgroundColor: selectedArea.color + '22',
                       border: `2px solid ${selectedArea.color}`,
+                      color: selectedArea.color,
                     }}
                   >
-                    {selectedArea.icon}
+                    <DynamicIcon name={selectedArea.icon} size={15} fallback="folder" />
                   </div>
                   <span className="text-sm font-semibold text-[#F4F2EF]">
                     {selectedArea.name}

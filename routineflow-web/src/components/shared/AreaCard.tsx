@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DynamicIcon } from './DynamicIcon'
 import { TaskItem } from './TaskItem'
 import { SkipDayModal } from './SkipDayModal'
 import { skipDaysApi } from '@/services/api'
@@ -67,8 +68,8 @@ export function AreaCard({
         aria-expanded={expanded}
       >
         {/* Icon + name */}
-        <span className="text-lg shrink-0" aria-hidden>
-          {area.icon}
+        <span className="shrink-0" aria-hidden>
+          <DynamicIcon name={area.icon} color={area.color} size={20} fallback="folder" />
         </span>
         <span className="flex-1 text-[15px] font-medium text-fg tracking-[-0.006em]">{area.name}</span>
 

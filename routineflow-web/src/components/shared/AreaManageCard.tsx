@@ -1,5 +1,6 @@
 import { Pencil, Trash2, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DynamicIcon } from './DynamicIcon'
 import type { AreaResponse } from '@/types'
 
 interface Props {
@@ -21,10 +22,10 @@ export function AreaManageCard({ area, isSelected, onSelect, onEdit, onDelete }:
     >
       {/* Color dot + icon */}
       <div
-        className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-base"
-        style={{ backgroundColor: area.color + '22', border: `2px solid ${area.color}` }}
+        className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center"
+        style={{ backgroundColor: area.color + '22', border: `2px solid ${area.color}`, color: area.color }}
       >
-        <span>{area.icon}</span>
+        <DynamicIcon name={area.icon} size={16} fallback="folder" />
       </div>
 
       {/* Name */}
