@@ -61,10 +61,11 @@ public class SkipDayControllerTest {
 
     private String token;
     private Long areaId;
+    private UserJpaEntity userEntity;
 
     @BeforeEach
     void setUp() {
-        UserJpaEntity userEntity = userJpaRepository.save(
+        userEntity = userJpaRepository.save(
                 UserJpaEntity.builder()
                         .email("skip@example.com")
                         .passwordHash("hashed_password")
@@ -124,13 +125,11 @@ public class SkipDayControllerTest {
     void skipDay_failsIfOverLimit() throws Exception {
         LocalDate date = LocalDate.of(2026, 6, 15);
         // pre-insert 2 skips for the same month
-        UserJpaEntity user = userJpaRepository.findAll().get(0);
+        UserJpaEntity user = userEntity;
         AreaJpaEntity area = areaJpaRepository.findById(areaId).get();
         skipDayJpaRepository.saveAndFlush(SkipDayJpaEntity.builder().user(user).area(area).skipDate(date.minusDays(1)).reason("sick").build());
         skipDayJpaRepository.saveAndFlush(SkipDayJpaEntity.builder().user(user).area(area).skipDate(date.minusDays(2)).reason("sick").build());
 
-        System.out.println("PRE-INSERTED SKIPS: " + skipDayJpaRepository.findAll().size());
-        
         SkipDayRequest request = new SkipDayRequest(date, "trip");
 
         mockMvc.perform(post("/api/areas/{areaId}/skip-days", areaId)
@@ -143,7 +142,7 @@ public class SkipDayControllerTest {
     @Test
     void removeSkipDay_success() throws Exception {
         LocalDate date = LocalDate.now();
-        UserJpaEntity user = userJpaRepository.findAll().get(0);
+        UserJpaEntity user = userEntity;
         AreaJpaEntity area = areaJpaRepository.findById(areaId).get();
         skipDayJpaRepository.save(SkipDayJpaEntity.builder().user(user).area(area).skipDate(date).reason("sick").build());
 
