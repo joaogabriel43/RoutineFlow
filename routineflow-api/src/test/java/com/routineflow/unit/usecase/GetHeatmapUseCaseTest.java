@@ -5,6 +5,7 @@ import com.routineflow.infrastructure.persistence.entity.RoutineJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.UserJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.DailyLogJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepository;
+import com.routineflow.infrastructure.persistence.repository.SkipDayJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.TaskJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +32,7 @@ class GetHeatmapUseCaseTest {
     @Mock private RoutineJpaRepository routineJpaRepository;
     @Mock private TaskJpaRepository taskJpaRepository;
     @Mock private DailyLogJpaRepository dailyLogJpaRepository;
+    @Mock private SkipDayJpaRepository skipDayJpaRepository;
 
     private GetHeatmapUseCase useCase;
 
@@ -41,7 +43,9 @@ class GetHeatmapUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new GetHeatmapUseCase(routineJpaRepository, taskJpaRepository, dailyLogJpaRepository);
+        useCase = new GetHeatmapUseCase(
+                routineJpaRepository, taskJpaRepository, dailyLogJpaRepository, skipDayJpaRepository
+        );
     }
 
     @Test

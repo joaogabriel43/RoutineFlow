@@ -6,5 +6,6 @@ public record HeatmapDayResponse(
         LocalDate date,
         int completedTasks,
         int totalTasks,
-        double completionRate
+        double completionRate,
+        boolean hasSkipDay
 ) {}

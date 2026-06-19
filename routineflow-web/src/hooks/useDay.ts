@@ -10,10 +10,12 @@ export interface EnrichedTask extends TaskResponse {
   completed: boolean
   completedAt: string | null
   notes: string | null
+  goalProgress: number | null
 }
 
 export interface EnrichedArea extends Omit<AreaWithTasksResponse, 'tasks'> {
   tasks: EnrichedTask[]
+  isSkippedToday?: boolean
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -122,8 +124,10 @@ export function useDay(selectedDate: string) {
     if (!scheduleQuery.data) return []
     return scheduleQuery.data.areas.map((area) => {
       const sorted = [...area.tasks].sort((a, b) => a.orderIndex - b.orderIndex)
+      const progArea = progressQuery.data?.areas.find(a => a.areaId === area.id)
       return {
         ...area,
+        isSkippedToday: progArea?.isSkippedToday ?? false,
         tasks: sorted.map((task) => {
           const done = localChecked.get(task.id) ?? false
           const note = localNotes.get(task.id) ?? null
@@ -138,7 +142,7 @@ export function useDay(selectedDate: string) {
         }),
       }
     })
-  }, [scheduleQuery.data, localChecked, localNotes])
+  }, [scheduleQuery.data, progressQuery.data, localChecked, localNotes, localProgress])
 
   const overallRate = computeOverallRate(enrichedAreas)
   const isLoading = scheduleQuery.isLoading || progressQuery.isLoading
@@ -252,5 +256,6 @@ export function useDay(selectedDate: string) {
     updateNotes,
     incrementTaskProgress,
     resetTaskProgress,
+    refetchProgress: progressQuery.refetch,
   }
 }

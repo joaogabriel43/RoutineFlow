@@ -129,6 +129,21 @@ export interface ActiveRoutineResponse {
   areas: AreaWithTasksResponse[]
 }
 
+// ── Skip Days ──────────────────────────────────────────────────────────────────
+
+export interface SkipDayRequest {
+  date: string
+  reason?: string
+}
+
+export interface SkipDayResponse {
+  id: number
+  areaId: number
+  skipDate: string
+  reason: string | null
+  createdAt: string
+}
+
 // ── Check-in / Progress ──────────────────────────────────────────────────────
 
 export interface DailyLogResponse {
@@ -154,6 +169,7 @@ export interface AreaProgressResponse {
   completedTaskIds: number[]
   taskNotes?: Record<number, string>
   taskProgress?: Record<number, number>
+  isSkippedToday?: boolean
 }
 
 export interface DailyProgressResponse {
@@ -218,6 +234,7 @@ export interface HeatmapDayResponse {
   completedTasks: number
   totalTasks: number
   completionRate: number
+  hasSkipDay?: boolean
 }
 
 export interface HeatmapResponse {

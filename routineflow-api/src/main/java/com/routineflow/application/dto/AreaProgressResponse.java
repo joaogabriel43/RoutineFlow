@@ -14,5 +14,6 @@ public record AreaProgressResponse(
         double completionRate,
         List<Long> completedTaskIds,
         Map<Long, String> taskNotes,
-        Map<Long, BigDecimal> taskProgress
+        Map<Long, BigDecimal> taskProgress,
+        boolean isSkippedToday
 ) {}

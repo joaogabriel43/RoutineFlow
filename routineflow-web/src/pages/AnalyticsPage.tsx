@@ -62,6 +62,7 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
 
 function heatmapColor(day: FilledHeatmapDay): string {
   if (day.isFuture) return '#0F0F11'
+  if (day.hasSkipDay) return '#f59e0b' // amber-500
   if (day.totalTasks === 0) return '#1C1C1F'
   if (day.completionRate === 0) return '#1C1C1F'
   if (day.completionRate < 0.34) return 'rgba(47,139,255,0.25)'
@@ -89,6 +90,7 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
       new Date(day.date + 'T00:00:00'),
     )
     if (day.isFuture) return `${date}: futuro`
+    if (day.hasSkipDay) return `${date}: Dia Pulado`
     if (day.totalTasks === 0) return `${date}: sem tarefas`
     return `${date}: ${day.completedTasks}/${day.totalTasks} (${Math.round(day.completionRate * 100)}%)`
   }
@@ -343,7 +345,11 @@ export function AnalyticsPage() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-2 mt-2 justify-end">
+        <div className="flex items-center gap-2 mt-2 justify-end flex-wrap">
+          <div className="flex items-center gap-1 mr-4">
+            <div className="rounded-[2px]" style={{ width: 10, height: 10, backgroundColor: '#f59e0b' }} />
+            <span className="text-[10px] text-[#8C8A88]">Skip Day</span>
+          </div>
           <span className="text-[10px] text-[#8C8A88]">Menos</span>
           {['#1C1C1F', 'rgba(47,139,255,0.25)', 'rgba(47,139,255,0.55)', '#2F8BFF'].map((c, i) => (
             <div

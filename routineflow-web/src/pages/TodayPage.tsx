@@ -281,6 +281,7 @@ export function TodayPage() {
     updateNotes,
     incrementTaskProgress,
     resetTaskProgress,
+    refetchProgress,
     error,
   } = useDay(selectedDate)
 
@@ -324,6 +325,8 @@ export function TodayPage() {
               onUpdateNotes={updateNotes}
               onIncrementProgress={incrementTaskProgress}
               onResetProgress={resetTaskProgress}
+              selectedDate={selectedDate}
+              onRefetchProgress={refetchProgress}
             />
           ))}
         </div>

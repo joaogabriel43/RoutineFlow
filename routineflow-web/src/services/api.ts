@@ -24,6 +24,8 @@ import type {
   UpdateTaskRequest,
   TaskResponse,
   PushSubscriptionData,
+  SkipDayRequest,
+  SkipDayResponse,
 } from '@/types'
 
 // ── Axios instance ────────────────────────────────────────────────────────────
@@ -137,6 +139,19 @@ export const checkInApi = {
   // Alias kept for backward compat
   getTodayProgress: () =>
     api.get<DailyProgressResponse>('/checkins/today/progress').then((r) => r.data),
+}
+
+// ── Skip Days ─────────────────────────────────────────────────────────────────
+
+export const skipDaysApi = {
+  skipDay: (areaId: number, data: SkipDayRequest) =>
+    api.post<SkipDayResponse>(`/areas/${areaId}/skip-days`, data).then((r) => r.data),
+
+  removeSkipDay: (areaId: number, date: string) =>
+    api.delete(`/areas/${areaId}/skip-days/${date}`).then((r) => r.data),
+
+  listSkipDays: (areaId: number) =>
+    api.get<SkipDayResponse[]>(`/areas/${areaId}/skip-days`).then((r) => r.data),
 }
 
 // ── Analytics ─────────────────────────────────────────────────────────────────

@@ -7,6 +7,8 @@ import com.routineflow.infrastructure.persistence.entity.TaskJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.DailyLogJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.RoutineJpaRepository;
+import com.routineflow.infrastructure.persistence.repository.SkipDayJpaRepository;
+import com.routineflow.infrastructure.persistence.entity.SkipDayJpaEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,15 +25,18 @@ public class GetDailyProgressUseCase {
     private final RoutineJpaRepository routineJpaRepository;
     private final AreaJpaRepository areaJpaRepository;
     private final DailyLogJpaRepository dailyLogJpaRepository;
+    private final SkipDayJpaRepository skipDayJpaRepository;
 
     public GetDailyProgressUseCase(
             RoutineJpaRepository routineJpaRepository,
             AreaJpaRepository areaJpaRepository,
-            DailyLogJpaRepository dailyLogJpaRepository
+            DailyLogJpaRepository dailyLogJpaRepository,
+            SkipDayJpaRepository skipDayJpaRepository
     ) {
         this.routineJpaRepository = routineJpaRepository;
         this.areaJpaRepository = areaJpaRepository;
         this.dailyLogJpaRepository = dailyLogJpaRepository;
+        this.skipDayJpaRepository = skipDayJpaRepository;
     }
 
     @Transactional(readOnly = true)
@@ -61,6 +66,11 @@ public class GetDailyProgressUseCase {
                 .filter(l -> l.getGoalProgress() != null)
                 .collect(Collectors.toMap(l -> l.getTask().getId(), DailyLogJpaEntity::getGoalProgress));
 
+        List<SkipDayJpaEntity> skipDays = skipDayJpaRepository.findAllByUserIdAndSkipDate(userId, date);
+        Set<Long> skippedAreaIds = skipDays.stream()
+                .map(s -> s.getArea().getId())
+                .collect(Collectors.toSet());
+
         List<AreaProgressResponse> areaResponses = areas.stream()
                 .map(area -> {
                     List<TaskJpaEntity> dayTasks = area.getTasks().stream()
@@ -83,9 +93,11 @@ public class GetDailyProgressUseCase {
                             .filter(taskProgress::containsKey)
                             .collect(Collectors.toMap(id -> id, taskProgress::get));
 
+                    boolean isSkippedToday = skippedAreaIds.contains(area.getId());
+
                     return new AreaProgressResponse(
                             area.getId(), area.getName(), area.getColor(), area.getIcon(),
-                            total, completed, rate, completedIds, areaTaskNotes, areaTaskProgress
+                            total, completed, rate, completedIds, areaTaskNotes, areaTaskProgress, isSkippedToday
                     );
                 })
                 .filter(a -> a.totalTasks() > 0) // exclude areas with no applicable tasks
