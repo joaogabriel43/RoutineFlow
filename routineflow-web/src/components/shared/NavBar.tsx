@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, Calendar, CheckSquare, Home, Settings2, Upload } from 'lucide-react'
+import { BarChart2, Calendar, CalendarDays, CheckSquare, Home, Settings2, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -10,21 +10,23 @@ interface NavItem {
 
 // Desktop sidebar — all items including Importar
 const SIDEBAR_ITEMS: NavItem[] = [
-  { to: '/',          icon: Home,        label: 'Hoje'      },
-  { to: '/tasks',     icon: CheckSquare, label: 'Tarefas'   },
-  { to: '/semana',    icon: Calendar,    label: 'Semana'    },
-  { to: '/analytics', icon: BarChart2,   label: 'Analytics' },
-  { to: '/manage',    icon: Settings2,   label: 'Gerenciar' },
-  { to: '/import',    icon: Upload,      label: 'Importar'  },
+  { to: '/',           icon: Home,         label: 'Hoje'       },
+  { to: '/tasks',      icon: CheckSquare,  label: 'Tarefas'    },
+  { to: '/semana',     icon: Calendar,     label: 'Semana'     },
+  { to: '/calendario', icon: CalendarDays, label: 'Calendário' },
+  { to: '/analytics',  icon: BarChart2,    label: 'Analytics'  },
+  { to: '/manage',     icon: Settings2,    label: 'Gerenciar'  },
+  { to: '/import',     icon: Upload,       label: 'Importar'   },
 ]
 
-// Mobile bottom nav — 5 items, Importar excluded
+// Mobile bottom nav — Importar excluded (6 items fit at text-[10px])
 const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { to: '/',          icon: Home,        label: 'Hoje'      },
-  { to: '/tasks',     icon: CheckSquare, label: 'Tarefas'   },
-  { to: '/semana',    icon: Calendar,    label: 'Semana'    },
-  { to: '/analytics', icon: BarChart2,   label: 'Analytics' },
-  { to: '/manage',    icon: Settings2,   label: 'Gerenciar' },
+  { to: '/',           icon: Home,         label: 'Hoje'       },
+  { to: '/tasks',      icon: CheckSquare,  label: 'Tarefas'    },
+  { to: '/semana',     icon: Calendar,     label: 'Semana'     },
+  { to: '/calendario', icon: CalendarDays, label: 'Calendário' },
+  { to: '/analytics',  icon: BarChart2,    label: 'Analytics'  },
+  { to: '/manage',     icon: Settings2,    label: 'Gerenciar'  },
 ]
 
 // ── Desktop Sidebar ───────────────────────────────────────────────────────────

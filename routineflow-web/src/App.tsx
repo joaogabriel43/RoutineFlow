@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/shared/AppLayout'
 import { LoginPage } from '@/pages/LoginPage'
 import { TodayPage } from '@/pages/TodayPage'
 import { WeekPage } from '@/pages/WeekPage'
+import { CalendarPage } from '@/pages/CalendarPage'
 import { AnalyticsPage } from '@/pages/AnalyticsPage'
 import { AreaAnalyticsPage } from '@/pages/AreaAnalyticsPage'
 import { ImportPage } from '@/pages/ImportPage'
@@ -44,6 +45,7 @@ export default function App() {
           >
             <Route index element={<TodayPage />} />
             <Route path="semana" element={<WeekPage />} />
+            <Route path="calendario" element={<CalendarPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="analytics/area/:areaId" element={<AreaAnalyticsPage />} />
             <Route path="import" element={<ImportPage />} />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, Bell, X } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AreaCard } from '@/components/shared/AreaCard'
@@ -265,7 +266,13 @@ function PushBanner() {
 }
 
 export function TodayPage() {
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr)
+  // ?date=YYYY-MM-DD (e.g. from the CalendarPage) opens that day directly.
+  // Read once on mount; DateNavBar/state own the date afterwards.
+  const [searchParams] = useSearchParams()
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const param = searchParams.get('date')
+    return param && /^\d{4}-\d{2}-\d{2}$/.test(param) ? param : todayStr()
+  })
   const [activeTimerTaskId, setActiveTimerTaskId] = useState<number | null>(null)
 
   const handleToggleTimer = (taskId: number) => {
