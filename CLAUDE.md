@@ -1,5 +1,5 @@
 # CLAUDE.md — RoutineFlow
-> Versão: 3.1.0 | Criado: 2026-04-19 | Última atualização: 2026-05-06
+> Versão: 3.2.0 | Criado: 2026-04-19 | Última atualização: 2026-07-07
 
 ---
 
@@ -288,6 +288,12 @@ springdoc artifact: `springdoc-openapi-starter-webmvc-ui:2.6.0`.
 Frontend `useToday.ts` usa `completedIds.has(task.id)` para inicializar `localChecked` — substitui o workaround `idx < completedCount` que distribuía incorretamente pelas primeiras N tarefas por `orderIndex`.
 **Nunca** reverter para distribuição por orderIndex — viola a precisão do estado histórico.
 
+### 20. Largura por tipo de página + H1 padrão
+Listas verticais (Today, Tarefas, Semana, Calendário) usam wrapper local `max-w-2xl lg:max-w-3xl mx-auto`; telas densas (Manage, Analytics) usam o max-w global do AppLayout (`xl:max-w-6xl`). H1 padrão do app: `text-3xl font-light tracking-tight`. Badges numéricos só renderizam com valor > 0.
+
+### 21. CalendarPage — reusa o heatmap, zero backend novo
+`GET /analytics/heatmap?from&to` já aceita range arbitrário (≤365d) — o calendário mensal consome esse endpoint via `useCalendar(year, month)`. Lógica de grid em `lib/calendar.ts` (pura, testada em vitest; semanas começam segunda). CUIDADO: `Intl.DateTimeFormat` sem `timeZone:'UTC'` sobre datas construídas com `Date.UTC` desloca o mês em BRT — sempre casar a timezone do formatter com a da construção. Clique no dia navega para `/?date=YYYY-MM-DD` (TodayPage lê o param na montagem).
+
 ### 8. Formato do arquivo de importação (YAML)
 ```yaml
 routine:
@@ -386,6 +392,11 @@ routine:
 | Sprint 17 | Rate Limiting (Bucket4j 8.14, POST /auth/login, 10 req/min/IP, X-Forwarded-For), Timezone BRT (AppTimeZone.ZONE, 17 ocorrências LocalDate.now() + ZoneId.systemDefault() corrigidas em 8 arquivos), Swagger/OpenAPI (springdoc 2.6, Bearer JWT, @Tag em 7 controllers, @Operation em endpoints-chave) | ✅ Concluído |
 | Sprint 18 | GitHub Actions CI/CD — ci.yml (backend tests + Testcontainers + frontend build + tsc + OWASP scan), cd.yml (deployment summary), owasp-suppressions.xml, README badges | ✅ Concluído |
 | Sprint 19 | completedTaskIds em AreaProgressResponse — TDD (4 unit + 2 integration tests), AreaProgressResponse +completedTaskIds List<Long>, GetDailyProgressUseCase coleta IDs reais, useToday.ts substituído idx-based por completedIds.has() | ✅ Concluído |
+| Sprints 20–24 | Push notifications VAPID (V12–V13), check-in notes (V14), task timer, Numeric Goal Habits (V15), Skip Day / vacation mode (V16) — implementados via Antigravity, integrados e validados (235 testes) | ✅ Concluído |
+| Sprint 25 | Icon/color customizados — V17 (areas.icon VARCHAR(50), tasks +icon/color), AppearanceValidator hex, IconPicker lucide lazy + ColorPicker + DynamicIcon (fallback seguro p/ emoji legado), 245 testes | ✅ Concluído |
+| Sprint 26 | IconPicker categorizado + layout desktop (max-w-3xl lg:max-w-5xl xl:max-w-6xl no AppLayout) | ✅ Concluído |
+| Sprint 27 | Polimento UX — larguras por tipo de página (listas max-w-2xl lg:max-w-3xl), H1 padronizado text-3xl font-light, badge "0min" com guard >0, PushBanner hairline | ✅ Concluído |
+| Sprint 28 | CalendarPage — visão mensal navegável (reusa GET /analytics/heatmap?from&to), clique no dia abre TodayPage via ?date=, lib/calendar.ts pura + 6 testes vitest, E2E validado com dados reais | ✅ Concluído |
 
 ---
 
@@ -603,6 +614,7 @@ protected boolean shouldNotFilter(HttpServletRequest request) {
 | 2026-04-24 | 2.5.0 | Sprint 13 concluído — Single Tasks: V10 migration (single_tasks + índice parcial WHERE completed=FALSE), SingleTask domain record, SingleTaskJpaEntity (Long userId direto), SingleTaskJpaRepository (findPendingByUserId NULLS LAST, findArchivedByUserId), CreateSingleTaskRequest + SingleTaskResponse DTOs, SingleTaskUseCase (create/complete/uncomplete/delete/listPending/listArchived), SingleTaskController (POST /single-tasks, GET /single-tasks, /archived, /today, /complete, /uncomplete, DELETE), GlobalExceptionHandler IllegalStateException → 409, 10 unit tests + 11 integration tests (177 total), frontend: tipos SingleTaskResponse/CreateSingleTaskRequest, singleTaskApi, useSingleTasks (5 hooks com optimistic update), SingleTaskItem (circular checkbox, fade-out 280ms, isOverdue badge, delete X), CreateSingleTaskModal (Dialog shadcn), TodayPage seção "Para fazer" (só hoje), SingleTasksPage (Tabs Pendentes/Arquivadas, grupos Atrasadas/Hoje/Sem prazo/Futuras, desfazer), NavBar atualizado (CheckSquare, Importar removido do mobile) |
 | 2026-04-30 | 2.7.0 | Sprint 15 concluído — Import MERGE mode: ImportMode enum (REPLACE/MERGE), ImportRoutineResponse +5 campos (mode/areasCreated/areasMerged/tasksCreated/tasksSkipped), ImportRoutineUseCase refatorado (executeReplace/executeMerge privados, dedup key title+scheduleType+dayOfWeek+dayOfMonth), RoutineController ?mode param (defaultValue=REPLACE), fixture merge_routine.yaml, 10 unit tests ImportRoutineUseCaseTest + 4 integration tests RoutineControllerTest (209 total), frontend: ImportMode/ImportRoutineResponse em types, routineApi.importRoutine(mode), useImportRoutine toast detalhado por mode, ImportPage modal REPLACE/MERGE com ModeCard, HabitNowConverterPage tip sobre MERGE. ADR-007 + regras 16-18 |
 | 2026-05-03 | 3.0.0 | Sprint 18 concluído — GitHub Actions CI/CD: ci.yml (backend tests via Testcontainers + frontend build + tsc + OWASP scan), cd.yml (deployment summary com URLs), owasp-suppressions.xml, README badges CI + tests count |
+| 2026-07-07 | 3.2.0 | Sprints 20–28 consolidados — features Antigravity integradas (push, notes, timer, numeric goals, skip day), Sprint 25 icons/colors (V17, 245 testes), Sprint 26 picker categorizado + desktop, Sprint 27 polimento UX, Sprint 28 CalendarPage (visão mensal, ?date= na TodayPage, 12 testes vitest, E2E real). Redesign Graphite+Geist aplicado. Padrões 20–21. |
 | 2026-05-06 | 3.1.0 | Sprint 19 concluído — completedTaskIds: AreaProgressResponse +completedTaskIds List<Long>, GetDailyProgressUseCase passa IDs reais, TDD (4 unit + 2 integration tests), useToday.ts corrigido (completedIds.has vs idx-based), ADR-008, padrão 19. 113 unit tests ✅ tsc ✅ build ✅ |
 | 2026-05-01 | 2.9.0 | Sprint 17 concluído — Rate Limiting (Bucket4j 8.14 / com.bucket4j:bucket4j_jdk17-core, RateLimitFilter @Order(1), ConcurrentHashMap, X-Forwarded-For, 5 unit tests), Timezone BRT (AppTimeZone.ZONE, 17 LocalDate.now() + 3 ZoneId.systemDefault() corrigidos em 8 arquivos), Swagger/OpenAPI (springdoc 2.6, OpenApiConfig Bearer JWT, SecurityConfig +3 rotas abertas, @Tag em 7 controllers, @Operation em 10 endpoints). 209 testes ✅ |
 | 2026-05-01 | 2.8.0 | Sprint 16 concluído — Filter Lists: FilterBar (search + Escape + X button + children slot), FilterPills<T extends string> (Todos pill + aria-pressed + deselect on re-click), ManagePage áreas (search debounce 200ms + ResetFrequency pills + empty SearchX state) e tarefas (search + ScheduleType pills + day-of-week pills condicionais + reset on area change), SingleTasksPage (Tabs Pendentes/Arquivadas + deadline FilterPills OVERDUE/TODAY/FUTURE/NO_DATE + CreateSingleTaskModal date picker), useSingleTasks (5 hooks: listPending/listArchived/create/complete/uncomplete/delete, optimistic update em complete e delete), SingleTaskItem (circular checkbox + strikethrough archived + isOverdue badge + fade-out 280ms + hover delete), NavBar adicionado Tarefas/CheckSquare + MOBILE_NAV_ITEMS sem Importar, rota /tasks em App.tsx. Build ✅ tsc ✅ 170 testes ✅ |
