@@ -85,7 +85,7 @@ function AreaRow({
 
 function WeekSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-2xl lg:max-w-3xl mx-auto">
       {/* Header skeleton */}
       <div className="space-y-2 mb-6">
         <Skeleton className="h-8 w-48 bg-[#26262A]" />
@@ -153,7 +153,9 @@ export function WeekPage() {
   if (areaRows.length === 0) return <EmptyState />
 
   return (
-    <div>
+    /* The week grid has fixed-width day cells (~500px of real content) — a narrower
+       column avoids dead space on wide screens (same rationale as TodayPage). */
+    <div className="max-w-2xl lg:max-w-3xl mx-auto">
       {/* Header */}
       <header className="mb-6">
         <h1 className="text-3xl font-light text-[#F4F2EF] tracking-tight">Semana</h1>

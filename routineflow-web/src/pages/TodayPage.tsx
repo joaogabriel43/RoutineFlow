@@ -239,7 +239,7 @@ function PushBanner() {
   }
 
   return (
-    <div className="mb-4 rounded-xl bg-[#1C1C1F] border border-[#1C1C1F] px-4 py-3 flex items-center gap-3">
+    <div className="mb-4 rounded-xl bg-[#1C1C1F] border border-[#26262A] px-4 py-3 flex items-center gap-3">
       <Bell size={18} className="text-[#2F8BFF] shrink-0" />
       <p className="text-sm text-[#B8B6B3] flex-1">
         Ativar lembretes para receber notificações nos horários configurados
