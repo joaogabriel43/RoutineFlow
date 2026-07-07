@@ -39,10 +39,11 @@ export function TaskManageRow({ task, onEdit, onDelete }: Props) {
       {/* Title */}
       <span className="flex-1 text-sm text-[#F4F2EF] truncate">{task.title}</span>
 
-      {/* Duration */}
-      {task.estimatedMinutes != null && (
+      {/* Duration — only when meaningful (> 0), matching TaskItem's rule.
+          Avoids the noisy "0min" badge on tasks without an estimate. */}
+      {task.estimatedMinutes != null && task.estimatedMinutes > 0 && (
         <span className="text-[11px] text-[#8C8A88] shrink-0">
-          {task.estimatedMinutes}min
+          <span className="num">{task.estimatedMinutes}</span>min
         </span>
       )}
 

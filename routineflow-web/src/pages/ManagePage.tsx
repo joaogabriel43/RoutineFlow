@@ -813,8 +813,9 @@ export function ManagePage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-[#F4F2EF]">Gerenciar Rotina</h1>
-        <p className="text-sm text-[#8C8A88] mt-0.5">
+        {/* H1 matches the page-title pattern used across the app (text-3xl font-light) */}
+        <h1 className="text-3xl font-light text-[#F4F2EF] tracking-tight">Gerenciar Rotina</h1>
+        <p className="text-sm text-[#8C8A88] mt-1">
           Adicione, edite ou remova áreas e tarefas da sua rotina.
         </p>
       </div>

@@ -216,7 +216,8 @@ export function SingleTasksPage() {
   }
 
   return (
-    <div>
+    /* Vertical list page — narrower column than the global max-w (see TodayPage). */
+    <div className="max-w-2xl lg:max-w-3xl mx-auto">
       {/* Page header */}
       <header className="flex items-center justify-between mb-6">
         <div>
@@ -241,12 +242,8 @@ export function SingleTasksPage() {
             value="pending"
             className="text-xs data-[state=active]:bg-[#26262A] data-[state=active]:text-[#F4F2EF] text-[#8C8A88]"
           >
+            {/* Count intentionally omitted — the header subtitle already shows "X pendentes" */}
             Pendentes
-            {(pending?.length ?? 0) > 0 && (
-              <span className="ml-1.5 text-[10px] bg-[#2F8BFF] text-white rounded-full px-1.5 py-0">
-                {pending?.length}
-              </span>
-            )}
           </TabsTrigger>
           <TabsTrigger
             value="archived"

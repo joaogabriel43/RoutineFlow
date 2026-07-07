@@ -205,7 +205,7 @@ function AreaAnalyticsSkeleton() {
         <Skeleton className="h-8 w-8 rounded-full bg-[#26262A]" />
         <Skeleton className="h-6 w-48 bg-[#26262A]" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="rounded-2xl bg-[#141416] p-5 space-y-3">
             <Skeleton className="h-3 w-20 bg-[#26262A]" />
@@ -246,7 +246,7 @@ function AreaAnalyticsContent({ data }: { data: AreaAnalyticsResponse }) {
   return (
     <div className="space-y-8">
       {/* Summary cards — 2×2 grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         <SummaryCard
           label="Total feito"
           value={data.totalCheckIns}
@@ -344,7 +344,7 @@ export function AreaAnalyticsPage() {
             >
               <DynamicIcon name={data.icon} size={18} fallback="folder" />
             </div>
-            <h1 className="text-2xl font-semibold text-[#F4F2EF]">{data.areaName}</h1>
+            <h1 className="text-3xl font-light text-[#F4F2EF] tracking-tight">{data.areaName}</h1>
           </div>
         ) : null}
       </header>

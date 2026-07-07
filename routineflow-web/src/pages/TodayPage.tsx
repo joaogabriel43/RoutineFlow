@@ -89,7 +89,7 @@ function DayHeader({
 
 function TodaySkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-2xl lg:max-w-3xl mx-auto">
       {/* Date nav skeleton */}
       <div className="flex gap-1.5 mb-5">
         {Array.from({ length: 7 }).map((_, i) => (
@@ -239,7 +239,7 @@ function PushBanner() {
   }
 
   return (
-    <div className="mb-4 rounded-xl bg-[#1C1C1F] border border-[#1C1C1F] px-4 py-3 flex items-center gap-3">
+    <div className="mb-4 rounded-xl bg-[#1C1C1F] border border-[#26262A] px-4 py-3 flex items-center gap-3">
       <Bell size={18} className="text-[#2F8BFF] shrink-0" />
       <p className="text-sm text-[#B8B6B3] flex-1">
         Ativar lembretes para receber notificações nos horários configurados
@@ -296,7 +296,11 @@ export function TodayPage() {
   const totalTasks = allTasks.length
 
   return (
-    <div>
+    /* TodayPage is a vertical list of cards, not a dense grid — it does not need
+       the wide global max-w (xl:max-w-6xl) applied in AppLayout for Manage/Analytics/
+       Semana. A narrower column keeps area cards compact instead of stretching
+       sparse content (e.g. a single-task area) across ~1100px. */
+    <div className="max-w-2xl lg:max-w-3xl mx-auto">
       <DateNavBar selectedDate={selectedDate} onSelect={setSelectedDate} />
 
       {/* Push notification permission banner — only on today */}
