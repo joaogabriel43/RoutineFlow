@@ -73,6 +73,22 @@ jobs:
           VITE_API_URL: https://routineflow-production.up.railway.app/api
         run: npm run build
 
+      - name: Install Playwright Browsers
+        working-directory: routineflow-web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: routineflow-web
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: routineflow-web/playwright-report/
+          retention-days: 30
+
   # ── Security Scan ─────────────────────────────────────────────────────────────
   security-scan:
     name: Security Scan (OWASP)

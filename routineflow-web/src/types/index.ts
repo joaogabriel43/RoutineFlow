@@ -35,6 +35,32 @@ export interface RegisterRequest {
   password: string
 }
 
+export interface ProfileResponse {
+  name: string
+  email: string
+}
+
+export interface UpdateProfileRequest {
+  name: string
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
+export interface PreferencesResponse {
+  theme: string
+  soundEnabled: boolean
+  firstDayOfWeek: string
+}
+
+export interface UpdatePreferencesRequest {
+  theme: string
+  soundEnabled: boolean
+  firstDayOfWeek: string
+}
+
 // ── Routine / Schedule ───────────────────────────────────────────────────────
 
 export type ScheduleType = 'DAY_OF_WEEK' | 'DAY_OF_MONTH'
