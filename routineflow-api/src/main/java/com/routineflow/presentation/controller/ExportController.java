@@ -1,7 +1,9 @@
 package com.routineflow.presentation.controller;
 
 import com.routineflow.application.dto.CheckInExportRow;
+import com.routineflow.application.dto.BackupData;
 import com.routineflow.application.usecase.ExportUseCase;
+import com.routineflow.application.usecase.ExportBackupUseCase;
 import com.routineflow.infrastructure.config.AppTimeZone;
 import com.routineflow.infrastructure.security.AuthenticatedUserResolver;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,10 +45,14 @@ public class ExportController {
     );
 
     private final ExportUseCase exportUseCase;
+    private final ExportBackupUseCase exportBackupUseCase;
     private final AuthenticatedUserResolver userResolver;
 
-    public ExportController(ExportUseCase exportUseCase, AuthenticatedUserResolver userResolver) {
+    public ExportController(ExportUseCase exportUseCase, 
+                            ExportBackupUseCase exportBackupUseCase, 
+                            AuthenticatedUserResolver userResolver) {
         this.exportUseCase = exportUseCase;
+        this.exportBackupUseCase = exportBackupUseCase;
         this.userResolver = userResolver;
     }
 
@@ -83,6 +89,17 @@ public class ExportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .header(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
                 .body(body);
+    }
+
+    @Operation(summary = "Export full account backup as JSON")
+    @GetMapping(value = "/backup", produces = "application/json")
+    public ResponseEntity<BackupData> exportBackup() {
+        BackupData backup = exportBackupUseCase.getFullBackup();
+        String filename = "routineflow-backup-" + LocalDate.now(AppTimeZone.ZONE).format(DateTimeFormatter.ISO_LOCAL_DATE) + ".json";
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(backup);
     }
 
     private String buildCsvLine(CheckInExportRow row) {

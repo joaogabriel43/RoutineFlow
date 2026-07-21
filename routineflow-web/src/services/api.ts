@@ -3,6 +3,11 @@ import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  ProfileResponse,
+  UpdateProfileRequest,
+  ChangePasswordRequest,
+  PreferencesResponse,
+  UpdatePreferencesRequest,
   SingleTaskResponse,
   CreateSingleTaskRequest,
   ImportMode,
@@ -68,6 +73,34 @@ export const authApi = {
 
   login: (data: LoginRequest) =>
     api.post<AuthResponse>('/auth/login', data).then((r) => r.data),
+
+  getProfile: () =>
+    api.get<ProfileResponse>('/auth/profile').then((r) => r.data),
+
+  updateProfile: (data: UpdateProfileRequest) =>
+    api.put<ProfileResponse>('/auth/profile', data).then((r) => r.data),
+
+  changePassword: (data: ChangePasswordRequest) =>
+    api.put<void>('/auth/password', data).then(() => void 0),
+
+  revokeSessions: () =>
+    api.post<void>('/auth/revoke-sessions').then(() => void 0),
+
+  logout: () => {
+    localStorage.removeItem('rf_token')
+    localStorage.removeItem('rf_user')
+    window.location.href = '/login'
+  },
+}
+
+// ── Preferences ───────────────────────────────────────────────────────────────
+
+export const preferencesApi = {
+  getPreferences: () =>
+    api.get<PreferencesResponse>('/preferences').then((r) => r.data),
+
+  updatePreferences: (data: UpdatePreferencesRequest) =>
+    api.put<PreferencesResponse>('/preferences', data).then((r) => r.data),
 }
 
 // ── Routine ───────────────────────────────────────────────────────────────────
@@ -194,6 +227,21 @@ export const exportApi = {
     link.href = url
     const date = getLocalISODate()
     link.setAttribute('download', `routineflow-export-${date}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  },
+  exportBackup: async (): Promise<void> => {
+    const response = await api.get('/export/backup', {
+      responseType: 'blob',
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]))
+    const link = document.createElement('a')
+    link.href = url
+    const date = getLocalISODate()
+    link.setAttribute('download', `routineflow-backup-${date}.json`)
     document.body.appendChild(link)
     link.click()
     link.remove()

@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN tokens_revoked_before TIMESTAMP WITH TIME ZONE;
