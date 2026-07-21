@@ -12,11 +12,30 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RoutineFlow">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="preload" href="/icons/icon-192.png" as="image">
+    <link rel="preload" href="/icons/icon-512.png" as="image">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="description" content="Gerencie sua rotina pessoal com inteligência">
+    <style>
+      /* Splash Screen minimal CSS */
+      body { margin: 0; background-color: #08080A; color: #F4F2EF; font-family: system-ui, -apple-system, sans-serif; }
+      .splash-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; }
+      .splash-logo { font-size: 24px; font-weight: 600; letter-spacing: -0.025em; margin-bottom: 24px; }
+      .splash-loader {
+        width: 24px; height: 24px; border: 2px solid #26262A; border-bottom-color: #2F8BFF;
+        border-radius: 50%; display: inline-block; box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+      }
+      @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="splash-container">
+        <div class="splash-logo">RoutineFlow</div>
+        <div class="splash-loader"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
