@@ -13,6 +13,16 @@ export const DAYS_OF_WEEK = [
   'SUNDAY',
 ] as const
 
+export const DAYS_OF_WEEK_SUNDAY = [
+  'SUNDAY',
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+] as const
+
 export type DayKey = (typeof DAYS_OF_WEEK)[number]
 
 export const DAY_LABELS_PT: Record<DayKey, string> = {
@@ -45,7 +55,8 @@ export interface WeekAreaRow {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useWeek() {
+export function useWeek(firstDayOfWeek: string = 'MONDAY') {
+  const daysOfWeek = firstDayOfWeek === 'SUNDAY' ? DAYS_OF_WEEK_SUNDAY : DAYS_OF_WEEK
   // Separated from dayQueries so TypeScript infers the correct return type
   // (mixing heterogeneous queries in a single useQueries call produces a union type
   //  that prevents property access on either branch)
@@ -56,7 +67,7 @@ export function useWeek() {
   })
 
   const dayQueries = useQueries({
-    queries: DAYS_OF_WEEK.map((day) => ({
+    queries: daysOfWeek.map((day) => ({
       queryKey: ['day-schedule', day] as const,
       queryFn: () => routineApi.getDay(day),
       staleTime: 300_000,
@@ -75,8 +86,8 @@ export function useWeek() {
     for (const area of weeklyData.areas) {
       const days = {} as Record<DayKey, WeekCell>
 
-      for (let i = 0; i < DAYS_OF_WEEK.length; i++) {
-        const day = DAYS_OF_WEEK[i]
+      for (let i = 0; i < daysOfWeek.length; i++) {
+        const day = daysOfWeek[i]
         const areaOnDay = daySchedules[i].areas.find((a) => a.id === area.areaId)
         days[day] = {
           scheduled: !!areaOnDay,
@@ -110,6 +121,7 @@ export function useWeek() {
 // ── Utils ─────────────────────────────────────────────────────────────────────
 
 /** Returns the DAYS_OF_WEEK index (0 = Mon, 6 = Sun) for today. */
-export function getTodayDayIndex(): number {
-  return (new Date().getDay() + 6) % 7
+export function getTodayDayIndex(firstDayOfWeek: string = 'MONDAY'): number {
+  const today = new Date().getDay()
+  return firstDayOfWeek === 'SUNDAY' ? today : (today + 6) % 7
 }

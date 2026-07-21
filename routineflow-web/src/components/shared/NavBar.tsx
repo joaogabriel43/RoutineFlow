@@ -1,6 +1,8 @@
-import { NavLink } from 'react-router-dom'
-import { BarChart2, Calendar, CalendarDays, CheckSquare, Home, Settings2, Upload } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { BarChart2, Calendar, CalendarDays, CheckSquare, Home, LogOut, Settings2, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { authApi } from '@/services/api'
+import { SpotlightSearch } from '@/components/shared/SpotlightSearch'
 
 interface NavItem {
   to: string
@@ -8,7 +10,7 @@ interface NavItem {
   label: string
 }
 
-// Desktop sidebar — all items including Importar
+// Desktop sidebar — all items including Importar + Settings
 const SIDEBAR_ITEMS: NavItem[] = [
   { to: '/',           icon: Home,         label: 'Hoje'       },
   { to: '/tasks',      icon: CheckSquare,  label: 'Tarefas'    },
@@ -19,7 +21,7 @@ const SIDEBAR_ITEMS: NavItem[] = [
   { to: '/import',     icon: Upload,       label: 'Importar'   },
 ]
 
-// Mobile bottom nav — Importar excluded (6 items fit at text-[10px])
+// Mobile bottom nav — Importar excluded, Settings added
 const BOTTOM_NAV_ITEMS: NavItem[] = [
   { to: '/',           icon: Home,         label: 'Hoje'       },
   { to: '/tasks',      icon: CheckSquare,  label: 'Tarefas'    },
@@ -31,9 +33,22 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
 
 // ── Desktop Sidebar ───────────────────────────────────────────────────────────
 
+function getUserInfo(): { name: string; email: string } | null {
+  const raw = localStorage.getItem('rf_user')
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as { name: string; email: string }
+  } catch {
+    return null
+  }
+}
+
 export function SidebarNav() {
+  const navigate = useNavigate()
+  const user = getUserInfo()
+
   return (
-    <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-[#26262A] h-full px-3 py-6 gap-1">
+    <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-[#26262A] h-full px-3 py-6">
       {/* Logo */}
       <div className="px-3 mb-6">
         <span className="text-[15px] font-semibold tracking-tight text-[#F4F2EF]">
@@ -41,11 +56,37 @@ export function SidebarNav() {
         </span>
       </div>
 
-      {SIDEBAR_ITEMS.map(({ to, icon: Icon, label }) => (
+      <div className="px-3">
+        <SpotlightSearch />
+      </div>
+
+      {/* Nav items */}
+      <nav className="flex flex-col gap-1 flex-1">
+        {SIDEBAR_ITEMS.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === '/'}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                isActive
+                  ? 'bg-[#26262A] text-[#F4F2EF] font-medium'
+                  : 'text-[#8C8A88] hover:text-[#F4F2EF] hover:bg-[#141416]',
+              )
+            }
+          >
+            <Icon size={16} />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* User footer */}
+      <div className="border-t border-[#26262A] pt-3 mt-3 space-y-1">
+        {/* Settings link */}
         <NavLink
-          key={to}
-          to={to}
-          end={to === '/'}
+          to="/settings"
           className={({ isActive }) =>
             cn(
               'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
@@ -55,10 +96,34 @@ export function SidebarNav() {
             )
           }
         >
-          <Icon size={16} />
-          {label}
+          <Settings2 size={16} />
+          Configurações
         </NavLink>
-      ))}
+
+        {/* User info + logout */}
+        {user && (
+          <div className="flex items-center gap-2 px-3 py-2">
+            <div className="w-7 h-7 rounded-full bg-brand/20 text-brand flex items-center justify-center text-xs font-semibold shrink-0">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-[#F4F2EF] font-medium truncate">{user.name}</p>
+              <p className="text-[10px] text-[#8C8A88] truncate">{user.email}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                authApi.logout()
+                navigate('/login')
+              }}
+              title="Sair"
+              className="shrink-0 p-1.5 rounded-md text-[#8C8A88] hover:text-danger hover:bg-danger/10 transition-colors"
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
+        )}
+      </div>
     </aside>
   )
 }

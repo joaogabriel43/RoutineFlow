@@ -10,7 +10,10 @@ import { CreateSingleTaskModal } from '@/components/shared/CreateSingleTaskModal
 import { useDay } from '@/hooks/useDay'
 import { useSingleTasksToday, useCompleteSingleTask, useDeleteSingleTask } from '@/hooks/useSingleTasks'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { formatPercent, getLocalISODate } from '@/lib/utils'
+import { useConfetti } from '@/hooks/useConfetti'
+import { DashboardCard } from '@/components/shared/DashboardCard'
+import { getLocalISODate } from '@/lib/utils'
+import { useEffect, useRef } from 'react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -50,15 +53,9 @@ function dateLabel(dateStr: string): string {
 
 function DayHeader({
   dateStr,
-  overallRate,
-  totalTasks,
-  doneTasks,
   isFuture,
 }: {
   dateStr: string
-  overallRate: number
-  totalTasks: number
-  doneTasks: number
   isFuture: boolean
 }) {
   const label = dateLabel(dateStr)
@@ -66,21 +63,10 @@ function DayHeader({
   return (
     <header className="mb-4">
       <h1 className="text-3xl font-light text-[#F4F2EF] tracking-tight">{label}</h1>
-
-      {isFuture ? (
-        <p className="text-sm text-[#8C8A88] mt-1">Visualização apenas — sem check-ins para dias futuros</p>
-      ) : (
-        <>
-          <p className="text-sm text-[#8C8A88] mt-1">
-            <span className="num">{doneTasks}</span> de <span className="num">{totalTasks}</span> tarefas &bull; <span className="num">{formatPercent(overallRate)}</span>
-          </p>
-          <div className="mt-3 h-[3px] rounded-full bg-[#26262A] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-[#2F8BFF] transition-all duration-700 ease-out"
-              style={{ width: `${Math.round(overallRate * 100)}%` }}
-            />
-          </div>
-        </>
+      {isFuture && (
+        <p className="text-sm text-[#8C8A88] mt-1">
+          Visualização apenas — sem check-ins para dias futuros
+        </p>
       )}
     </header>
   )
@@ -292,6 +278,16 @@ export function TodayPage() {
     error,
   } = useDay(selectedDate)
 
+  const { triggerConfetti } = useConfetti()
+  const prevRateRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (overallRate === 1.0 && prevRateRef.current < 1.0 && !isLoading && !isFuture) {
+      triggerConfetti()
+    }
+    prevRateRef.current = overallRate
+  }, [overallRate, isLoading, isFuture, triggerConfetti])
+
   if (isLoading) return <TodaySkeleton />
 
   // 404 = no active routine at all
@@ -315,11 +311,19 @@ export function TodayPage() {
 
       <DayHeader
         dateStr={selectedDate}
-        overallRate={overallRate}
-        totalTasks={totalTasks}
-        doneTasks={doneTasks}
         isFuture={isFuture}
       />
+
+      {/* Dashboard Summary Card — only show if not empty and not future */}
+      {!isFuture && enrichedAreas.length > 0 && (
+        <DashboardCard 
+          overallRate={overallRate}
+          totalTasks={totalTasks}
+          doneTasks={doneTasks}
+          // Note: To show bestStreak we would need to pass it from API. 
+          // Defaulting to 0 for now as it would require backend AreaAnalytics changes to aggregate overall streak.
+        />
+      )}
 
       {enrichedAreas.length === 0 ? (
         <EmptyDayState dateStr={selectedDate} />

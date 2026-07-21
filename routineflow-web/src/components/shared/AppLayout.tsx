@@ -2,9 +2,11 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { SidebarNav, BottomNav } from './NavBar'
 import { Toaster } from '@/components/ui/sonner'
 import { InstallPrompt } from './InstallPrompt'
+import { usePreferences } from '@/hooks/usePreferences'
 
 export function AppLayout() {
   const { pathname } = useLocation()
+  usePreferences() // Fetch and apply preferences on app mount
 
   return (
     <div className="flex h-full bg-[#08080A]">

@@ -42,3 +42,13 @@ export const AREA_COLORS: Record<string, string> = {
   '#F97316': '#F97316',
   '#06B6D4': '#06B6D4',
 }
+
+/**
+ * Triggers a short vibration on supported mobile devices.
+ * Used for micro-interactions like checking off a task.
+ */
+export function hapticFeedback() {
+  if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+    window.navigator.vibrate(50) // 50ms vibration
+  }
+}

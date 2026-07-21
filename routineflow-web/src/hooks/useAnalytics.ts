@@ -16,16 +16,21 @@ export interface FilledHeatmapDay extends HeatmapDayResponse {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Builds the heatmap date range: last Monday 12 weeks ago → today */
-function buildHeatmapRange(): { from: string; to: string } {
+/** Builds the heatmap date range: last Monday (or Sunday) 12 weeks ago → today */
+function buildHeatmapRange(firstDayOfWeek: string): { from: string; to: string } {
   const today = new Date()
-  const todayIndex = (today.getDay() + 6) % 7 // Mon=0, Sun=6
+  const isSundayFirst = firstDayOfWeek === 'SUNDAY'
+  
+  // Calculate index relative to the start of the week
+  // If Sunday first: Sun=0, Mon=1, ..., Sat=6
+  // If Monday first: Mon=0, Tue=1, ..., Sun=6
+  const todayIndex = isSundayFirst ? today.getDay() : (today.getDay() + 6) % 7
 
-  const thisMonday = new Date(today)
-  thisMonday.setDate(today.getDate() - todayIndex)
+  const thisStartOfWeek = new Date(today)
+  thisStartOfWeek.setDate(today.getDate() - todayIndex)
 
-  const from = new Date(thisMonday)
-  from.setDate(thisMonday.getDate() - 12 * 7)
+  const from = new Date(thisStartOfWeek)
+  from.setDate(thisStartOfWeek.getDate() - 12 * 7)
 
   return {
     from: getLocalISODate(from),
@@ -72,8 +77,8 @@ function fillHeatmapDays(
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useAnalytics() {
-  const { from, to } = buildHeatmapRange()
+export function useAnalytics(firstDayOfWeek: string = 'MONDAY') {
+  const { from, to } = buildHeatmapRange(firstDayOfWeek)
 
   const [streaksQuery, heatmapQuery, historyQuery] = useQueries({
     queries: [

@@ -1,6 +1,7 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { useWeek, DAYS_OF_WEEK, DAY_LABELS_PT, getTodayDayIndex } from '@/hooks/useWeek'
+import { useWeek, DAYS_OF_WEEK, DAYS_OF_WEEK_SUNDAY, DAY_LABELS_PT, getTodayDayIndex } from '@/hooks/useWeek'
 import type { WeekAreaRow, DayKey } from '@/hooks/useWeek'
+import { usePreferences } from '@/hooks/usePreferences'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
 import { DynamicIcon } from '@/components/shared/DynamicIcon'
 import { formatPercent } from '@/lib/utils'
@@ -49,10 +50,12 @@ function AreaRow({
   row,
   todayIndex,
   isLast,
+  daysOfWeek,
 }: {
   row: WeekAreaRow
   todayIndex: number
   isLast: boolean
+  daysOfWeek: readonly DayKey[]
 }) {
   return (
     <div className={`flex items-stretch ${!isLast ? 'border-b border-[#26262A]' : ''}`}>
@@ -68,7 +71,7 @@ function AreaRow({
       </div>
 
       {/* Day cells */}
-      {DAYS_OF_WEEK.map((day, idx) => (
+      {daysOfWeek.map((day, idx) => (
         <div
           key={day}
           className="w-12 shrink-0 flex items-center justify-center"
@@ -142,8 +145,12 @@ function EmptyState() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function WeekPage() {
-  const { areaRows, weekStart, weekEnd, overallRate, isLoading, error } = useWeek()
-  const todayIndex = getTodayDayIndex()
+  const { preferences } = usePreferences()
+  const firstDayOfWeek = preferences?.firstDayOfWeek ?? 'MONDAY'
+  const daysOfWeek = firstDayOfWeek === 'SUNDAY' ? DAYS_OF_WEEK_SUNDAY : DAYS_OF_WEEK
+
+  const { areaRows, weekStart, weekEnd, overallRate, isLoading, error } = useWeek(firstDayOfWeek)
+  const todayIndex = getTodayDayIndex(firstDayOfWeek)
 
   if (isLoading) return <WeekSkeleton />
 
@@ -178,7 +185,7 @@ export function WeekPage() {
             <div className="w-40 shrink-0 px-4 py-3">
               <span className="text-xs text-[#8C8A88] font-medium">Área</span>
             </div>
-            {DAYS_OF_WEEK.map((day, idx) => (
+            {daysOfWeek.map((day, idx) => (
               <div
                 key={day}
                 className="w-12 shrink-0 flex items-center justify-center py-3"
@@ -201,6 +208,7 @@ export function WeekPage() {
               row={row}
               todayIndex={todayIndex}
               isLast={idx === areaRows.length - 1}
+              daysOfWeek={daysOfWeek}
             />
           ))}
         </div>
