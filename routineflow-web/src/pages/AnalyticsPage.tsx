@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DynamicIcon } from '@/components/shared/DynamicIcon'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { usePreferences } from '@/hooks/usePreferences'
 import { EmptyRoutineState } from '@/components/shared/EmptyRoutineState'
 import { exportApi } from '@/services/api'
 import type { StreakResponse } from '@/types'
@@ -40,6 +41,7 @@ function StreakCard({ streak }: { streak: StreakResponse }) {
                  cursor-pointer transition-all duration-200 hover:bg-surface-3 focus-visible:outline-none
                  focus-visible:ring-2 focus-visible:ring-[#2F8BFF]"
       style={{ borderLeftColor: streak.color }}
+      aria-label={`Ver detalhes da área ${streak.areaName}`}
     >
       <span className="shrink-0"><DynamicIcon name={streak.icon} color={streak.color} size={22} fallback="folder" /></span>
       <div className="flex-1 min-w-0">
@@ -78,14 +80,20 @@ function heatmapColor(day: FilledHeatmapDay): string {
 const CELL_PX = 13
 const GAP_PX = 3
 
-const DAY_LABEL_CONFIG: { label: string; row: number }[] = [
-  { label: 'Seg', row: 0 },
-  { label: 'Qua', row: 2 },
-  { label: 'Sex', row: 4 },
-  { label: 'Dom', row: 6 },
-]
-
-function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
+function HeatmapGrid({ days, firstDayOfWeek }: { days: FilledHeatmapDay[], firstDayOfWeek: string }) {
+  const isSundayFirst = firstDayOfWeek === 'SUNDAY'
+  
+  const DAY_LABEL_CONFIG = isSundayFirst ? [
+    { label: 'Dom', row: 0 },
+    { label: 'Ter', row: 2 },
+    { label: 'Qui', row: 4 },
+    { label: 'Sáb', row: 6 },
+  ] : [
+    { label: 'Seg', row: 0 },
+    { label: 'Qua', row: 2 },
+    { label: 'Sex', row: 4 },
+    { label: 'Dom', row: 6 },
+  ]
   const formatTip = (day: FilledHeatmapDay) => {
     const date = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(
       new Date(day.date + 'T00:00:00'),
@@ -112,7 +120,15 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
   const gap = `${GAP_PX}px`
 
   return (
-    <div className="flex items-start gap-2 w-full">
+    <div 
+      className="flex items-start gap-2 w-full"
+      role="img" 
+      aria-label="Mapa de calor de atividades"
+    >
+      <span className="sr-only">
+        Mapa de calor visual representando o nível de conclusão das tarefas diárias nas últimas semanas. 
+        Dias mais escuros indicam menor atividade, enquanto dias azuis representam maior taxa de conclusão.
+      </span>
       {/* Day labels — stacked vertically, aligned to grid rows */}
       <div
         className="grid shrink-0"
@@ -154,6 +170,7 @@ function HeatmapGrid({ days }: { days: FilledHeatmapDay[] }) {
               backgroundColor: heatmapColor(day),
             }}
             title={formatTip(day)}
+            aria-label={formatTip(day)}
           />
         ))}
       </div>
@@ -189,8 +206,10 @@ function WeeklyLineChart({ data }: { data: WeekHistoryPoint[] }) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={180}>
-      <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+    <div role="img" aria-label="Gráfico de evolução semanal">
+      <span className="sr-only">Gráfico de linha exibindo o percentual de tarefas concluídas ao longo das semanas.</span>
+      <ResponsiveContainer width="100%" height={180}>
+        <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#26262A" vertical={false} />
         <XAxis
           dataKey="weekLabel"
@@ -217,6 +236,7 @@ function WeeklyLineChart({ data }: { data: WeekHistoryPoint[] }) {
         />
       </LineChart>
     </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -282,7 +302,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function AnalyticsPage() {
-  const { streaks, heatmapDays, weekHistoryData, isLoading, error } = useAnalytics()
+  const { preferences } = usePreferences()
+  const firstDayOfWeek = preferences?.firstDayOfWeek ?? 'MONDAY'
+  const { streaks, heatmapDays, weekHistoryData, isLoading, error } = useAnalytics(firstDayOfWeek)
   const [isExporting, setIsExporting] = useState(false)
 
   async function handleExport() {
@@ -341,7 +363,7 @@ export function AnalyticsPage() {
           {heatmapDays.length === 0 ? (
             <p className="text-sm text-[#8C8A88]">Sem dados de atividade.</p>
           ) : (
-            <HeatmapGrid days={heatmapDays} />
+            <HeatmapGrid days={heatmapDays} firstDayOfWeek={firstDayOfWeek} />
           )}
         </div>
 

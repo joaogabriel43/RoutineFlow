@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, useRef } from 'react'
 import { ArrowLeft, Loader2, Plus, SearchX } from 'lucide-react'
 import { useManage } from '@/hooks/useManage'
 import { AreaManageCard } from '@/components/shared/AreaManageCard'
@@ -8,6 +8,7 @@ import { FilterBar } from '@/components/shared/FilterBar'
 import { FilterPills } from '@/components/shared/FilterPills'
 import { ColorPicker } from '@/components/shared/ColorPicker'
 import { DynamicIcon } from '@/components/shared/DynamicIcon'
+import { useVirtualizer } from '@tanstack/react-virtual'
 
 // Lazy — keeps the full lucide icon catalog out of the main bundle.
 const IconPicker = lazy(() => import('@/components/shared/IconPicker'))
@@ -125,8 +126,9 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">Nome</label>
+            <label htmlFor="area-name" className="text-xs text-[#8C8A88] font-medium">Nome</label>
             <Input
+              id="area-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ex: Inglês/PTE"
@@ -175,8 +177,9 @@ function AreaModal({ open, initial, onClose, onSave, isPending }: AreaModalProps
             )}
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">Frequência do streak</label>
+            <label htmlFor="area-freq" className="text-xs text-[#8C8A88] font-medium">Frequência do streak</label>
             <select
+              id="area-freq"
               value={resetFrequency}
               onChange={(e) => setResetFrequency(e.target.value as ResetFrequency)}
               className="w-full h-9 rounded-md border border-[#26262A] bg-[#26262A] text-[#F4F2EF] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#2F8BFF]"
@@ -312,8 +315,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">Título</label>
+            <label htmlFor="taskm-title" className="text-xs text-[#8C8A88] font-medium">Título</label>
             <Input
+              id="taskm-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="ex: Re-tell Lecture"
@@ -354,8 +358,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
           {goalType === 'NUMERIC' && (
             <div className="flex gap-3">
               <div className="space-y-1.5 flex-1">
-                <label className="text-xs text-[#8C8A88] font-medium">Alvo (ex: 3, 5.5)</label>
+                <label htmlFor="taskm-target" className="text-xs text-[#8C8A88] font-medium">Alvo (ex: 3, 5.5)</label>
                 <Input
+                  id="taskm-target"
                   type="number"
                   step="0.1"
                   min="0.1"
@@ -366,8 +371,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
                 />
               </div>
               <div className="space-y-1.5 flex-1">
-                <label className="text-xs text-[#8C8A88] font-medium">Unidade <span className="text-[#34343A]">— opcional</span></label>
+                <label htmlFor="taskm-unit" className="text-xs text-[#8C8A88] font-medium">Unidade <span className="text-[#34343A]">— opcional</span></label>
                 <Input
+                  id="taskm-unit"
                   type="text"
                   value={goalUnit}
                   onChange={(e) => setGoalUnit(e.target.value)}
@@ -409,8 +415,9 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
 
           {scheduleType === 'DAY_OF_WEEK' && (
             <div className="space-y-1.5">
-              <label className="text-xs text-[#8C8A88] font-medium">Dia da semana</label>
+              <label htmlFor="taskm-dow" className="text-xs text-[#8C8A88] font-medium">Dia da semana</label>
               <select
+                id="taskm-dow"
                 value={dayOfWeek}
                 onChange={(e) => setDayOfWeek(e.target.value)}
                 className="w-full h-9 rounded-md border border-[#26262A] bg-[#26262A] text-[#F4F2EF] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#2F8BFF]"
@@ -426,10 +433,11 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
 
           {scheduleType === 'DAY_OF_MONTH' && (
             <div className="space-y-1.5">
-              <label className="text-xs text-[#8C8A88] font-medium">
+              <label htmlFor="taskm-dom" className="text-xs text-[#8C8A88] font-medium">
                 Dia do mês <span className="text-[#34343A]">(1–31)</span>
               </label>
               <Input
+                id="taskm-dom"
                 type="number"
                 min={1}
                 max={31}
@@ -446,10 +454,11 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">
+            <label htmlFor="taskm-dur" className="text-xs text-[#8C8A88] font-medium">
               Duração estimada (min) <span className="text-[#34343A]">— opcional</span>
             </label>
             <Input
+              id="taskm-dur"
               type="number"
               min={1}
               value={estimatedMinutes}
@@ -460,10 +469,11 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">
+            <label htmlFor="taskm-rem" className="text-xs text-[#8C8A88] font-medium">
               Horário do lembrete <span className="text-[#34343A]">— opcional</span>
             </label>
             <Input
+              id="taskm-rem"
               type="time"
               value={reminderTime}
               onChange={(e) => setReminderTime(e.target.value)}
@@ -513,10 +523,11 @@ function TaskModal({ open, initial, onClose, onSave, isPending }: TaskModalProps
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] font-medium">
+            <label htmlFor="taskm-desc" className="text-xs text-[#8C8A88] font-medium">
               Descrição <span className="text-[#34343A]">— opcional</span>
             </label>
             <Textarea
+              id="taskm-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalhes da tarefa…"
@@ -808,6 +819,48 @@ export function ManagePage() {
 
   const isDeletePending = deleteArea.isPending || deleteTask.isPending
 
+  // ── Virtualization setup ──────────────────────────────────────────────────
+
+  type VirtualItemDef =
+    | { type: 'header'; label: string; id: string }
+    | { type: 'task'; task: TaskResponse; id: string }
+
+  const virtualItems: VirtualItemDef[] = []
+
+  if (hasFilteredTasks) {
+    DAYS_OF_WEEK.filter((d) =>
+      filteredDayOfWeekTasks.some((t) => t.dayOfWeek === d.value),
+    ).forEach((day) => {
+      virtualItems.push({ type: 'header', label: DAY_FULL[day.value], id: `header-${day.value}` })
+      const dayTasks = filteredDayOfWeekTasks.filter((t) => t.dayOfWeek === day.value)
+      dayTasks.forEach((task) => {
+        virtualItems.push({ type: 'task', task, id: `task-${task.id}` })
+      })
+    })
+
+    if (filteredDayOfMonthTasks.length > 0) {
+      virtualItems.push({ type: 'header', label: 'Mensal', id: 'header-monthly' })
+      filteredDayOfMonthTasks.forEach((task) => {
+        virtualItems.push({ type: 'task', task, id: `task-${task.id}` })
+      })
+    }
+  }
+
+  // We use the main tag which has overflow-y-auto as our scroll container.
+  // Since it's outside our component, we access it via document.querySelector.
+  const parentRef = useRef<Element | null>(null)
+  
+  useEffect(() => {
+    parentRef.current = document.querySelector('main')
+  }, [])
+
+  const rowVirtualizer = useVirtualizer({
+    count: virtualItems.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: (index) => (virtualItems[index].type === 'header' ? 36 : 64),
+    overscan: 10,
+  })
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -998,51 +1051,48 @@ export function ManagePage() {
                   )}
                 </div>
               ) : (
-                <div className="space-y-0.5">
-                  {/* DAY_OF_WEEK tasks grouped by weekday */}
-                  {DAYS_OF_WEEK.filter((d) =>
-                    filteredDayOfWeekTasks.some((t) => t.dayOfWeek === d.value),
-                  ).map((day) => {
-                    const dayTasks = filteredDayOfWeekTasks.filter(
-                      (t) => t.dayOfWeek === day.value,
-                    )
+                <div
+                  style={{
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                    width: '100%',
+                    position: 'relative',
+                  }}
+                  className="space-y-0.5"
+                >
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const item = virtualItems[virtualRow.index]
+
                     return (
-                      <div key={day.value} className="mb-3">
-                        <div className="px-3 mb-1">
-                          <span className="text-[10px] font-semibold text-[#8C8A88] uppercase tracking-widest">
-                            {DAY_FULL[day.value]}
-                          </span>
-                        </div>
-                        {dayTasks.map((task) => (
-                          <TaskManageRow
-                            key={task.id}
-                            task={task}
-                            onEdit={() => setTaskModal({ open: true, task })}
-                            onDelete={() => handleDeleteTask(task)}
-                          />
-                        ))}
+                      <div
+                        key={item.id}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                        className={item.type === 'header' ? 'flex items-end pb-1' : ''}
+                      >
+                        {item.type === 'header' ? (
+                          <div className="px-3 w-full">
+                            <span className="text-[10px] font-semibold text-[#8C8A88] uppercase tracking-widest">
+                              {item.label}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="w-full px-1">
+                            <TaskManageRow
+                              task={item.task}
+                              onEdit={() => setTaskModal({ open: true, task: item.task })}
+                              onDelete={() => handleDeleteTask(item.task)}
+                            />
+                          </div>
+                        )}
                       </div>
                     )
                   })}
-
-                  {/* DAY_OF_MONTH tasks */}
-                  {filteredDayOfMonthTasks.length > 0 && (
-                    <div className="mb-3">
-                      <div className="px-3 mb-1">
-                        <span className="text-[10px] font-semibold text-[#8C8A88] uppercase tracking-widest">
-                          Mensal
-                        </span>
-                      </div>
-                      {filteredDayOfMonthTasks.map((task) => (
-                        <TaskManageRow
-                          key={task.id}
-                          task={task}
-                          onEdit={() => setTaskModal({ open: true, task })}
-                          onDelete={() => handleDeleteTask(task)}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </div>

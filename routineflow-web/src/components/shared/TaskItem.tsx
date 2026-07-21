@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, hapticFeedback } from '@/lib/utils'
 import type { EnrichedTask } from '@/hooks/useDay'
 import { TaskTimer } from '@/components/shared/TaskTimer'
 import { NoteInput } from '@/components/shared/NoteInput'
@@ -32,6 +32,7 @@ export function TaskItem({
 }: TaskItemProps) {
   function handleClick() {
     if (disabled) return
+    if (!task.completed) hapticFeedback()
     onToggle(task.id, !task.completed)
   }
 
@@ -53,9 +54,13 @@ export function TaskItem({
           disabled={disabled}
           areaColor={areaColor}
           onIncrement={(inc) => {
+            if (disabled) return
+            hapticFeedback()
             if (onIncrementProgress) onIncrementProgress(task.id, inc, task.goalTarget ?? 1)
           }}
           onReset={() => {
+            if (disabled) return
+            hapticFeedback()
             if (onResetProgress) onResetProgress(task.id)
           }}
         />
@@ -66,10 +71,10 @@ export function TaskItem({
           disabled={disabled}
           aria-label={
             disabled
-              ? 'Check-in indisponível'
+              ? `Check-in indisponível para ${task.title}`
               : task.completed
-                ? 'Desmarcar tarefa'
-                : 'Marcar como concluída'
+                ? `Desmarcar tarefa: ${task.title}`
+                : `Marcar como concluída: ${task.title}`
           }
           className="mt-0.5 shrink-0 w-5 h-5 rounded-xs flex items-center justify-center transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
           style={{
@@ -91,6 +96,11 @@ export function TaskItem({
             onClick={() => {
               if (onToggleTimer && !disabled && !task.completed) onToggleTimer(task.id)
             }}
+            aria-label={
+              task.completed || disabled
+                ? task.title
+                : `Iniciar timer para a tarefa: ${task.title}`
+            }
             className={cn(
               'text-[15px] font-medium leading-snug transition-colors duration-200 text-left tracking-[-0.006em]',
               task.completed

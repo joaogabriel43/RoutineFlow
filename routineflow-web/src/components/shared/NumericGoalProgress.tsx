@@ -70,6 +70,7 @@ export function NumericGoalProgress({
           type="button"
           onClick={() => onIncrement(-1)}
           disabled={disabled || goalProgress <= 0}
+          aria-label="Decrementar progresso"
           className="relative z-10 w-6 h-6 flex items-center justify-center rounded-sm hover:bg-surface-3 disabled:opacity-30 disabled:hover:bg-transparent"
         >
           <Minus size={14} className="text-fg-subtle" />
@@ -83,6 +84,7 @@ export function NumericGoalProgress({
           type="button"
           onClick={() => onIncrement(1)}
           disabled={disabled}
+          aria-label="Incrementar progresso"
           className="relative z-10 w-6 h-6 flex items-center justify-center rounded-sm hover:bg-surface-3 disabled:opacity-30 disabled:hover:bg-transparent"
         >
           <Plus size={14} className="text-fg-subtle" />

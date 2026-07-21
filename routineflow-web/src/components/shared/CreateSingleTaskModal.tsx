@@ -67,10 +67,11 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 py-2">
           {/* Title */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
+            <label htmlFor="task-title" className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
               Título *
             </label>
             <input
+              id="task-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -85,10 +86,11 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
+            <label htmlFor="task-desc" className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
               Descrição (opcional)
             </label>
             <textarea
+              id="task-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalhes adicionais..."
@@ -99,10 +101,11 @@ export function CreateSingleTaskModal({ open, onClose }: CreateSingleTaskModalPr
 
           {/* Due date */}
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
+            <label htmlFor="task-date" className="text-xs text-[#8C8A88] uppercase tracking-wide font-medium">
               Prazo (opcional)
             </label>
             <input
+              id="task-date"
               type="date"
               value={dueDate}
               min={todayStr()}

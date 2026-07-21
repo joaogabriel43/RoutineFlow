@@ -81,34 +81,37 @@ function WeeklyTrendChart({ trend, color }: { trend: WeeklyTrendPoint[]; color: 
   const data = trend.map((p) => ({ ...p, rate: p.completionRate }))
 
   return (
-    <ResponsiveContainer width="100%" height={180}>
-      <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#26262A" vertical={false} />
-        <XAxis
-          dataKey="weekLabel"
-          tick={{ fill: '#8C8A88', fontSize: 10 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis
-          domain={[0, 100]}
-          tickFormatter={(v) => `${v}%`}
-          tick={{ fill: '#8C8A88', fontSize: 10 }}
-          axisLine={false}
-          tickLine={false}
-          ticks={[0, 25, 50, 75, 100]}
-        />
-        <Tooltip content={<DarkTooltip />} cursor={{ stroke: '#26262A', strokeWidth: 1 }} />
-        <Line
-          type="monotone"
-          dataKey="rate"
-          stroke={color}
-          strokeWidth={2}
-          dot={false}
-          activeDot={{ fill: color, r: 4, strokeWidth: 0 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div role="img" aria-label="Progresso semanal da área">
+      <span className="sr-only">Gráfico de linha mostrando o progresso semanal de conclusão de tarefas da área nas últimas 12 semanas.</span>
+      <ResponsiveContainer width="100%" height={180}>
+        <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#26262A" vertical={false} />
+          <XAxis
+            dataKey="weekLabel"
+            tick={{ fill: '#8C8A88', fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            domain={[0, 100]}
+            tickFormatter={(v) => `${v}%`}
+            tick={{ fill: '#8C8A88', fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+            ticks={[0, 25, 50, 75, 100]}
+          />
+          <Tooltip content={<DarkTooltip />} cursor={{ stroke: '#26262A', strokeWidth: 1 }} />
+          <Line
+            type="monotone"
+            dataKey="rate"
+            stroke={color}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ fill: color, r: 4, strokeWidth: 0 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -153,46 +156,49 @@ function DayOfWeekBarChart({
   const data = stats.map((s) => ({ ...s, rate: s.completionRate }))
 
   return (
-    <ResponsiveContainer width="100%" height={Math.max(stats.length * 36, 120)}>
-      <BarChart
-        layout="vertical"
-        data={data}
-        margin={{ top: 0, right: 48, left: 0, bottom: 0 }}
-      >
-        <XAxis
-          type="number"
-          domain={[0, 100]}
-          tickFormatter={(v) => `${v}%`}
-          tick={{ fill: '#8C8A88', fontSize: 10 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis
-          type="category"
-          dataKey="dayLabel"
-          tick={{ fill: '#8C8A88', fontSize: 11 }}
-          axisLine={false}
-          tickLine={false}
-          width={56}
-        />
-        <Tooltip content={<BarTooltipContent />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-        <Bar dataKey="rate" radius={[0, 4, 4, 0]}>
-          <LabelList
-            dataKey="rate"
-            position="right"
-            style={{ fill: '#8C8A88', fontSize: 10 }}
-            formatter={(v: unknown) => `${Number(v).toFixed(0)}%`}
+    <div role="img" aria-label="Taxa de conclusão por dia da semana">
+      <span className="sr-only">Gráfico de barras horizontais mostrando a taxa de conclusão de tarefas em cada dia da semana.</span>
+      <ResponsiveContainer width="100%" height={Math.max(stats.length * 36, 120)}>
+        <BarChart
+          layout="vertical"
+          data={data}
+          margin={{ top: 0, right: 48, left: 0, bottom: 0 }}
+        >
+          <XAxis
+            type="number"
+            domain={[0, 100]}
+            tickFormatter={(v) => `${v}%`}
+            tick={{ fill: '#8C8A88', fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
           />
-          {data.map((entry) => (
-            <Cell
-              key={entry.dayOfWeek}
-              fill={color}
-              fillOpacity={entry.dayOfWeek === bestDay ? 1 : 0.35}
+          <YAxis
+            type="category"
+            dataKey="dayLabel"
+            tick={{ fill: '#8C8A88', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            width={56}
+          />
+          <Tooltip content={<BarTooltipContent />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+          <Bar dataKey="rate" radius={[0, 4, 4, 0]}>
+            <LabelList
+              dataKey="rate"
+              position="right"
+              style={{ fill: '#8C8A88', fontSize: 10 }}
+              formatter={(v: unknown) => `${Number(v).toFixed(0)}%`}
             />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+            {data.map((entry) => (
+              <Cell
+                key={entry.dayOfWeek}
+                fill={color}
+                fillOpacity={entry.dayOfWeek === bestDay ? 1 : 0.35}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 

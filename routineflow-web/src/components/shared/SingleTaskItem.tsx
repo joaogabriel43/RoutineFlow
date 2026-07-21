@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, hapticFeedback } from '@/lib/utils'
 import type { SingleTaskResponse } from '@/types'
 
 interface SingleTaskItemProps {
@@ -37,6 +37,7 @@ export function SingleTaskItem({
 
   function handleComplete() {
     if (archived) return
+    hapticFeedback()
     setFading(true)
     setTimeout(() => onComplete(task.id), 280)
   }
@@ -57,7 +58,7 @@ export function SingleTaskItem({
       <button
         type="button"
         onClick={archived ? undefined : handleComplete}
-        aria-label={archived ? 'Concluída' : 'Marcar como concluída'}
+        aria-label={archived ? `Tarefa concluída: ${task.title}` : `Marcar como concluída: ${task.title}`}
         className={cn(
           'mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer',
           'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8BFF]',
@@ -111,6 +112,7 @@ export function SingleTaskItem({
           <button
             type="button"
             onClick={handleUncomplete}
+            aria-label={`Desfazer conclusão da tarefa: ${task.title}`}
             className="text-xs text-[#8C8A88] hover:text-[#F4F2EF] px-2 py-1 rounded hover:bg-[#26262A] transition-colors cursor-pointer"
           >
             Desfazer
@@ -121,7 +123,7 @@ export function SingleTaskItem({
           <button
             type="button"
             onClick={() => onDelete(task.id)}
-            aria-label="Excluir tarefa"
+            aria-label={`Excluir tarefa: ${task.title}`}
             className="p-1 rounded text-[#3a3a3c] hover:text-danger hover:bg-[#26262A] transition-colors cursor-pointer"
           >
             <X size={14} />
