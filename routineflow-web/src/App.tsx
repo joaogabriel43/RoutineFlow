@@ -11,6 +11,9 @@ import { ImportPage } from '@/pages/ImportPage'
 import { ManagePage } from '@/pages/ManagePage'
 import { HabitNowConverterPage } from '@/pages/HabitNowConverterPage'
 import { SingleTasksPage } from '@/pages/SingleTasksPage'
+import { SettingsPage } from '@/pages/SettingsPage'
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
+import { ErrorFallback } from '@/components/shared/ErrorFallback'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,33 +32,36 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Rota pública */}
-          <Route path="/login" element={<LoginPage />} />
+    <ErrorBoundary fallback={<ErrorFallback />}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            {/* Rota pública */}
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* Rotas protegidas — aninhadas dentro do AppLayout */}
-          <Route
-            element={
-              <RequireAuth>
-                <AppLayout />
-              </RequireAuth>
-            }
-          >
-            <Route index element={<TodayPage />} />
-            <Route path="semana" element={<WeekPage />} />
-            <Route path="calendario" element={<CalendarPage />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
-            <Route path="analytics/area/:areaId" element={<AreaAnalyticsPage />} />
-            <Route path="import" element={<ImportPage />} />
-            <Route path="import/habitnow" element={<HabitNowConverterPage />} />
-            <Route path="tasks" element={<SingleTasksPage />} />
-            <Route path="manage" element={<ManagePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+            {/* Rotas protegidas — aninhadas dentro do AppLayout */}
+            <Route
+              element={
+                <RequireAuth>
+                  <AppLayout />
+                </RequireAuth>
+              }
+            >
+              <Route index element={<TodayPage />} />
+              <Route path="semana" element={<WeekPage />} />
+              <Route path="calendario" element={<CalendarPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="analytics/area/:areaId" element={<AreaAnalyticsPage />} />
+              <Route path="import" element={<ImportPage />} />
+              <Route path="import/habitnow" element={<HabitNowConverterPage />} />
+              <Route path="tasks" element={<SingleTasksPage />} />
+              <Route path="manage" element={<ManagePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }

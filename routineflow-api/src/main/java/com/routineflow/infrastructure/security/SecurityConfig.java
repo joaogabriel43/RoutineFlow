@@ -50,13 +50,19 @@ public class SecurityConfig {
                         // OPTIONS preflight must be allowed before any auth check —
                         // browser sends OPTIONS without credentials and expects 200.
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // Swagger UI and OpenAPI spec — publicly accessible
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
                         // VAPID public key must be accessible before auth
                         .requestMatchers("/push/vapid-public-key").permitAll()
                         .anyRequest().authenticated()
+                )
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives("default-src 'none'; frame-ancestors 'none'; sandbox")
+                        )
+                        .frameOptions(frame -> frame.deny())
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
