@@ -32,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // OPTIONS preflight requests carry no Authorization header — skip JWT validation
         // so the CORS filter can respond with 200 before any auth check.
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
-        return path.startsWith("/auth/") || path.startsWith("/actuator/");
+        return path.equals("/auth/login") || path.equals("/auth/register") || path.startsWith("/actuator/");
     }
 
     @Override
@@ -56,11 +56,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             var userDetails = userDetailsService.loadUserByUsername(username);
 
             if (jwtService.isTokenValid(token, userDetails)) {
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
+                boolean isRevoked = false;
+                if (userDetails instanceof CustomUserDetails customUser) {
+                    if (customUser.getTokensRevokedBefore() != null) {
+                        java.util.Date iat = jwtService.extractIssuedAt(token);
+                        if (iat != null && iat.toInstant().isBefore(customUser.getTokensRevokedBefore())) {
+                            isRevoked = true;
+                        }
+                    }
+                }
+
+                if (!isRevoked) {
+                    var authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
                 );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
         }
 

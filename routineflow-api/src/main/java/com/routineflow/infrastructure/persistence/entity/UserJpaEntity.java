@@ -40,4 +40,7 @@ public class UserJpaEntity {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "tokens_revoked_before")
+    private Instant tokensRevokedBefore;
 }

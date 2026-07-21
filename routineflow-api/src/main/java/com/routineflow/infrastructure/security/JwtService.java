@@ -41,6 +41,10 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public Date extractIssuedAt(String token) {
+        return extractClaim(token, Claims::getIssuedAt);
+    }
+
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             String username = extractUsername(token);

@@ -23,6 +23,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         var entity = userJpaRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
-        return new User(entity.getEmail(), entity.getPasswordHash(), Collections.emptyList());
+        return new CustomUserDetails(
+                entity.getEmail(), 
+                entity.getPasswordHash(), 
+                Collections.emptyList(), 
+                entity.getId(), 
+                entity.getTokensRevokedBefore()
+        );
     }
 }

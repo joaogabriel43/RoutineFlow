@@ -26,6 +26,8 @@ public interface DailyLogJpaRepository extends JpaRepository<DailyLogJpaEntity, 
             @Param("logDate") LocalDate logDate
     );
 
+    List<DailyLogJpaEntity> findByUserId(Long userId);
+
     @Query("""
             SELECT d FROM DailyLogJpaEntity d
             JOIN FETCH d.task
