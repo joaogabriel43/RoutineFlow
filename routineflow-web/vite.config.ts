@@ -59,6 +59,26 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router-dom/')) {
+            return 'react-vendor'
+          }
+          if (id.includes('node_modules/recharts/') || id.includes('node_modules/react-is/')) {
+            return 'recharts-vendor'
+          }
+          if (id.includes('node_modules/lucide-react/') || id.includes('node_modules/tailwind-merge/') || id.includes('node_modules/clsx/') || id.includes('node_modules/sonner/')) {
+            return 'ui-vendor'
+          }
+          if (id.includes('node_modules/@radix-ui/')) {
+            return 'radix-vendor'
+          }
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
   },

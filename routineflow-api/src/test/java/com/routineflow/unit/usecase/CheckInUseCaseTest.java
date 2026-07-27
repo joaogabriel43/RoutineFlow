@@ -3,6 +3,8 @@ package com.routineflow.unit.usecase;
 import com.routineflow.application.usecase.CheckInUseCase;
 import com.routineflow.application.usecase.exception.ResourceNotFoundException;
 import com.routineflow.application.usecase.exception.UnauthorizedException;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.Cache;
 import com.routineflow.domain.model.GoalType;
 import com.routineflow.infrastructure.persistence.entity.AreaJpaEntity;
 import com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity;
@@ -32,6 +34,8 @@ class CheckInUseCaseTest {
 
     @Mock private TaskJpaRepository taskJpaRepository;
     @Mock private DailyLogJpaRepository dailyLogJpaRepository;
+    @Mock private CacheManager cacheManager;
+    @Mock private Cache cache;
 
     private CheckInUseCase useCase;
 
@@ -42,7 +46,8 @@ class CheckInUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CheckInUseCase(taskJpaRepository, dailyLogJpaRepository);
+        lenient().when(cacheManager.getCache(any())).thenReturn(cache);
+        useCase = new CheckInUseCase(taskJpaRepository, dailyLogJpaRepository, cacheManager);
     }
 
     @Test

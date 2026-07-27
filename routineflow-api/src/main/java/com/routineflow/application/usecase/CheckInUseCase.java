@@ -6,8 +6,10 @@ import com.routineflow.application.usecase.exception.UnauthorizedException;
 import com.routineflow.infrastructure.persistence.entity.DailyLogJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.DailyLogJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.TaskJpaRepository;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.routineflow.infrastructure.config.CacheConfig;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -20,13 +22,16 @@ public class CheckInUseCase {
 
     private final TaskJpaRepository taskJpaRepository;
     private final DailyLogJpaRepository dailyLogJpaRepository;
+    private final CacheManager cacheManager;
 
     public CheckInUseCase(
             TaskJpaRepository taskJpaRepository,
-            DailyLogJpaRepository dailyLogJpaRepository
+            DailyLogJpaRepository dailyLogJpaRepository,
+            CacheManager cacheManager
     ) {
         this.taskJpaRepository = taskJpaRepository;
         this.dailyLogJpaRepository = dailyLogJpaRepository;
+        this.cacheManager = cacheManager;
     }
 
     @Transactional
@@ -56,6 +61,8 @@ public class CheckInUseCase {
         }
         log = dailyLogJpaRepository.save(log);
 
+        evictUserCaches(userId, task.getArea().getId());
+
         return toResponse(log);
     }
 
@@ -81,6 +88,8 @@ public class CheckInUseCase {
             log.setGoalProgress(null);
         }
         log = dailyLogJpaRepository.save(log);
+
+        evictUserCaches(userId, task.getArea().getId());
 
         return toResponse(log);
     }
@@ -149,12 +158,28 @@ public class CheckInUseCase {
 
         log = dailyLogJpaRepository.save(log);
 
+        evictUserCaches(userId, task.getArea().getId());
+
         return toResponse(log);
     }
 
     @Transactional
     public DailyLogResponse resetProgress(Long userId, Long taskId, LocalDate date) {
         return uncompleteTask(userId, taskId, date);
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private void evictUserCaches(Long userId, Long areaId) {
+        if (cacheManager.getCache(CacheConfig.CACHE_HEATMAP) != null) {
+            cacheManager.getCache(CacheConfig.CACHE_HEATMAP).evict(userId);
+        }
+        if (cacheManager.getCache(CacheConfig.CACHE_STREAK) != null) {
+            cacheManager.getCache(CacheConfig.CACHE_STREAK).evict(userId);
+        }
+        if (areaId != null && cacheManager.getCache(CacheConfig.CACHE_ANALYTICS) != null) {
+            cacheManager.getCache(CacheConfig.CACHE_ANALYTICS).evict(userId + "-" + areaId);
+        }
     }
 
     private void validateOwnership(Long requestingUserId, Long taskOwnerId, Long taskId) {

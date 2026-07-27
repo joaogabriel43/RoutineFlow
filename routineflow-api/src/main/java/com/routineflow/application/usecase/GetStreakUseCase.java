@@ -30,6 +30,10 @@ public class GetStreakUseCase {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(
+            value = com.routineflow.infrastructure.config.CacheConfig.CACHE_STREAK,
+            key = "#userId"
+    )
     public StreakListResponse getStreaks(Long userId) {
         var routineOpt = routineJpaRepository.findActiveByUserId(userId);
         if (routineOpt.isEmpty()) {

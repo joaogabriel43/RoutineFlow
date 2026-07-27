@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Loader2, LogOut, User, Lock, Info, Settings2, Volume2, Calendar as CalendarIcon, Moon, Download, Database } from 'lucide-react'
+import { Loader2, LogOut, User, Lock, Info, Settings2, Volume2, Calendar as CalendarIcon, Moon, Download, Database, Medal, Flame, Star, Target } from 'lucide-react'
 import { toast } from 'sonner'
 import { authApi } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { usePreferences } from '@/hooks/usePreferences'
+import { useQuery } from '@tanstack/react-query'
+import { analyticsApi } from '@/services/api'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,6 +80,60 @@ export function SettingsPage() {
       })
       .finally(() => setProfileLoading(false))
   }, [])
+
+  // ── Badges ────────────────────────────────────────────────────────────────
+  const { data: streakData, isLoading: streaksLoading } = useQuery({
+    queryKey: ['analytics-streaks'],
+    queryFn: analyticsApi.getStreaks,
+    staleTime: 60_000,
+  })
+
+  const currentStreaks = streakData?.streaks || []
+  const maxStreak = Math.max(0, ...currentStreaks.map(s => s.currentStreak))
+  const hasAreas = currentStreaks.length > 0
+
+  const badges = [
+    {
+      id: 'novato',
+      title: 'Novato',
+      desc: 'Criou sua primeira rotina.',
+      icon: Target,
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/20',
+      unlocked: hasAreas
+    },
+    {
+      id: 'chamas',
+      title: 'Em Chamas',
+      desc: 'Alcançou 7 dias de streak.',
+      icon: Flame,
+      color: 'text-orange-500',
+      bg: 'bg-orange-500/10',
+      border: 'border-orange-500/20',
+      unlocked: maxStreak >= 7
+    },
+    {
+      id: 'mestre',
+      title: 'Mestre da Rotina',
+      desc: 'Alcançou 30 dias de streak.',
+      icon: Medal,
+      color: 'text-yellow-500',
+      bg: 'bg-yellow-500/10',
+      border: 'border-yellow-500/20',
+      unlocked: maxStreak >= 30
+    },
+    {
+      id: 'lenda',
+      title: 'Lenda Pessoal',
+      desc: 'Alcançou 100 dias de streak.',
+      icon: Star,
+      color: 'text-purple-500',
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/20',
+      unlocked: maxStreak >= 100
+    }
+  ]
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -238,6 +294,37 @@ export function SettingsPage() {
           {pwdLoading ? <Loader2 size={14} className="animate-spin mr-2" /> : null}
           Alterar senha
         </Button>
+      </Section>
+
+      {/* ── Badges / Gamification ── */}
+      <Section icon={Medal} title="Conquistas">
+        {streaksLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 size={24} className="animate-spin text-fg-dim" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {badges.map(b => (
+              <div 
+                key={b.id} 
+                className={`flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all ${
+                  b.unlocked 
+                    ? `${b.bg} ${b.border}` 
+                    : 'bg-line/20 border-line/50 opacity-40 grayscale'
+                }`}
+              >
+                <b.icon size={28} className={`mb-3 ${b.unlocked ? b.color : 'text-fg-dim'}`} />
+                <h3 className="text-sm font-semibold text-fg mb-1">{b.title}</h3>
+                <p className="text-xs text-fg-dim">{b.desc}</p>
+                {!b.unlocked && (
+                  <div className="mt-2 text-[10px] uppercase font-bold tracking-wider text-fg-dim">
+                    Bloqueado
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       {/* ── Preferences ─────────────────────────────────────────────────── */}

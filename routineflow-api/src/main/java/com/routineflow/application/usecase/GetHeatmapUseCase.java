@@ -41,6 +41,10 @@ public class GetHeatmapUseCase {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(
+            value = com.routineflow.infrastructure.config.CacheConfig.CACHE_HEATMAP,
+            key = "#userId"
+    )
     public HeatmapResponse getHeatmap(Long userId, LocalDate from, LocalDate to) {
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("from date must not be after to date");

@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.Cache;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -32,6 +34,10 @@ public class SkipDayUseCaseTest {
     private AreaJpaRepository areaJpaRepository;
     @Mock
     private UserJpaRepository userJpaRepository;
+    @Mock
+    private CacheManager cacheManager;
+    @Mock
+    private Cache cache;
 
     private SkipDayUseCase skipDayUseCase;
     private UserJpaEntity user;
@@ -39,7 +45,8 @@ public class SkipDayUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        skipDayUseCase = new SkipDayUseCase(skipDayJpaRepository, areaJpaRepository, userJpaRepository);
+        lenient().when(cacheManager.getCache(any())).thenReturn(cache);
+        skipDayUseCase = new SkipDayUseCase(skipDayJpaRepository, areaJpaRepository, userJpaRepository, cacheManager);
         user = UserJpaEntity.builder().id(1L).build();
         area = AreaJpaEntity.builder().id(10L).user(user).build();
     }

@@ -8,8 +8,10 @@ import com.routineflow.infrastructure.persistence.entity.UserJpaEntity;
 import com.routineflow.infrastructure.persistence.repository.AreaJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.SkipDayJpaRepository;
 import com.routineflow.infrastructure.persistence.repository.UserJpaRepository;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.routineflow.infrastructure.config.CacheConfig;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,13 +23,16 @@ public class SkipDayUseCase {
     private final SkipDayJpaRepository skipDayJpaRepository;
     private final AreaJpaRepository areaJpaRepository;
     private final UserJpaRepository userJpaRepository;
+    private final CacheManager cacheManager;
 
     public SkipDayUseCase(SkipDayJpaRepository skipDayJpaRepository,
                           AreaJpaRepository areaJpaRepository,
-                          UserJpaRepository userJpaRepository) {
+                          UserJpaRepository userJpaRepository,
+                          CacheManager cacheManager) {
         this.skipDayJpaRepository = skipDayJpaRepository;
         this.areaJpaRepository = areaJpaRepository;
         this.userJpaRepository = userJpaRepository;
+        this.cacheManager = cacheManager;
     }
 
     @Transactional
@@ -69,6 +74,8 @@ public class SkipDayUseCase {
 
         skipDay = skipDayJpaRepository.save(skipDay);
 
+        evictUserCaches(userId, areaId);
+
         return new SkipDayResponse(
                 skipDay.getId(),
                 skipDay.getArea().getId(),
@@ -82,6 +89,7 @@ public class SkipDayUseCase {
     public void removeSkipDay(Long userId, Long areaId, LocalDate date) {
         skipDayJpaRepository.findByUserIdAndAreaIdAndSkipDate(userId, areaId, date)
                 .ifPresent(skipDayJpaRepository::delete);
+        evictUserCaches(userId, areaId);
     }
 
     @Transactional(readOnly = true)
@@ -101,5 +109,17 @@ public class SkipDayUseCase {
                         s.getCreatedAt()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    private void evictUserCaches(Long userId, Long areaId) {
+        if (cacheManager.getCache(CacheConfig.CACHE_HEATMAP) != null) {
+            cacheManager.getCache(CacheConfig.CACHE_HEATMAP).evict(userId);
+        }
+        if (cacheManager.getCache(CacheConfig.CACHE_STREAK) != null) {
+            cacheManager.getCache(CacheConfig.CACHE_STREAK).evict(userId);
+        }
+        if (areaId != null && cacheManager.getCache(CacheConfig.CACHE_ANALYTICS) != null) {
+            cacheManager.getCache(CacheConfig.CACHE_ANALYTICS).evict(userId + "-" + areaId);
+        }
     }
 }

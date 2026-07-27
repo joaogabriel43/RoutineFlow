@@ -3,6 +3,8 @@ import { BarChart2, Calendar, CalendarDays, CheckSquare, Home, LogOut, Settings2
 import { cn } from '@/lib/utils'
 import { authApi } from '@/services/api'
 import { SpotlightSearch } from '@/components/shared/SpotlightSearch'
+import { useInstallPrompt } from './InstallPrompt'
+import { Download } from 'lucide-react'
 
 interface NavItem {
   to: string
@@ -46,6 +48,7 @@ function getUserInfo(): { name: string; email: string } | null {
 export function SidebarNav() {
   const navigate = useNavigate()
   const user = getUserInfo()
+  const { deferredPrompt, handleInstall } = useInstallPrompt()
 
   return (
     <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-[#26262A] h-full px-3 py-6">
@@ -99,6 +102,16 @@ export function SidebarNav() {
           <Settings2 size={16} />
           Configurações
         </NavLink>
+
+        {deferredPrompt && (
+          <button
+            onClick={handleInstall}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[#2F8BFF] hover:bg-[#141416] transition-colors text-left"
+          >
+            <Download size={16} />
+            Instalar App
+          </button>
+        )}
 
         {/* User info + logout */}
         {user && (

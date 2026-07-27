@@ -38,6 +38,10 @@ public class AreaAnalyticsUseCase {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(
+            value = com.routineflow.infrastructure.config.CacheConfig.CACHE_ANALYTICS,
+            key = "#userId + '-' + #areaId"
+    )
     public AreaAnalyticsResponse getAreaAnalytics(Long userId, Long areaId) {
         // Validate ownership — returns 404 for non-existent OR another user's area (ADR-006)
         var area = areaJpaRepository.findWithTasksByIdAndUserId(areaId, userId)

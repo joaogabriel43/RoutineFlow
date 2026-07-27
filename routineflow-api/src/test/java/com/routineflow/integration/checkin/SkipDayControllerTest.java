@@ -123,7 +123,7 @@ public class SkipDayControllerTest {
 
     @Test
     void skipDay_failsIfOverLimit() throws Exception {
-        LocalDate date = LocalDate.of(2026, 6, 15);
+        LocalDate date = LocalDate.now();
         // pre-insert 2 skips for the same month
         UserJpaEntity user = userEntity;
         AreaJpaEntity area = areaJpaRepository.findById(areaId).get();

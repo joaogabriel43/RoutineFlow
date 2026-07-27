@@ -63,6 +63,10 @@ jobs:
         working-directory: routineflow-web
         run: npm ci
 
+      - name: Lint
+        working-directory: routineflow-web
+        run: npm run lint
+
       - name: TypeScript check
         working-directory: routineflow-web
         run: npx tsc --noEmit

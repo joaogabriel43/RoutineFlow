@@ -1,6 +1,7 @@
 import { Play, Pause, Check } from 'lucide-react'
 import { useTimer } from '@/hooks/useTimer'
 import { getLocalISODate } from '@/lib/utils'
+import { usePreferences } from '@/hooks/usePreferences'
 
 interface TaskTimerProps {
   taskId: number
@@ -20,6 +21,9 @@ function formatTime(seconds: number): string {
 }
 
 export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: TaskTimerProps) {
+  const { preferences } = usePreferences()
+  const soundEnabled = preferences?.soundEnabled ?? true
+
   const {
     isRunning,
     isFinished,
@@ -35,24 +39,26 @@ export function TaskTimer({ taskId, taskTitle, estimatedMinutes, onComplete }: T
     dateStr: todayStr(),
     onFinish: () => {
       // Play beep
-      try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-        const oscillator = audioCtx.createOscillator()
-        const gainNode = audioCtx.createGain()
-        
-        oscillator.type = 'sine'
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime) // A5
-        
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5)
-        
-        oscillator.connect(gainNode)
-        gainNode.connect(audioCtx.destination)
-        
-        oscillator.start()
-        oscillator.stop(audioCtx.currentTime + 0.5)
-      } catch (e) {
-        console.error('AudioContext error', e)
+      if (soundEnabled) {
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const oscillator = audioCtx.createOscillator()
+          const gainNode = audioCtx.createGain()
+          
+          oscillator.type = 'sine'
+          oscillator.frequency.setValueAtTime(880, audioCtx.currentTime) // A5
+          
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5)
+          
+          oscillator.connect(gainNode)
+          gainNode.connect(audioCtx.destination)
+          
+          oscillator.start()
+          oscillator.stop(audioCtx.currentTime + 0.5)
+        } catch (e) {
+          console.error('AudioContext error', e)
+        }
       }
       
       // Vibrate
